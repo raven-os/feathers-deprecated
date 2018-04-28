@@ -3,9 +3,9 @@ A compositor for raven-os
 
 # Building
 Dependencies:
-- vulkan-hpp
-- claws
-- magma
+- [vulkan-hpp](https://github.com/KhronosGroup/Vulkan-Hpp)
+- [claws](https://github.com/raven-os/claws)
+- [magma](https://github.com/raven-os/magma)
 
 Pass `CLAWS_DIR` and `MAGMA_DIR` so that `cmake` finds them.
 
