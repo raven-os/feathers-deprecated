@@ -14,7 +14,7 @@ Ex:
 mkdir build/
 mkdir build/Debug
 cd build/Debug
-cmake ../.. -DCMAKE_BUILT_TYPE=Debug -DCLAWS_DIR=<claws dir> -DMAGMA_DIR<magma dir>
+cmake ../.. -DCMAKE_BUILT_TYPE=Debug -DCLAWS_DIR=<claws dir> -DMAGMA_DIR=<magma dir>
 cd ../..
 cmake --build build/Debug
 ```
