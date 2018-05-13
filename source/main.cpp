@@ -1,7 +1,8 @@
-#include <magma/VulkanHandler.hpp>
-#include "dummy.hpp"
+#include "display/WaylandSurface.hpp"
+#include "display/Display.ipp"
+
 
 int main()
 {
-  
+  display::Display<display::WaylandSurface> display;
 }
