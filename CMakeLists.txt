@@ -1,4 +1,5 @@
-#
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 cmake_minimum_required(VERSION 2.6)
 project(feathers CXX)
 
@@ -20,11 +21,13 @@ file(GLOB_RECURSE SOURCES_FILE "${SOURCE_DIRECTORY}/*.cpp")
 file(GLOB_RECURSE HEADERS_FILE "${HEADER_DIRECTORY}/*.hpp")
 
 find_package(Vulkan REQUIRED)
+find_package(Wayland REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 include_directories(
-  ${GLFW_INCLUDE_DIRS}
   ${HEADER_DIRECTORY}
+  ${WAYLAND_CLIENT_INCLUDE_DIR}
+  ${WAYLAND_SERVER_INCLUDE_DIR}
   )
 
 if (DEFINED CLAWS_DIR)
@@ -43,3 +46,5 @@ add_executable(
 
 target_link_libraries(${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARY})
+target_link_libraries(${PROJECT_NAME} ${WAYLAND_CLIENT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${WAYLAND_SERVER_LIBRARIES})
