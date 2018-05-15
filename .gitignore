@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+# Specific Files
+tutorials/
+build/
+lib/
