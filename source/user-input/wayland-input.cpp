@@ -54,7 +54,7 @@ static struct wl_pointer_listener pointer_listener = {&pointer_enter, &pointer_l
 
 
 static void keyboard_keymap (void *data, struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size) {
-  char *keymap_string = (char *)(mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0));
+  char *keymap_string = static_cast<char *>(mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0));
 
 	xkb_keymap_unref (keymap);
 	keymap = xkb_keymap_new_from_string (xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
@@ -111,13 +111,13 @@ static struct wl_seat_listener seat_listener = {&seat_capabilities};
 
 static void registry_add_object (void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
 	if (!strcmp(interface,"wl_compositor")) {
-	  compositor = (wl_compositor *)wl_registry_bind(registry, name, &wl_compositor_interface, 1);
+	  compositor = static_cast<wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
 	}
 	else if (!strcmp(interface,"wl_shell")) {
-	  shell = (wl_shell *)wl_registry_bind (registry, name, &wl_shell_interface, 1);
+	  shell = static_cast<wl_shell *>(wl_registry_bind (registry, name, &wl_shell_interface, 1));
 	}
 	else if (!strcmp(interface,"wl_seat")) {
-		seat = (wl_seat *)wl_registry_bind (registry, name, &wl_seat_interface, 1);
+	  seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
 		wl_seat_add_listener (seat, &seat_listener, NULL);
 	}
 }
@@ -131,7 +131,7 @@ static void shell_surface_ping (void *data, struct wl_shell_surface *shell_surfa
 	wl_shell_surface_pong (shell_surface, serial);
 }
 static void shell_surface_configure (void *data, struct wl_shell_surface *shell_surface, uint32_t edges, int32_t width, int32_t height) {
-  struct window *window = (struct window *)data;
+  struct window *window = static_cast<struct window *>(data);
 	wl_egl_window_resize (window->egl_window, width, height, 0, 0);
 }
 static void shell_surface_popup_done (void *data, struct wl_shell_surface *shell_surface) {
