@@ -1,4 +1,4 @@
-// g++ -o user-input user-input.cpp window.cpp -lwayland-client -lwayland-egl -lEGL -lGL -lxkbcommon -I../../include/
+// g++ -o user-input user-input.cpp window.cpp listeners.cpp listeners/windowListener.cpp -lwayland-client -lwayland-egl -lEGL -lGL -lxkbcommon -I../../include/ -g -std=c++17
 
 #include "user-input/user-input.hpp"
 
