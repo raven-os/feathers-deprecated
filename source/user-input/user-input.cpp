@@ -12,16 +12,12 @@ userInput::userInput() {
 	userInput::instance.xkb_state = NULL;
 	userInput::instance.running = true;
 	userInput::instance.display = wl_display_connect(NULL);
+	listeners = new Listeners();
 }
 
-userInput userInput::get() {
+userInput &userInput::get() {
 	return instance;
 }
-
-/*template<typename T>
-void userInput::set(T other, T *member) {
-	*member = other;
-}*/
 
 WindowHandler &userInput::getWindow() {
 	return *win;
@@ -58,13 +54,11 @@ static void keyboard_keymap (void *data, struct wl_keyboard *keyboard, uint32_t 
   char *keymap_string = static_cast<char *>(mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0));
 
 	xkb_keymap_unref(userInput::get().keymap);
-	//keymap = xkb_keymap_new_from_string (xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
-	userInput::get().setKeyMap(xkb_keymap_new_from_string(userInput::get().xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS));
+	userInput::get().keymap = xkb_keymap_new_from_string(userInput::get().xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
 	munmap (keymap_string, size);
 	close(fd);
 	xkb_state_unref(userInput::get().xkb_state);
-	//xkb_state = xkb_state_new(keymap);
-	userInput::get().setState(xkb_state_new(userInput::get().keymap));
+	userInput::get().xkb_state = xkb_state_new(userInput::get().keymap);
 }
 static void keyboard_enter (void *data, struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys) {
   printf("Entering the window\n");
@@ -79,7 +73,7 @@ static void keyboard_key (void *data, struct wl_keyboard *keyboard, uint32_t ser
 		if (utf32) {
 			if (utf32 >= 0x21 && utf32 <= 0x7E) {
 				printf ("the key %c was pressed\n", (char)utf32);
-				if (utf32 == 'q') userInput::get().setRun(false);
+				if (utf32 == 'q') userInput::get().running = false;
 			}
 			else {
 				printf ("the key U+%04X was pressed\n", utf32);
@@ -114,16 +108,13 @@ static struct wl_seat_listener seat_listener = {&seat_capabilities};
 
 static void registry_add_object (void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
 	if (!strcmp(interface,"wl_compositor")) {
-		//compositor = static_cast<wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
-	  userInput::get().setCompositor(static_cast<wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, 1)));
+		userInput::get().compositor = static_cast<wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
 	}
 	else if (!strcmp(interface,"wl_shell")) {
-		//shell = static_cast<wl_shell *>(wl_registry_bind (registry, name, &wl_shell_interface, 1));
-	  userInput::get().setShell(static_cast<wl_shell *>(wl_registry_bind (registry, name, &wl_shell_interface, 1)));
+		userInput::get().shell = static_cast<wl_shell *>(wl_registry_bind (registry, name, &wl_shell_interface, 1));
 	}
 	else if (!strcmp(interface,"wl_seat")) {
-		//seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
-	  userInput::get().setSeat(static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1)));
+		userInput::get().seat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
 		wl_seat_add_listener(userInput::get().seat, &seat_listener, NULL);
 	}
 }
@@ -134,14 +125,13 @@ static struct wl_registry_listener registry_listener = {&registry_add_object, &r
 
 int main () {
 	struct wl_registry *registry = wl_display_get_registry(userInput::get().display);
-	wl_registry_add_listener (registry, &registry_listener, NULL);
+	wl_registry_add_listener(registry, &registry_listener, NULL);
 	wl_display_roundtrip (userInput::get().display);
 
-	userInput::get().setEglDisplay(eglGetDisplay(userInput::get().display));
+	userInput::get().egl_display = eglGetDisplay(userInput::get().display);
 	eglInitialize(userInput::get().egl_display, NULL, NULL);
 
-//	xkb_context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
-	userInput::get().setContext(xkb_context_new (XKB_CONTEXT_NO_FLAGS));
+	userInput::get().xkb_context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
 
 	userInput::createWindow();
 
