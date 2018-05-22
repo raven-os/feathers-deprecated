@@ -1,10 +1,6 @@
 #pragma once
 
-#include <wayland-client.h>
-#include <wayland-egl.h>
-#include <map>
-#include <variant>
-#include <string>
+#include "user-input/user-input.hpp"
 
 using var_listener  = std::variant<struct wl_pointer_listener,
              struct wl_keyboard_listener,

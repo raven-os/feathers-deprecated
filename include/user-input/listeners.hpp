@@ -18,6 +18,7 @@ using var_listener  = std::variant<struct wl_pointer_listener,
              struct wl_registry_listener,
              struct wl_shell_surface_listener>;
 
+
 class Listeners {
   public:
     Listeners();

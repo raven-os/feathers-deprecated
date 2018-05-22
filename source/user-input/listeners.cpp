@@ -2,9 +2,9 @@
 
 Listeners::Listeners() {
   const pointerListener pL = pointerListener(listeners);
-  //const keyboardListener kL = keyboardListener(listeners);
-  //const seatListener sL = seatListener(listeners);
-  //const registryListener rL = registryListener(listeners);
+  const keyboardListener kL = keyboardListener(listeners);
+  const seatListener sL = seatListener(listeners);
+  const registryListener rL = registryListener(listeners);
   const windowListener wL = windowListener(listeners);
 }
 

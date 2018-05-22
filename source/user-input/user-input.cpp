@@ -1,4 +1,4 @@
-// g++ -o user-input user-input.cpp window.cpp listeners.cpp listeners/windowListener.cpp -lwayland-client -lwayland-egl -lEGL -lGL -lxkbcommon -I../../include/ -g -std=c++17
+// g++ -o user-input ../main.cpp user-input.cpp window.cpp listeners.cpp listeners/*.cpp -lwayland-client -lwayland-egl -lEGL -lGL -lxkbcommon -I../../include/ -g -std=c++17
 
 #include "user-input/user-input.hpp"
 
@@ -29,7 +29,7 @@ void userInput::createWindow() {
 																							userInput::instance.compositor);
 }
 
-// listeners
+/*// listeners
 static void pointer_enter (void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	printf ("pointer enter\n");
 }
@@ -122,26 +122,4 @@ static void registry_remove_object (void *data, struct wl_registry *registry, ui
 
 }
 static struct wl_registry_listener registry_listener = {&registry_add_object, &registry_remove_object};
-
-int main () {
-	struct wl_registry *registry = wl_display_get_registry(userInput::get().display);
-	wl_registry_add_listener(registry, &registry_listener, NULL);
-	wl_display_roundtrip (userInput::get().display);
-
-	userInput::get().egl_display = eglGetDisplay(userInput::get().display);
-	eglInitialize(userInput::get().egl_display, NULL, NULL);
-
-	userInput::get().xkb_context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
-
-	userInput::createWindow();
-
-	while (userInput::get().running) {
-		wl_display_dispatch_pending(userInput::get().display);
-		userInput::get().getWindow().draw();
-	}
-
-//	delete win;
-	eglTerminate(userInput::get().egl_display);
-	wl_display_disconnect(userInput::get().display);
-	return 0;
-}
+*/
