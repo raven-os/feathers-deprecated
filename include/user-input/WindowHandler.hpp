@@ -3,6 +3,9 @@
 #include <wayland-egl.h>
 #include <EGL/egl.h>
 #include <GL/gl.h>
+#include <variant>
+#include "user-input/UserInput.hpp"
+#include "user-input/Listeners.hpp"
 
 struct window {
   EGLContext egl_context;
@@ -19,7 +22,6 @@ public:
   ~WindowHandler();
 
   void draw();
-//  struct window const& getWindow() const;
 
 private:
   static constexpr int WIDTH = 256;

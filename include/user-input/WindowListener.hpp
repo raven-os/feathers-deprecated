@@ -3,19 +3,12 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 #include <map>
-#include <variant>
 #include <string>
 
-using var_listener  = std::variant<struct wl_pointer_listener,
-             struct wl_keyboard_listener,
-             struct wl_seat_listener,
-             struct wl_registry_listener,
-             struct wl_shell_surface_listener>;
-
-class windowListener {
+class WindowListener {
   public:
-    windowListener(std::map<std::string, var_listener> &listeners);
-    ~windowListener() = default;
+    WindowListener(std::map<std::string, varListener> &listeners);
+    ~WindowListener() = default;
 
   private:
     static void shell_surface_ping (void *data, struct wl_shell_surface *shell_surface, uint32_t serial);

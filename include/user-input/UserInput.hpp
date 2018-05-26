@@ -9,14 +9,20 @@
 #include <xkbcommon/xkbcommon.h>
 #include <string.h>
 #include <stdio.h>
-#include "user-input/listeners.hpp"
-#include "user-input/window.hpp"
+#include <variant>
 
-//class Listeners;
+class Listeners;
+class WindowHandler;
 
-class userInput {
+using varListener  = std::variant<struct wl_pointer_listener,
+             struct wl_keyboard_listener,
+             struct wl_seat_listener,
+             struct wl_registry_listener,
+             struct wl_shell_surface_listener>;
+
+class UserInput {
 public:
-  static userInput &get();
+  static UserInput &get();
   static void createWindow();
 
   WindowHandler &getWindow();
@@ -33,10 +39,10 @@ public:
   Listeners *listeners;
 
 private:
-  userInput();
+  UserInput();
 
 private:
-  static userInput instance;
+  static UserInput instance;
 
   WindowHandler *win;
   //std::queue<T> events;

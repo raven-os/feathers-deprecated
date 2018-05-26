@@ -1,17 +1,12 @@
 #pragma once
 
-#include "user-input/user-input.hpp"
+#include <map>
+#include "user-input/UserInput.hpp"
 
-using var_listener  = std::variant<struct wl_pointer_listener,
-             struct wl_keyboard_listener,
-             struct wl_seat_listener,
-             struct wl_registry_listener,
-             struct wl_shell_surface_listener>;
-
-class pointerListener {
+class PointerListener {
   public:
-    pointerListener(std::map<std::string, var_listener> &listeners);
-    ~pointerListener() = default;
+    PointerListener(std::map<std::string, varListener> &listeners);
+    ~PointerListener() = default;
 
   private:
     static void pointer_enter (void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t surface_x, wl_fixed_t surface_y);
