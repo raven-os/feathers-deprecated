@@ -1,6 +1,5 @@
 #include "display/WaylandSurface.hpp"
 #include "display/Display.ipp"
-#include "display/DisplayProtocol.hpp"
 
 #include <unistd.h>
 
