@@ -6,7 +6,7 @@
 
 class SeatListener {
   public:
-    SeatListener(std::map<std::string, varListener> &listeners);
+    SeatListener(std::map<std::string, Listener> &listeners);
     ~SeatListener() = default;
 
   private:

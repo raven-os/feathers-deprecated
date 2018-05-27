@@ -5,7 +5,7 @@
 
 class PointerListener {
   public:
-    PointerListener(std::map<std::string, varListener> &listeners);
+    PointerListener(std::map<std::string, Listener> &listeners);
     ~PointerListener() = default;
 
   private:

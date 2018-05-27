@@ -1,6 +1,6 @@
 #include "user-input/RegistryListener.hpp"
 
-RegistryListener::RegistryListener(std::map<std::string, varListener> &listeners) {
+RegistryListener::RegistryListener(std::map<std::string, Listener> &listeners) {
   static struct wl_registry_listener registry_listener =
           {&RegistryListener::registry_add_object,
            &RegistryListener::registry_remove_object};

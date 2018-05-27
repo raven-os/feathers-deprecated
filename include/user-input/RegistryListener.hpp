@@ -6,7 +6,7 @@
 
 class RegistryListener {
   public:
-    RegistryListener(std::map<std::string, varListener> &listeners);
+    RegistryListener(std::map<std::string, Listener> &listeners);
     ~RegistryListener() = default;
 
   private:

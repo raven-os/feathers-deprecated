@@ -14,7 +14,7 @@
 class Listeners;
 class WindowHandler;
 
-using varListener  = std::variant<struct wl_pointer_listener,
+using Listener  = std::variant<struct wl_pointer_listener,
              struct wl_keyboard_listener,
              struct wl_seat_listener,
              struct wl_registry_listener,

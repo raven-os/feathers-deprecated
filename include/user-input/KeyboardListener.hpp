@@ -6,7 +6,7 @@
 
 class KeyboardListener {
   public:
-    KeyboardListener(std::map<std::string, varListener> &listeners);
+    KeyboardListener(std::map<std::string, Listener> &listeners);
     KeyboardListener() = default;
 
   private:

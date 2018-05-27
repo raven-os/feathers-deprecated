@@ -7,7 +7,7 @@
 
 class WindowListener {
   public:
-    WindowListener(std::map<std::string, varListener> &listeners);
+    WindowListener(std::map<std::string, Listener> &listeners);
     ~WindowListener() = default;
 
   private:

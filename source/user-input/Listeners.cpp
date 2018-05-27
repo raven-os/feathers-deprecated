@@ -12,6 +12,6 @@ Listeners::~Listeners() {
 
 }
 
-varListener const &Listeners::getListener(std::string key) const {
+Listener const &Listeners::getListener(std::string key) const {
   return listeners.at(key);
 }

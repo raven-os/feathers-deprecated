@@ -1,6 +1,6 @@
 #include "user-input/SeatListener.hpp"
 
-SeatListener::SeatListener(std::map<std::string, varListener> &listeners) {
+SeatListener::SeatListener(std::map<std::string, Listener> &listeners) {
   static struct wl_seat_listener seat_listener = {&SeatListener::seat_capabilities};
   listeners.emplace("seat", seat_listener);
 }

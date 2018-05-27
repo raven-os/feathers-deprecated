@@ -1,7 +1,7 @@
 #include "user-input/WindowHandler.hpp"
 #include "user-input/WindowListener.hpp"
 
-WindowListener::WindowListener(std::map<std::string, varListener> &listeners) {
+WindowListener::WindowListener(std::map<std::string, Listener> &listeners) {
   const struct wl_shell_surface_listener shell_surface_listener =
         {&WindowListener::shell_surface_ping,
          &WindowListener::shell_surface_configure,

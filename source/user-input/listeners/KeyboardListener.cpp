@@ -1,6 +1,6 @@
 #include "user-input/KeyboardListener.hpp"
 
-KeyboardListener::KeyboardListener(std::map<std::string, varListener> &listeners) {
+KeyboardListener::KeyboardListener(std::map<std::string, Listener> &listeners) {
   static struct wl_keyboard_listener keyboard_listener =
         {&KeyboardListener::keyboard_keymap,
          &KeyboardListener::keyboard_enter,

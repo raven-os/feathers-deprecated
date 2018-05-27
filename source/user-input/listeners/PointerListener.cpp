@@ -1,6 +1,6 @@
 #include "user-input/PointerListener.hpp"
 
-PointerListener::PointerListener(std::map<std::string, varListener> &listeners) {
+PointerListener::PointerListener(std::map<std::string, Listener> &listeners) {
   struct wl_pointer_listener pointer_listener =
         {&PointerListener::pointer_enter,
          &PointerListener::pointer_leave,

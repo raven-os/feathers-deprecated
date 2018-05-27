@@ -12,7 +12,7 @@
 #include "user-input/RegistryListener.hpp"
 #include "user-input/WindowListener.hpp"
 
-using varListener  = std::variant<struct wl_pointer_listener,
+using Listener  = std::variant<struct wl_pointer_listener,
              struct wl_keyboard_listener,
              struct wl_seat_listener,
              struct wl_registry_listener,
@@ -23,8 +23,8 @@ class Listeners {
   public:
     Listeners();
     ~Listeners();
-    varListener const &getListener(std::string key) const;
+    Listener const &getListener(std::string key) const;
 
   private:
-    std::map<std::string, varListener> listeners;
+    std::map<std::string, Listener> listeners;
 };
