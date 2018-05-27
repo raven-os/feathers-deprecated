@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+#AutoGenerate files
+*~
+#*#
+
+# Specific Files
+tutorials/
+build/
+lib/
+source/user-input/user-input
