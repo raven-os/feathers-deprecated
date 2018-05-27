@@ -14,6 +14,12 @@
 class Listeners;
 class WindowHandler;
 
+// typedef struct wl_pointer_listener pointerListener;
+// typedef struct wl_keyboard_listener keyboardListener;
+// typedef struct wl_seat_listener seatListener;
+// typedef struct wl_registry_listener registryListener;
+// typedef struct wl_shell_surface_listener windowListener;
+
 using Listener  = std::variant<struct wl_pointer_listener,
              struct wl_keyboard_listener,
              struct wl_seat_listener,
