@@ -15,16 +15,29 @@ namespace  display
     struct wl_display *wlDisplay;
     struct wl_compositor *wlCompositor;
     struct wl_surface *wlSurface;
-    magma::Surface surface;
+    magma::Surface<> surface;
   public:
     static std::vector<char const *> getRequiredExtensiosn()
     {
       return {"VK_KHR_surface", "VK_KHR_wayland_surface"};
     }
 
-    magma::Surface const &getSurface()
+    magma::Surface<claws::no_delete> getSurface()
     {
       return surface;
+    }
+
+    WaylandSurface(WaylandSurface const &) = delete;
+
+    WaylandSurface(WaylandSurface &&other)
+      : wlDisplay(other.wlDisplay)
+      , wlCompositor(other.wlCompositor)
+      , wlSurface(other.wlSurface)
+      , surface(std::move(other.surface))
+    {
+      other.wlDisplay = nullptr;
+      other.wlCompositor = nullptr;
+      other.wlSurface = nullptr;
     }
 
     WaylandSurface(magma::Instance const &instance)
@@ -55,32 +68,36 @@ namespace  display
 	  wl_registry_add_listener(wlRegistry, &registry_listener, reinterpret_cast<void *>(&result));
 	  wl_display_dispatch(wlDisplay);
 	  wl_display_roundtrip(wlDisplay);
-	  if (!result)
+	  if (!result) {
 	    throw std::runtime_error("Could not find compositor\n");
+	  }
 	  return result;
 	}())
       , wlSurface([&](){
 	  return wl_compositor_create_surface(wlCompositor);
 	}())
-      , surface(instance, [&](){
-	  VkWaylandSurfaceCreateInfoKHR waylnadSurfaceCreateInfo
-	  {
-	    VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-	      nullptr,
-	      0,
-	      wlDisplay,
-	      wlSurface
-	      };
-	  VkSurfaceKHR surface;
-	  vkCreateWaylandSurfaceKHR(instance.vkInstance, &waylnadSurfaceCreateInfo, nullptr, &surface);
-	  return surface;
-	}())
+      , surface(makeSurface(instance, [&](){
+	    VkWaylandSurfaceCreateInfoKHR waylnadSurfaceCreateInfo
+	    {
+	      VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+		nullptr,
+		0,
+		wlDisplay,
+		wlSurface
+		};
+	    VkSurfaceKHR surface;
+	    vkCreateWaylandSurfaceKHR(instance.vkInstance, &waylnadSurfaceCreateInfo, nullptr, &surface);
+	    return surface;
+	  }()))
     {
     }
 
     ~WaylandSurface()
     {
-      wl_display_disconnect(wlDisplay);
+      if (wlDisplay)
+	{
+	  wl_display_disconnect(wlDisplay);
+	}
     }
   };
 }
