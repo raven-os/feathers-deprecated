@@ -6,7 +6,6 @@
 int main()
 {
   display::Display<display::WaylandSurface> display;
-  magma::Semaphore<> sem;
 
   while (true)
     {
