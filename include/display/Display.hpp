@@ -23,7 +23,6 @@
 
 namespace display
 {
-  template<class SurfaceProvider>
   class Display
   {
     struct Renderer
@@ -426,14 +425,13 @@ namespace display
     };
 
     magma::Instance instance;
-    SurfaceProvider surfaceProvider;
     magma::Surface<> surface;
     Renderer renderer;
 
   public:
-    Display()
+    template<class SurfaceProvider>
+    Display(SurfaceProvider &surfaceProvider)
       : instance{SurfaceProvider::getRequiredExtensiosn()}
-      , surfaceProvider{}
       , surface(surfaceProvider.createSurface(instance))
       , renderer(instance, surface)
     {
@@ -447,7 +445,6 @@ namespace display
     void render()
     {
       renderer.render();
-      surfaceProvider.dispatch();
     }
   };
 }

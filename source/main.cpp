@@ -5,11 +5,13 @@
 
 int main()
 {
-  display::Display<display::WaylandSurface> display;
+  display::WaylandSurface waylandSurface;
+  display::Display display(waylandSurface);
 
   while (true)
     {
       display.render();
+      waylandSurface.dispatch();
       std::cout << "presenting image" << std::endl;
     }
 }
