@@ -21,9 +21,10 @@ int addListener(struct wl_pointer *wlPointer, Listener &listener) noexcept
     [](void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
       return reinterpret_cast<Listener *>(data)->pointer_button(pointer, serial, time, button, state);
     },
-    [](void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, uint32_t value) {
+    [](void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value) {
       return reinterpret_cast<Listener *>(data)->pointer_axis(pointer, time, axis, value);
-    }
+    },
+    nullptr, nullptr, nullptr, nullptr
   };
   return wl_pointer_add_listener(wlPointer, pointer_listener, reinterpret_cast<void *>(&listener));
 }
@@ -35,7 +36,7 @@ int addListener(struct wl_keyboard *wlKeyboard, Listener &listener) noexcept
   const wl_keyboard_listener *keyboard_listener = new wl_keyboard_listener
   {
     [](void *data, struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size) {
-      return reinterpret_cast<Listener *>(data)->keyboard_map(keyboard, format, fd, size);
+      return reinterpret_cast<Listener *>(data)->keyboard_keymap(keyboard, format, fd, size);
     },
     [](void *data, struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys) {
       return reinterpret_cast<Listener *>(data)->keyboard_enter(keyboard, serial, surface, keys);
@@ -48,7 +49,8 @@ int addListener(struct wl_keyboard *wlKeyboard, Listener &listener) noexcept
     },
     [](void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) {
       return reinterpret_cast<Listener *>(data)->keyboard_modifiers(keyboard, serial, mods_depressed, mods_latched, mods_locked, group);
-    }
+    },
+    nullptr
   };
   return wl_keyboard_add_listener(wlKeyboard, keyboard_listener, reinterpret_cast<void *>(&listener));
 }
@@ -61,6 +63,9 @@ int addListener(struct wl_seat *wlSeat, Listener &listener)
   {
     [](void *data, struct wl_seat *seat, uint32_t capabilities) {
       return reinterpret_cast<Listener *>(data)->seat_capabilities(seat, capabilities);
+    },
+    [](void *data, struct wl_seat *seat, const char *name) {
+      return reinterpret_cast<Listener *>(data)->seat_name(seat, name);
     }
   };
   return  wl_seat_add_listener(wlSeat, seat_listener, reinterpret_cast<void *>(&listener));
