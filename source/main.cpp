@@ -8,6 +8,7 @@ int main(int argc, char **argv)
 {
   if (argc == 1)
     {
+      // RUN ON TTY
       try
 	{
 	  ModeSetter modeSetter;
@@ -30,11 +31,14 @@ int main(int argc, char **argv)
       display::WaylandSurface waylandSurface;
       display::Display display(waylandSurface);
 
-      while (true)
+      while (waylandSurface.isRunning())
 	{
 	  display.render();
 	  waylandSurface.dispatch();
-	  std::cout << "presenting image" << std::endl;
+	  //  std::cout << "presenting image" << std::endl;
 	}
     }
+
+  std::cout << "Exit" << std::endl;
+  return 0;
 }
