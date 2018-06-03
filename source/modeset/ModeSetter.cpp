@@ -2,8 +2,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <iostream>
 
 #include "modeset/ModeSetter.hpp"
+#include "Exception.hpp"
 
 ModeSetter::ModeSetter()
 {
@@ -33,16 +35,17 @@ ModeSetter::~ModeSetter()
 
 void ModeSetter::initDRM()
 {
-  fd = open("/dev/dri/card0", O_RDWR|O_CLOEXEC);
+  // TODO find card1 with proper scan
+  fd = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
   if (fd < 0)
     {
-      // TODO throw exception
+      throw ModeSettingError("/dev/dri/card1: no such file or directory");
     }
 
   drmModeRes *res = drmModeGetResources(fd);
   if (!res)
     {
-      // TODO throw exception
+      throw ModeSettingError("Cannot get drm resource");
     }
 
   drmModeConnector *conn = nullptr;
@@ -56,7 +59,7 @@ void ModeSetter::initDRM()
     }
   if (!conn)
     {
-      // TODO throw exception
+      throw ModeSettingError("Connector not found");
     }
 
   modeInfo = conn->modes[0];
@@ -69,7 +72,7 @@ void ModeSetter::initDRM()
     }
   else
     {
-      // TODO throw exception
+      throw ModeSettingError("Encoder not found");
     }
 
   if (enc->crtc_id)
@@ -78,7 +81,7 @@ void ModeSetter::initDRM()
     }
   else
     {
-      // TODO throw exception
+      throw ModeSettingError("CRTC not found");
     }
 
   // clean up
@@ -125,7 +128,8 @@ void ModeSetter::swapBuffers()
   uint32_t stride = gbm_bo_get_stride(bo);
   uint32_t fb;
   drmModeAddFB(fd, modeInfo.hdisplay, modeInfo.vdisplay, 24, 32, stride, handle, &fb);
-  drmModeSetCrtc(fd, crtc->crtc_id, fb, 0, 0, &connectorId, 1, &modeInfo);
+  if (drmModeSetCrtc(fd, crtc->crtc_id, fb, 0, 0, &connectorId, 1, &modeInfo) != 0)
+    throw ModeSettingError("Cannot set CRTC");
 
   if (previousBo) {
     drmModeRmFB(fd, previousFb);
