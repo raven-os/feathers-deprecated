@@ -14,4 +14,5 @@ int main()
       waylandSurface.dispatch();
     //  std::cout << "presenting image" << std::endl;
     }
+    std::cout << "Exit" << std::endl;
 }

@@ -1,7 +1,7 @@
-class WindowListenerExample
-{
-public:
-};
+// class WindowListenerExample
+// {
+// public:
+// };
 
 //Pointer listener
 template<class Listener>
