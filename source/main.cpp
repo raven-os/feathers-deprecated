@@ -2,15 +2,15 @@
 #include "user-input/UserInput.hpp"
 #include "user-input/Listeners.hpp"
 #include "user-input/WindowHandler.hpp"
-#include "display/WaylandSurface.hpp"
-#include "display/Display.ipp"
+//#include "display/WaylandSurface.hpp"
+//#include "display/Display.ipp"
 
 int main (int ac, char **argv) {
-	if (!argv[1])
+  /*	if (!argv[1])
 	{
 		display::Display<display::WaylandSurface> display;
 	}
-	else if ((!strcmp(argv[1], "--sub-compositor") || !strcmp(argv[1], "-sc")) && !argv[2])
+	else if ((!strcmp(argv[1], "--sub-compositor") || !strcmp(argv[1], "-sc")) && !argv[2])*/
 	{
 	struct wl_registry *registry = wl_display_get_registry(UserInput::get().display);
 	wl_registry_add_listener(registry,
@@ -35,9 +35,9 @@ int main (int ac, char **argv) {
 	eglTerminate(UserInput::get().egl_display);
 	wl_display_disconnect(UserInput::get().display);
 	}
-	else
+	/*else
 	{
 		std::cerr << "Unknow parameter, Usage: " << argv[0] << " [--sub-compositor] [-sc]" << std::endl;
-	}
+		}*/
 	return 0;
 }
