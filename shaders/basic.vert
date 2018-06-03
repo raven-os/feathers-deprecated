@@ -6,7 +6,7 @@ layout(location = 1) in vec2 texCoord;
 layout(constant_id = 0) const float screenXSize = 1.0; // window x scaling
 layout(constant_id = 1) const float screenYSize = 1.0; // window y scaling
 
-layout(location = 0) out vec2 outTexCoord;
+layout(location = 0) out vec2 fragTexCoord;
 
 out gl_PerVertex
 {
@@ -15,8 +15,9 @@ out gl_PerVertex
 
 void main()
 {
-  const vec2 scale = vec2(screenXSize, screenYSize);
+  const vec2 sreenSize = vec2(screenXSize, screenYSize);
 
-  outTexCoord = texCoord;
-  gl_Position = vec4(pos / scale, 0.0, 1.0);
+  fragTexCoord = texCoord;
+  // gl_Position = vec4(pos / scale, 0.0, 1.0);
+  gl_Position = vec4(pos, 0.0, 1.0);
 }

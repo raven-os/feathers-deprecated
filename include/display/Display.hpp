@@ -18,6 +18,7 @@
 #include <magma/DescriptorSetLayout.hpp>
 #include <magma/Image.hpp>
 #include <magma/Sampler.hpp>
+#include <magma/DynamicBuffer.hpp>
 
 #include "display/SuperCorbeau.hpp"
 
@@ -38,7 +39,7 @@ namespace display
 	UserData(magma::Device<claws::no_delete> device, vk::PhysicalDevice, uint32_t selectedQueueFamily)
 	  : commandPool(device.createCommandPool({vk::CommandPoolCreateFlagBits::eResetCommandBuffer}, selectedQueueFamily))
 	  , descriptorSetLayout(device.createDescriptorSetLayout({vk::DescriptorSetLayoutBinding{0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr}}))
-	  , pipelineLayout(device.createPipelineLayout({}, {descriptorSetLayout}, {vk::PushConstantRange{vk::ShaderStageFlagBits::eVertex, 0, sizeof(float) * 4u}}))
+	  , pipelineLayout(device.createPipelineLayout({}, {descriptorSetLayout}, {}))
 	{
 	  {
 	    std::ifstream vertSource("spirv/basic.vert.spirv");
@@ -74,12 +75,14 @@ namespace display
 	    shaderStageCreateInfos{{{}, vk::ShaderStageFlagBits::eVertex, userData.vert, "main", &specialzationInfo},
 	      {{}, vk::ShaderStageFlagBits::eFragment, userData.frag, "main", nullptr}};
 
-	  vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{{}, vk::PrimitiveTopology::eTriangleFan, false};
-	   std::array<vk::VertexInputBindingDescription, 1u> vertexInputBindings{
-	     vk::VertexInputBindingDescription{0, 6 * sizeof(float), vk::VertexInputRate::eVertex}};
-	   std::array<vk::VertexInputAttributeDescription, 2u>
-	     vertexInputAttrib{vk::VertexInputAttributeDescription{0, vertexInputBindings[0].binding, vk::Format::eR32G32Sfloat, 0},
-	       vk::VertexInputAttributeDescription{1, vertexInputBindings[0].binding, vk::Format::eR32G32B32A32Sfloat, 2 * sizeof(float)}};
+	  vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{{}, vk::PrimitiveTopology::eTriangleStrip, false};
+	  std::array<vk::VertexInputBindingDescription, 2u> vertexInputBindings{
+	    vk::VertexInputBindingDescription{0, 2 * sizeof(float), vk::VertexInputRate::eVertex},
+	      vk::VertexInputBindingDescription{1, 2 * sizeof(float), vk::VertexInputRate::eVertex}
+	  };
+	  std::array<vk::VertexInputAttributeDescription, 2u>
+	    vertexInputAttrib{vk::VertexInputAttributeDescription{0, vertexInputBindings[0].binding, vk::Format::eR32G32Sfloat, 0},
+	      vk::VertexInputAttributeDescription{1, vertexInputBindings[1].binding, vk::Format::eR32G32Sfloat, 0}};
 
 	  auto vertexInputStateCreateInfo(magma::StructBuilder<vk::PipelineVertexInputStateCreateInfo, true>::make(vertexInputBindings,
 														   vertexInputAttrib));
@@ -101,7 +104,7 @@ namespace display
 	      false,                            // VkBool32                                       depthClampEnable
 		false,                            // VkBool32                                       rasterizerDiscardEnable
 		vk::PolygonMode::eFill,           // VkPolygonMode                                  polygonMode
-		vk::CullModeFlagBits::eBack,      // VkCullModeFlags                                cullMode
+		vk::CullModeFlagBits::eNone,      // VkCullModeFlags                                cullMode
 		vk::FrontFace::eCounterClockwise, // VkFrontFace                                    frontFace
 		false,                            // VkBool32                                       depthBiasEnable
 		0.0f,                             // float                                          depthBiasConstantFactor
@@ -181,7 +184,7 @@ namespace display
 
 	      return device.createRenderPass(renderPassCreateInfo);
 	    }())
-	  , pipeline(std::move(createPipeline(device, swapchain, userData)))
+	  , pipeline(createPipeline(device, swapchain, userData))
 	{
 	}
       };
@@ -216,6 +219,7 @@ namespace display
       magma::DeviceMemory<> backgroundImageMemory;
       magma::ImageView<> backgroundImageView;
       magma::Sampler<> sampler;
+      magma::DynamicBuffer stagingBuffer;
 
       struct Score
       {
@@ -269,26 +273,31 @@ namespace display
 	  }())
 	, descriptorPool(device.createDescriptorPool(1, {vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 1}}))
 	, descriptorSets(descriptorPool.allocateDescriptorSets({displaySystem.userData.descriptorSetLayout}))
-	, backgroundImage(device.createImage2D({}, vk::Format::eR8G8B8Unorm, {display::superCorbeau::width, display::superCorbeau::height}, vk::SampleCountFlagBits::e1,
-					       vk::ImageTiling::eLinear, vk::ImageUsageFlagBits::eSampled, vk::ImageLayout::ePreinitialized))
+	, backgroundImage(device.createImage2D({}, vk::Format::eR8G8B8Snorm, {display::superCorbeau::width, display::superCorbeau::height}, vk::SampleCountFlagBits::e1,
+					       vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::ImageLayout::eUndefined))
 	, backgroundImageMemory([this](){
 	    auto memRequirements(device.getImageMemoryRequirements(backgroundImage));
-	    auto result(device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits));
-	    
-	    device.bindImageMemory(backgroundImage, backgroundImageMemory, 0);
-	    return result;
+
+	    auto memory(device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits));
+	    device.bindImageMemory(backgroundImage, memory, 0);
+	    return memory;
 	  }())
 	, backgroundImageView(device.createImageView({},
 						     backgroundImage,
 						     vk::ImageViewType::e2D,
-						     vk::Format::eR8G8B8Unorm,
+						     vk::Format::eR8G8B8Snorm,
 						     vk::ComponentMapping{},
 						     vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor,
 									       0,
-									       VK_REMAINING_MIP_LEVELS,
+									       1,
 									       0,
-									       VK_REMAINING_ARRAY_LAYERS
-									       )))
+									       1)))
+	, stagingBuffer(device,
+			physicalDevice,
+			{},
+			vk::BufferUsageFlagBits::eTransferSrc,
+			vk::MemoryPropertyFlagBits::eHostVisible,
+			std::vector<uint32_t>{selectedResult.second.bestQueue})
 	, sampler(device.createSampler(vk::Filter::eNearest,
 				       vk::Filter::eNearest,
 				       vk::SamplerMipmapMode::eNearest,
@@ -301,35 +310,86 @@ namespace display
 				       false,
 				       vk::CompareOp::eAlways, // no effect
 				       0.0f,
-				       1.0f,
+				       0.0f,
 				       vk::BorderColor::eIntOpaqueBlack,
 				       false))
       {
-	device.bindBufferMemory(quadBuffer, quadBufferMemory, 0);
 	{
-	  auto deleter([&](auto data) {
-	      if (data)
-		device.unmapMemory(backgroundImageMemory);
-	    });
-	  std::unique_ptr<unsigned char[], decltype(deleter)> imageData(reinterpret_cast<unsigned char *>(device.mapMemory(backgroundImageMemory, 0, VK_WHOLE_SIZE)),
-									deleter);
+	  magma::DynamicBuffer::RangeId tmpBuffer(stagingBuffer.allocate(display::superCorbeau::width * display::superCorbeau::height * 3));
+	  auto memory(stagingBuffer.getMemory<unsigned char []>(tmpBuffer));
 	  auto src(display::superCorbeau::header_data);
 	  for (unsigned int i(0u); i < display::superCorbeau::width * display::superCorbeau::height; ++i)
 	    {
 	      std::array<unsigned char, 4> pixel;
 	      display::superCorbeau::headerPixel(src, pixel.data());
 	      for (unsigned int j(0u); j < 3u; ++j) {
-		imageData[3 * i + j] = pixel[j];
+		memory[3 * i + j] = pixel[j];
 	      }
 	    }
+	  auto commandBuffers(displaySystem.userData.commandPool.allocatePrimaryCommandBuffers(1));
+	  commandBuffers[0].begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	  vk::ImageSubresourceRange imageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
+ 
+	  commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, {}, {},
+						  {
+						    vk::ImageMemoryBarrier{
+						      {},
+							vk::AccessFlagBits::eTransferWrite,
+							  vk::ImageLayout::eUndefined,
+							  vk::ImageLayout::eTransferDstOptimal,
+							  VK_QUEUE_FAMILY_IGNORED,
+							  VK_QUEUE_FAMILY_IGNORED,
+							  backgroundImage,
+							  imageSubresourceRange
+							  }
+						  });
+	  commandBuffers[0].raw().copyBufferToImage(stagingBuffer.getBuffer(tmpBuffer),
+						    backgroundImage,
+						    vk::ImageLayout::eTransferDstOptimal,
+						    {
+						      vk::BufferImageCopy{
+							tmpBuffer.second,
+							  0,
+							  0,
+							  vk::ImageSubresourceLayers{
+							  vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+							  vk::Offset3D{0, 0, 0},
+							    vk::Extent3D{display::superCorbeau::width, display::superCorbeau::height, 1}
+						      }
+						    });
+	  ;
+	  commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {},
+						  {
+						    vk::ImageMemoryBarrier{
+						      vk::AccessFlagBits::eTransferWrite,
+							vk::AccessFlagBits::eShaderRead,
+							vk::ImageLayout::eTransferDstOptimal,
+							vk::ImageLayout::eShaderReadOnlyOptimal,
+							VK_QUEUE_FAMILY_IGNORED,
+							VK_QUEUE_FAMILY_IGNORED,
+							backgroundImage,
+							imageSubresourceRange
+							}
+						  });
+
+	  commandBuffers[0].end();
+	  magma::Fence<> fence(device.createFence({}));
+	  queue.submit(magma::StructBuilder<vk::SubmitInfo>::make(magma::EmptyList(),
+								  nullptr,
+								  magma::asListRef(commandBuffers[0].raw()),
+								  magma::EmptyList()),
+		       fence);
+	  device.waitForFences({fence}, true, 1000000000);
 	}
+	
 	vk::DescriptorImageInfo const imageInfo
 	{
 	  sampler,
 	    backgroundImageView,
 	    vk::ImageLayout::eColorAttachmentOptimal
-	};
+	    };
 	device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 0, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo, nullptr, nullptr}});
+	device.bindBufferMemory(quadBuffer, quadBufferMemory, 0);
 	{
 	  auto deleter([&](auto data) {
 	      if (data)
@@ -339,12 +399,12 @@ namespace display
 							       deleter);
 	  quadData[0] = 0.0f;
 	  quadData[1] = 0.0f;
-	  quadData[2] = 1.0f;
+	  quadData[2] = 10000.0f;
 	  quadData[3] = 0.0f;
 	  quadData[4] = 0.0f;
-	  quadData[5] = 1.0f;
-	  quadData[6] = 1.0f;
-	  quadData[7] = 1.0f;
+	  quadData[5] = 10000.0f;
+	  quadData[6] = 10000.0f;
+	  quadData[7] = 10000.0f;
 	}
       }
 
@@ -396,13 +456,13 @@ namespace display
 	device.waitForFences({frame.fence}, true, 1000000000);
 	device.resetFences({frame.fence});
 	magma::PrimaryCommandBuffer cmdBuffer(displaySystem.swapchainUserData.commandBuffers[index]);
-	uint32_t vertexCount(4u);
+	uint32_t vertexCount(8u);
 
 	cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 	cmdBuffer.bindVertexBuffers(0, {quadBuffer}, {0ul});
 	cmdBuffer.bindVertexBuffers(1, {quadBuffer}, {0ul});
 	cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, displaySystem.userData.pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
-	vk::ClearValue clearValue = {vk::ClearColorValue(std::array<float, 4>{0.01f, 0.02f, 0.1f, 1.0f})};
+	vk::ClearValue clearValue = {vk::ClearColorValue(std::array<float, 4>{0.11f, 0.02f, 0.0f, 0.0f})};
 	{
 	  auto lock(cmdBuffer.beginRenderPass(displaySystem.swapchainUserData.renderPass, frame.framebuffer,
 					      {{0, 0}, displaySystem.getSwapchain().getExtent()}, {clearValue}, vk::SubpassContents::eInline));
