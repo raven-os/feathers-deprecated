@@ -60,12 +60,12 @@ namespace display
       }
     else if (!strcmp(interface,"wl_shell"))
       {
-	      wlShell = static_cast<wl_shell *>(wl_registry_bind(registry, name, &wl_shell_interface, 1));
+	wlShell = static_cast<wl_shell *>(wl_registry_bind(registry, name, &wl_shell_interface, 1));
       }
     else if (!strcmp(interface,"wl_seat"))
       {
-    	   wlSeat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
-         addListener(wlSeat, *seat_listener);
+	wlSeat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
+	addListener(wlSeat, *seat_listener);
       }
   }
 
