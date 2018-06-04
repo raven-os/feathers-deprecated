@@ -39,9 +39,6 @@ public:
   void swapBuffers();
 
 private:
-  void initDRM();
-  void initGBM();
-
   Drm drm;
   Gbm gbm;
 
