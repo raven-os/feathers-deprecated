@@ -6,9 +6,9 @@
 class Exception : public std::exception {
 public:
   Exception(std::string const& msg) : msg(msg) {}
-  virtual ~Exception() throw() {}
+  virtual ~Exception() noexcept {}
 
-  char const *what() const throw() { return msg.c_str(); }
+  char const *what() const noexcept { return msg.c_str(); }
 
 private:
   std::string msg;

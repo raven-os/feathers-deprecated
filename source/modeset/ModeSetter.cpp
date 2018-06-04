@@ -7,33 +7,7 @@
 #include "modeset/ModeSetter.hpp"
 #include "Exception.hpp"
 
-ModeSetter::ModeSetter()
-{
-  initDRM();
-  initGBM();
-}
-
-ModeSetter::~ModeSetter()
-{
-  // set the previous crtc
-  drmModeSetCrtc(fd, crtc->crtc_id, crtc->buffer_id, crtc->x, crtc->y, &connectorId, 1, &crtc->mode);
-  drmModeFreeCrtc(crtc);
-
-  if (previousBo)
-    {
-      drmModeRmFB(fd, previousFb);
-      gbm_surface_release_buffer(gbmSurface, previousBo);
-    }
-
-  eglDestroySurface(eglDisplay, eglSurface);
-  eglDestroyContext(eglDisplay, eglContext);
-  eglTerminate(eglDisplay);
-  gbm_device_destroy(gbmDevice);
-
-  close(fd);
-}
-
-void ModeSetter::initDRM()
+ModeSetter::Drm::Drm()
 {
   // TODO find card1 with proper scan
   fd = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
@@ -90,7 +64,7 @@ void ModeSetter::initDRM()
   drmModeFreeResources(res);
 }
 
-void ModeSetter::initGBM()
+ModeSetter::Gbm::Gbm(int fd, uint16_t hDisplay, uint16_t vDisplay)
 {
   gbmDevice = gbm_create_device(fd);
   eglDisplay = eglGetDisplay(gbmDevice);
@@ -110,30 +84,72 @@ void ModeSetter::initGBM()
 
   // create the GBM and EGL surface
   gbmSurface = gbm_surface_create(gbmDevice,
-				  modeInfo.hdisplay,
-				  modeInfo.vdisplay,
+				  hDisplay,
+				  vDisplay,
 				  GBM_BO_FORMAT_XRGB8888,
 				  GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
   eglSurface = eglCreateWindowSurface(eglDisplay, config, gbmSurface, nullptr);
   eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+}
 
-  previousBo = nullptr;
+ModeSetter::ModeSetter()
+  : drm(),
+    gbm(drm.fd, drm.modeInfo.hdisplay, drm.modeInfo.vdisplay),
+    previousBo(nullptr),
+    previousFb(0)
+{
+}
+
+ModeSetter::~ModeSetter()
+{
+  // set the previous crtc
+  drmModeSetCrtc(drm.fd,
+		 drm.crtc->crtc_id,
+		 drm.crtc->buffer_id,
+		 drm.crtc->x,
+		 drm.crtc->y,
+		 &drm.connectorId, 1, &drm.crtc->mode);
+  drmModeFreeCrtc(drm.crtc);
+
+  if (previousBo)
+    {
+      drmModeRmFB(drm.fd, previousFb);
+      gbm_surface_release_buffer(gbm.gbmSurface, previousBo);
+    }
+
+  eglDestroySurface(gbm.eglDisplay, gbm.eglSurface);
+  eglDestroyContext(gbm.eglDisplay, gbm.eglContext);
+  eglTerminate(gbm.eglDisplay);
+  gbm_device_destroy(gbm.gbmDevice);
+
+  close(drm.fd);
 }
 
 void ModeSetter::swapBuffers()
 {
-  eglSwapBuffers(eglDisplay, eglSurface);
-  struct gbm_bo *bo = gbm_surface_lock_front_buffer(gbmSurface);
+  eglSwapBuffers(gbm.eglDisplay, gbm.eglSurface);
+  struct gbm_bo *bo = gbm_surface_lock_front_buffer(gbm.gbmSurface);
   uint32_t handle = gbm_bo_get_handle(bo).u32;
   uint32_t stride = gbm_bo_get_stride(bo);
   uint32_t fb;
-  drmModeAddFB(fd, modeInfo.hdisplay, modeInfo.vdisplay, 24, 32, stride, handle, &fb);
-  if (drmModeSetCrtc(fd, crtc->crtc_id, fb, 0, 0, &connectorId, 1, &modeInfo) != 0)
-    throw ModeSettingError("Cannot set CRTC");
+  drmModeAddFB(drm.fd,
+	       drm.modeInfo.hdisplay,
+	       drm.modeInfo.vdisplay,
+	       24, 32, stride, handle, &fb);
+  int ret = drmModeSetCrtc(drm.fd,
+			   drm.crtc->crtc_id,
+			   fb,
+			   0,
+			   0,
+			   &drm.connectorId, 1, &drm.modeInfo);
+  if (ret != 0)
+    {
+      throw ModeSettingError("Cannot set CRTC");
+    }
 
   if (previousBo) {
-    drmModeRmFB(fd, previousFb);
-    gbm_surface_release_buffer(gbmSurface, previousBo);
+    drmModeRmFB(drm.fd, previousFb);
+    gbm_surface_release_buffer(gbm.gbmSurface, previousBo);
   }
 
   previousBo = bo;
