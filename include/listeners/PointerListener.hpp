@@ -1,6 +1,6 @@
 #pragma once
 
-#include <wayland-client.hpp>
+#include <wayland-client.h>
 #include <iostream>
 
 struct PointerListener
