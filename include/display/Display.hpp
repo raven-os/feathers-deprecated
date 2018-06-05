@@ -87,10 +87,10 @@ namespace display
 	  auto vertexInputStateCreateInfo(magma::StructBuilder<vk::PipelineVertexInputStateCreateInfo, true>::make(vertexInputBindings,
 														   vertexInputAttrib));
 
-	  vk::Viewport viewport(0.0f,
-				0.0f, // pos
-				static_cast<float>(swapchain.getExtent().width),
-				static_cast<float>(swapchain.getExtent().height), // size
+	  vk::Viewport viewport(-static_cast<float>(swapchain.getExtent().width),
+				-static_cast<float>(swapchain.getExtent().height), // pos
+				static_cast<float>(swapchain.getExtent().width) * 2.0f,
+				static_cast<float>(swapchain.getExtent().height) * 2.0f, // size
 				0.0f,
 				1.0); // depth range
 
@@ -218,8 +218,8 @@ namespace display
       magma::Image<> backgroundImage;
       magma::DeviceMemory<> backgroundImageMemory;
       magma::ImageView<> backgroundImageView;
-      magma::Sampler<> sampler;
       magma::DynamicBuffer stagingBuffer;
+      magma::Sampler<> sampler;
 
       struct Score
       {
@@ -265,7 +265,7 @@ namespace display
 	, renderDone(device.createSemaphore())
 	, queue(device.getQueue(selectedResult.second.bestQueue, 0u))
 	, displaySystem(physicalDevice, surface, device, queue, selectedResult.second.bestQueue)
-	, quadBuffer(device.createBuffer({}, 4 * sizeof(float), vk::BufferUsageFlagBits::eVertexBuffer, {selectedResult.second.bestQueue}))
+	, quadBuffer(device.createBuffer({}, 8 * sizeof(float), vk::BufferUsageFlagBits::eVertexBuffer, {selectedResult.second.bestQueue}))
 	, quadBufferMemory([this](){
 	    auto memRequirements(device.getBufferMemoryRequirements(quadBuffer));
 
@@ -273,7 +273,7 @@ namespace display
 	  }())
 	, descriptorPool(device.createDescriptorPool(1, {vk::DescriptorPoolSize{vk::DescriptorType::eCombinedImageSampler, 1}}))
 	, descriptorSets(descriptorPool.allocateDescriptorSets({displaySystem.userData.descriptorSetLayout}))
-	, backgroundImage(device.createImage2D({}, vk::Format::eR8G8B8Snorm, {display::superCorbeau::width, display::superCorbeau::height}, vk::SampleCountFlagBits::e1,
+	, backgroundImage(device.createImage2D({}, vk::Format::eR8G8B8A8Unorm, {display::superCorbeau::width, display::superCorbeau::height}, vk::SampleCountFlagBits::e1,
 					       vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::ImageLayout::eUndefined))
 	, backgroundImageMemory([this](){
 	    auto memRequirements(device.getImageMemoryRequirements(backgroundImage));
@@ -285,7 +285,7 @@ namespace display
 	, backgroundImageView(device.createImageView({},
 						     backgroundImage,
 						     vk::ImageViewType::e2D,
-						     vk::Format::eR8G8B8Snorm,
+						     vk::Format::eR8G8B8A8Unorm,
 						     vk::ComponentMapping{},
 						     vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor,
 									       0,
@@ -311,21 +311,15 @@ namespace display
 				       vk::CompareOp::eAlways, // no effect
 				       0.0f,
 				       0.0f,
-				       vk::BorderColor::eIntOpaqueBlack,
+				       vk::BorderColor::eIntOpaqueWhite,
 				       false))
       {
 	{
-	  magma::DynamicBuffer::RangeId tmpBuffer(stagingBuffer.allocate(display::superCorbeau::width * display::superCorbeau::height * 3));
+	  magma::DynamicBuffer::RangeId tmpBuffer(stagingBuffer.allocate(display::superCorbeau::width * display::superCorbeau::height * 4));
 	  auto memory(stagingBuffer.getMemory<unsigned char []>(tmpBuffer));
 	  auto src(display::superCorbeau::header_data);
 	  for (unsigned int i(0u); i < display::superCorbeau::width * display::superCorbeau::height; ++i)
-	    {
-	      std::array<unsigned char, 4> pixel;
-	      display::superCorbeau::headerPixel(src, pixel.data());
-	      for (unsigned int j(0u); j < 3u; ++j) {
-		memory[3 * i + j] = pixel[j];
-	      }
-	    }
+	    display::superCorbeau::headerPixel(src, &memory[i * 4]);
 	  auto commandBuffers(displaySystem.userData.commandPool.allocatePrimaryCommandBuffers(1));
 	  commandBuffers[0].begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 	  vk::ImageSubresourceRange imageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
@@ -349,10 +343,8 @@ namespace display
 						    {
 						      vk::BufferImageCopy{
 							tmpBuffer.second,
-							  0,
-							  0,
-							  vk::ImageSubresourceLayers{
-							  vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+							  0, 0,
+							  vk::ImageSubresourceLayers{vk::ImageAspectFlagBits::eColor, 0, 0, 1},
 							  vk::Offset3D{0, 0, 0},
 							    vk::Extent3D{display::superCorbeau::width, display::superCorbeau::height, 1}
 						      }
@@ -386,25 +378,26 @@ namespace display
 	{
 	  sampler,
 	    backgroundImageView,
-	    vk::ImageLayout::eColorAttachmentOptimal
+	    vk::ImageLayout::eShaderReadOnlyOptimal
 	    };
 	device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 0, 0, 1, vk::DescriptorType::eCombinedImageSampler, &imageInfo, nullptr, nullptr}});
 	device.bindBufferMemory(quadBuffer, quadBufferMemory, 0);
 	{
-	  auto deleter([&](auto data) {
-	      if (data)
-		device.unmapMemory(quadBufferMemory);
-	    });
+	  auto deleter([&](auto data)
+		       {
+			 if (data)
+			   device.unmapMemory(quadBufferMemory);
+		       });
 	  std::unique_ptr<float[], decltype(deleter)> quadData(reinterpret_cast<float *>(device.mapMemory(quadBufferMemory, 0, VK_WHOLE_SIZE)),
 							       deleter);
 	  quadData[0] = 0.0f;
 	  quadData[1] = 0.0f;
-	  quadData[2] = 10000.0f;
+	  quadData[2] = 100.0f;
 	  quadData[3] = 0.0f;
 	  quadData[4] = 0.0f;
-	  quadData[5] = 10000.0f;
-	  quadData[6] = 10000.0f;
-	  quadData[7] = 10000.0f;
+	  quadData[5] = 100.0f;
+	  quadData[6] = 100.0f;
+	  quadData[7] = 100.0f;
 	}
       }
 
@@ -456,13 +449,13 @@ namespace display
 	device.waitForFences({frame.fence}, true, 1000000000);
 	device.resetFences({frame.fence});
 	magma::PrimaryCommandBuffer cmdBuffer(displaySystem.swapchainUserData.commandBuffers[index]);
-	uint32_t vertexCount(8u);
+	uint32_t const vertexCount(4u);
 
 	cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 	cmdBuffer.bindVertexBuffers(0, {quadBuffer}, {0ul});
 	cmdBuffer.bindVertexBuffers(1, {quadBuffer}, {0ul});
 	cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, displaySystem.userData.pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
-	vk::ClearValue clearValue = {vk::ClearColorValue(std::array<float, 4>{0.11f, 0.02f, 0.0f, 0.0f})};
+	vk::ClearValue clearValue = {vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f})};
 	{
 	  auto lock(cmdBuffer.beginRenderPass(displaySystem.swapchainUserData.renderPass, frame.framebuffer,
 					      {{0, 0}, displaySystem.getSwapchain().getExtent()}, {clearValue}, vk::SubpassContents::eInline));

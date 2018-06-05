@@ -15,9 +15,8 @@ out gl_PerVertex
 
 void main()
 {
-  const vec2 sreenSize = vec2(screenXSize, screenYSize);
+  const vec2 screenSize = vec2(screenXSize, screenYSize);
 
-  fragTexCoord = texCoord;
-  // gl_Position = vec4(pos / scale, 0.0, 1.0);
-  gl_Position = vec4(pos, 0.0, 1.0);
+  fragTexCoord = texCoord / screenSize;
+  gl_Position = vec4(pos / screenSize, 0.0, 1.0);
 }
