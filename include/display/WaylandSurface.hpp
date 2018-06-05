@@ -8,7 +8,7 @@
 #include <wayland-client.h>
 #include <vector>
 
-#include "WaylandAdapters.hpp"
+#include "listeners/SeatListener.hpp"
 
 namespace  display
 {
@@ -21,6 +21,9 @@ namespace  display
     struct wl_shell *wlShell{nullptr};
     struct wl_shell_surface *wlShellSurface{nullptr};
     struct wl_seat *wlSeat{nullptr};
+
+    SeatListener *seat_listener;
+
   public:
     WaylandSurface(WaylandSurface const &) = delete;
 
@@ -60,5 +63,6 @@ namespace  display
     void registry_remove_object (struct wl_registry *registry, uint32_t name);
 
     void dispatch();
+    bool isRunning() const;
   };
 }

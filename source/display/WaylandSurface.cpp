@@ -12,8 +12,9 @@ namespace display
     if (int err = addListener(wlRegistry, *this))
       {
 	std::cerr << "error: " << err << std::endl;
-	throw std::runtime_error("Recieved error");
+	throw std::runtime_error("Received error");
       }
+    seat_listener = new SeatListener();
     wl_display_roundtrip(wlDisplay);
     if (!wlCompositor) {
       throw std::runtime_error("Could not find compositor");
@@ -51,11 +52,11 @@ namespace display
   {
     if (!strcmp(interface,"wl_compositor"))
       {
-	wlCompositor = static_cast<wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
-	wlSurface = wl_compositor_create_surface(wlCompositor);
-	if (!wlSurface) {
-	  throw std::runtime_error("Could not create surface");
-	}
+      	wlCompositor = static_cast<wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
+      	wlSurface = wl_compositor_create_surface(wlCompositor);
+      	if (!wlSurface) {
+      	  throw std::runtime_error("Could not create surface");
+      	}
       }
     else if (!strcmp(interface,"wl_shell"))
       {
@@ -64,11 +65,7 @@ namespace display
     else if (!strcmp(interface,"wl_seat"))
       {
 	wlSeat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
-	// TODO: convert to new style
-	// wl_seat_add_listener(UserInput::get().seat,
-	// 		     &std::get<struct wl_seat_listener>(
-	// 							UserInput::get().listeners->getListener("seat")),
-	// 		     NULL);
+	addListener(wlSeat, *seat_listener);
       }
   }
 
@@ -77,6 +74,11 @@ namespace display
 
   void WaylandSurface::dispatch() {
     wl_display_dispatch_pending(wlDisplay);
+  }
+
+  bool WaylandSurface::isRunning() const
+  {
+    return seat_listener->getRunning();
   }
 
 }
