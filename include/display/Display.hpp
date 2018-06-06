@@ -38,7 +38,9 @@ namespace display
 
 	UserData(magma::Device<claws::no_delete> device, vk::PhysicalDevice, uint32_t selectedQueueFamily)
 	  : commandPool(device.createCommandPool({vk::CommandPoolCreateFlagBits::eResetCommandBuffer}, selectedQueueFamily))
-	  , descriptorSetLayout(device.createDescriptorSetLayout({vk::DescriptorSetLayoutBinding{0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr}}))
+	  , descriptorSetLayout(device.createDescriptorSetLayout({
+		vk::DescriptorSetLayoutBinding{0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr
+		    }}))
 	  , pipelineLayout(device.createPipelineLayout({}, {descriptorSetLayout}, {}))
 	{
 	  {
@@ -60,26 +62,39 @@ namespace display
 	magma::RenderPass<> renderPass;
 	magma::Pipeline<> pipeline;
 
+	// This functions pipeline creation
+	// the reason I refactored this out is that it's pretty long and verbose
 	magma::Pipeline<> createPipeline(magma::Device<claws::no_delete> device, magma::Swapchain<claws::no_delete> swapchain, UserData const &userData)
 	{
 	  std::cout << "creating pipeline for swapchain with extent " << swapchain.getExtent().width << ", " << swapchain.getExtent().height << std::endl;
+	  /// --- Specialisation info --- ///
+	  // The width and height are specialized rather than being push constants, because a compositor shoudn't change size often (If ever).
+	  // Both entries have the size of a float
+	  // The second entry is offset by one float
 	  std::array<vk::SpecializationMapEntry, 2u> mapEntries{
 	    vk::SpecializationMapEntry{0, 0, sizeof(float)},
 	      vk::SpecializationMapEntry{1, sizeof(float), sizeof(float)}
 	  };
+	  // These are the actual specialisation values
 	  std::array<float, 2u> dimensions{static_cast<float>(swapchain.getExtent().width), static_cast<float>(swapchain.getExtent().height)};
 
 	  auto specialzationInfo(magma::StructBuilder<vk::SpecializationInfo>::make(mapEntries, sizeof(float) * 2, dimensions.data()));
+	  /// --- Specialisation info END --- ///
 
+	  // We have two shaders, and both shader's entrypoints are "main".
+	  // Only the vertex shader is specialized (see above setup)
 	  std::vector<vk::PipelineShaderStageCreateInfo>
 	    shaderStageCreateInfos{{{}, vk::ShaderStageFlagBits::eVertex, userData.vert, "main", &specialzationInfo},
 	      {{}, vk::ShaderStageFlagBits::eFragment, userData.frag, "main", nullptr}};
 
+	  // We are rendering triangle strips, and primitives shouldn't restart.
 	  vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{{}, vk::PrimitiveTopology::eTriangleStrip, false};
+	  // We have tzo seperate wertex buffers: one for position and one for color
 	  std::array<vk::VertexInputBindingDescription, 2u> vertexInputBindings{
 	    vk::VertexInputBindingDescription{0, 2 * sizeof(float), vk::VertexInputRate::eVertex},
 	      vk::VertexInputBindingDescription{1, 2 * sizeof(float), vk::VertexInputRate::eVertex}
 	  };
+	  // Both vertex buffers contains `vec2`s of floats, which is the format `vk::Format::eR32G32Sfloat`
 	  std::array<vk::VertexInputAttributeDescription, 2u>
 	    vertexInputAttrib{vk::VertexInputAttributeDescription{0, vertexInputBindings[0].binding, vk::Format::eR32G32Sfloat, 0},
 	      vk::VertexInputAttributeDescription{1, vertexInputBindings[1].binding, vk::Format::eR32G32Sfloat, 0}};
@@ -87,6 +102,8 @@ namespace display
 	  auto vertexInputStateCreateInfo(magma::StructBuilder<vk::PipelineVertexInputStateCreateInfo, true>::make(vertexInputBindings,
 														   vertexInputAttrib));
 
+	  // The viewport is st up so that the top left corner is (0, 0) and the bottom right (width, height)
+	  // We don't really care about depth
 	  vk::Viewport viewport(-static_cast<float>(swapchain.getExtent().width),
 				-static_cast<float>(swapchain.getExtent().height), // pos
 				static_cast<float>(swapchain.getExtent().width) * 2.0f,
@@ -94,11 +111,13 @@ namespace display
 				0.0f,
 				1.0); // depth range
 
+	  // Scissors cover all that is within the compositor
 	  vk::Rect2D scissor({0, 0}, swapchain.getExtent());
 
 	  auto viewportStateCreateInfo(magma::StructBuilder<vk::PipelineViewportStateCreateInfo, true>::make(magma::asListRef(viewport),
 													     magma::asListRef(scissor)));
 
+	  // Everything is turned off
 	  vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{
 	    {},
 	      false,                            // VkBool32                                       depthClampEnable
@@ -113,6 +132,8 @@ namespace display
 		1.0f                              // float                                          lineWidth
 		};
 
+	  // Everything is turned off
+	  // We use only one smape per pixel
 	  vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{
 	    {},
 	      vk::SampleCountFlagBits::e1, // VkSampleCountFlagBits                          rasterizationSamples
@@ -123,6 +144,7 @@ namespace display
 		false                        // VkBool32                                       alphaToOneEnable
 		};
 
+	  // No blending
 	  vk::PipelineColorBlendAttachmentState
 	    colorBlendAttachmentState{false,                  // VkBool32                                       blendEnable
 	      vk::BlendFactor::eOne,  // VkBlendFactor                                  srcColorBlendFactor
@@ -162,6 +184,8 @@ namespace display
 	  , renderPass([&](){
 	      magma::RenderPassCreateInfo renderPassCreateInfo{{}};
 
+	      // We have a simple renderpass writting to an image.
+	      // The attached framebuffer will be cleared
 	      renderPassCreateInfo.attachements.push_back({{},
 		    swapchain.getFormat(),
 		      vk::SampleCountFlagBits::e1,
@@ -254,8 +278,8 @@ namespace display
       Renderer(std::pair<vk::PhysicalDevice, Score> const &selectedResult, magma::Surface<claws::no_delete> surface)
 	: physicalDevice(selectedResult.first)
 	, device([this, &selectedResult, surface](){
-	    float priority[]{ 1.0 };
-	    vk::DeviceQueueCreateInfo deviceQueueCreateInfo{{}, selectedResult.second.bestQueue, 1, priority};
+	    float priority{1.0f};
+	    vk::DeviceQueueCreateInfo deviceQueueCreateInfo{{}, selectedResult.second.bestQueue, 1, &priority};
 
 	    return magma::Device<>(physicalDevice,
 				   std::vector<vk::DeviceQueueCreateInfo>({deviceQueueCreateInfo}),
@@ -444,36 +468,44 @@ namespace display
 
       void render()
       {
+	// get next image data, and image to present
 	auto [index, frame] = displaySystem.getImage(imageAvailable);
 
+	// wait for rendering fence
 	device.waitForFences({frame.fence}, true, 1000000000);
+	// reset fence
 	device.resetFences({frame.fence});
 	magma::PrimaryCommandBuffer cmdBuffer(displaySystem.swapchainUserData.commandBuffers[index]);
 	uint32_t const vertexCount(4u);
 
+	// being command recording
 	cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+	// we bind are quad buffer to both bindings
 	cmdBuffer.bindVertexBuffers(0, {quadBuffer}, {0ul});
 	cmdBuffer.bindVertexBuffers(1, {quadBuffer}, {0ul});
+	// we bind update our descriptor so that it points to our image
 	cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, displaySystem.userData.pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
-	vk::ClearValue clearValue = {vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f})};
+	vk::ClearValue clearValue = {vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f})}; // a nice recognisable green for debug
 	{
+	  // start the renderpass
 	  auto lock(cmdBuffer.beginRenderPass(displaySystem.swapchainUserData.renderPass, frame.framebuffer,
 					      {{0, 0}, displaySystem.getSwapchain().getExtent()}, {clearValue}, vk::SubpassContents::eInline));
-	  
+
+	  // us our pipeline
 	  lock.bindGraphicsPipeline(displaySystem.swapchainUserData.pipeline);
+	  // draw our quad
 	  lock.draw(vertexCount, 1, 0, 0);
 	}
 	cmdBuffer.end();
 
 	vk::PipelineStageFlags waitDestStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-	queue.submit(magma::StructBuilder<vk::SubmitInfo>::make(asListRef(imageAvailable),
+	queue.submit(magma::StructBuilder<vk::SubmitInfo>::make(asListRef(imageAvailable), // wait fo image to be available
 								&waitDestStageMask,
 								magma::asListRef(cmdBuffer.raw()),
-								magma::asListRef(renderDone)),
-		     frame.fence);
-	device.waitIdle();
+								magma::asListRef(renderDone)), // signal renderdone when done
+		     frame.fence); // signal the fence
 	std::cout << "about to present for index " << index << std::endl;
-	displaySystem.presentImage(renderDone, index);
+	displaySystem.presentImage(renderDone, index); // present our image
       }
     };
 
@@ -484,7 +516,7 @@ namespace display
   public:
     template<class SurfaceProvider>
     Display(SurfaceProvider &surfaceProvider)
-      : instance{SurfaceProvider::getRequiredExtensiosn()}
+      : instance{SurfaceProvider::getRequiredExtensions()}
       , surface(surfaceProvider.createSurface(instance))
       , renderer(instance, surface)
     {

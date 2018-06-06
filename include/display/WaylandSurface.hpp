@@ -31,7 +31,7 @@ namespace  display
 
     WaylandSurface();
 
-    static std::vector<char const *> getRequiredExtensiosn()
+    static std::vector<char const *> getRequiredExtensions()
     {
       return {"VK_KHR_surface", "VK_KHR_wayland_surface"};
     }
