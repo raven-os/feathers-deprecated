@@ -22,7 +22,7 @@ namespace  display
     struct wl_shell_surface *wlShellSurface{nullptr};
     struct wl_seat *wlSeat{nullptr};
 
-    SeatListener *seat_listener;
+    SeatListener *seatListener;
 
   public:
     WaylandSurface(WaylandSurface const &) = delete;
@@ -55,12 +55,12 @@ namespace  display
 
     ~WaylandSurface() = default;
 
-    void shell_surface_ping(struct wl_shell_surface *shell_surface, uint32_t serial);
-    void shell_surface_configure(struct wl_shell_surface *shell_surface, uint32_t edges, int32_t width, int32_t height);
-    void shell_surface_popup_done (struct wl_shell_surface *shell_surface);
+    void shellSurfacePing(struct wl_shell_surface *shellSurface, uint32_t serial);
+    void shellSurfaceConfigure(struct wl_shell_surface *shellSurface, uint32_t edges, int32_t width, int32_t height);
+    void shellSurfacePopupDone (struct wl_shell_surface *shellSurface);
 
-    void registry_add_object(struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
-    void registry_remove_object (struct wl_registry *registry, uint32_t name);
+    void registryAddObject(struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
+    void registryRemoveObject (struct wl_registry *registry, uint32_t name);
 
     void dispatch();
     bool isRunning() const;

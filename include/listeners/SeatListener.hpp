@@ -7,15 +7,15 @@
 
 class SeatListener {
 
-  KeyboardListener *keyboard_listener;
-  PointerListener *pointer_listener;
+  KeyboardListener *keyboardListener;
+  PointerListener *pointerListener;
 
   public:
     SeatListener();
     ~SeatListener() = default;
 
-    void seat_capabilities(struct wl_seat *seat, uint32_t capabilities);
-    void seat_name(struct wl_seat *seat, const char *name);
+    void seatCapabilities(struct wl_seat *seat, uint32_t capabilities);
+    void seatName(struct wl_seat *seat, const char *name);
 
     bool getRunning() const;
 };

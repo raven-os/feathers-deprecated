@@ -1,36 +1,42 @@
 #include "listeners/KeyboardListener.hpp"
 
 KeyboardListener::KeyboardListener()
-  : xkb_context(xkb_context_new (XKB_CONTEXT_NO_FLAGS)) {
+  : xkbContext(xkb_context_new (XKB_CONTEXT_NO_FLAGS))
+{
 
 }
 
-void KeyboardListener::keyboard_keymap(struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size)
+void KeyboardListener::keyboardKeymap(struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size)
 {
-  char *keymap_string = static_cast<char *>(mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0));
+  char *keymapString = static_cast<char *>(mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0));
 
   xkb_keymap_unref(keymap);
-  keymap = xkb_keymap_new_from_string(xkb_context, keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
-  munmap (keymap_string, size);
+  keymap = xkb_keymap_new_from_string(xkbContext, keymapString, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+  munmap (keymapString, size);
   close(fd);
-  xkb_state_unref(xkb_state);
-  xkb_state = xkb_state_new(keymap);
+  xkb_state_unref(xkbState);
+  xkbState = xkb_state_new(keymap);
+//  std::cout << "KEYMAP: " << xkb_keymap_get_as_string(keymap,  XKB_KEYMAP_FORMAT_TEXT_V1) << std::endl;
 }
 
-void KeyboardListener::keyboard_enter(struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys)
+void KeyboardListener::keyboardEnter(struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys)
 {
-  printf("Entering the window\n");
+  std::cout << "Entering the window" << std::endl;
 }
 
-void KeyboardListener::keyboard_leave(struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface)
+void KeyboardListener::keyboardLeave(struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface)
 {
-  printf("Leaving the window\n");
+  std::cout << "Leaving the window" << std::endl;
 }
 
-void KeyboardListener::keyboard_key (struct wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+void KeyboardListener::keyboardKey(struct wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
 {
-  if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-    xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, key + 8);
+  //Offset to get the correct ascii code in the table. The key map String start to 9, so you have to shift the code by 8
+  constexpr int offset = 8;
+
+  if (state == WL_KEYBOARD_KEY_STATE_PRESSED)
+  {
+    xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkbState, key + offset);
     uint32_t utf32 = xkb_keysym_to_utf32(keysym);
     if (utf32) {
       if (utf32 >= 0x21 && utf32 <= 0x7E) {
@@ -50,11 +56,12 @@ void KeyboardListener::keyboard_key (struct wl_keyboard *keyboard, uint32_t seri
   }
 }
 
-void KeyboardListener::keyboard_modifiers (struct wl_keyboard *keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group)
+void KeyboardListener::keyboardModifiers(struct wl_keyboard *keyboard, uint32_t serial, uint32_t modsDepressed, uint32_t modsLatched, uint32_t modsLocked, uint32_t group)
 {
-  xkb_state_update_mask(xkb_state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
+  xkb_state_update_mask(xkbState, modsDepressed, modsLatched, modsLocked, 0, 0, group);
 }
 
-bool KeyboardListener::getRunning() const {
+bool KeyboardListener::getRunning() const
+{
   return running;
 }

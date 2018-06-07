@@ -3,7 +3,7 @@
 namespace display
 {
   WaylandSurface::WaylandSurface()
-    : wlDisplay(wl_display_connect(NULL))
+    : wlDisplay(wl_display_connect(nullptr))
   {
     if (!wlDisplay)
       throw std::runtime_error("Could not connect to display");
@@ -14,19 +14,23 @@ namespace display
 	std::cerr << "error: " << err << std::endl;
 	throw std::runtime_error("Received error");
       }
-    seat_listener = new SeatListener();
+    seatListener = new SeatListener();
     wl_display_roundtrip(wlDisplay);
-    if (!wlCompositor) {
+    if (!wlCompositor)
+    {
       throw std::runtime_error("Could not find compositor");
     }
-    if (!wlShell) {
+    if (!wlShell)
+    {
       throw std::runtime_error("Could not find shell");
     }
-    if (!wlSeat) {
+    if (!wlSeat)
+    {
       throw std::runtime_error("Could not find seat");
     }
     wlShellSurface = wl_shell_get_shell_surface(wlShell, wlSurface);
-    if (!wlShellSurface) {
+    if (!wlShellSurface)
+    {
       throw std::runtime_error("Could not get shell surface");
     }
     addListener(wlShellSurface, *this);
@@ -34,27 +38,28 @@ namespace display
     wl_display_roundtrip(wlDisplay);
   }
 
-  void WaylandSurface::shell_surface_ping (struct wl_shell_surface *shell_surface, uint32_t serial)
+  void WaylandSurface::shellSurfacePing(struct wl_shell_surface *shellSurface, uint32_t serial)
   {
-    wl_shell_surface_pong (shell_surface, serial);
+    wl_shell_surface_pong(shellSurface, serial);
   }
 
-  void WaylandSurface::shell_surface_configure(struct wl_shell_surface *shell_surface, uint32_t edges, int32_t width, int32_t height)
+  void WaylandSurface::shellSurfaceConfigure(struct wl_shell_surface *shellSurface, uint32_t edges, int32_t width, int32_t height)
   {
     std::cout << "shell_surface_configure" << std::endl;
   }
 
-  void WaylandSurface::shell_surface_popup_done(struct wl_shell_surface *shell_surface)
+  void WaylandSurface::shellSurfacePopupDone(struct wl_shell_surface *shellSurface)
   {
   }
 
-  void WaylandSurface::registry_add_object(struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
+  void WaylandSurface::registryAddObject(struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
   {
     if (!strcmp(interface,"wl_compositor"))
       {
       	wlCompositor = static_cast<wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
       	wlSurface = wl_compositor_create_surface(wlCompositor);
-      	if (!wlSurface) {
+      	if (!wlSurface)
+        {
       	  throw std::runtime_error("Could not create surface");
       	}
       }
@@ -65,20 +70,22 @@ namespace display
     else if (!strcmp(interface,"wl_seat"))
       {
 	wlSeat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
-	addListener(wlSeat, *seat_listener);
+	addListener(wlSeat, *seatListener);
       }
   }
 
-  void WaylandSurface::registry_remove_object(struct wl_registry *registry, uint32_t name) {
+  void WaylandSurface::registryRemoveObject(struct wl_registry *registry, uint32_t name)
+  {
   }
 
-  void WaylandSurface::dispatch() {
+  void WaylandSurface::dispatch()
+  {
     wl_display_dispatch_pending(wlDisplay);
   }
 
   bool WaylandSurface::isRunning() const
   {
-    return seat_listener->getRunning();
+    return seatListener->getRunning();
   }
 
 }
