@@ -279,7 +279,7 @@ namespace display
 	  return (!isSuitable || (other.isSuitable && (deviceTypeScore() < other.deviceTypeScore())));
 	}
       };
-      
+
       Renderer(std::pair<vk::PhysicalDevice, Score> const &selectedResult, magma::Surface<claws::no_delete> surface)
 	: physicalDevice(selectedResult.first)
 	, device([this, &selectedResult, surface](){
@@ -352,7 +352,7 @@ namespace display
 	  auto commandBuffers(displaySystem.userData.commandPool.allocatePrimaryCommandBuffers(1));
 	  commandBuffers[0].begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 	  vk::ImageSubresourceRange imageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
- 
+
 	  commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, {}, {},
 						  {
 						    vk::ImageMemoryBarrier{
@@ -402,7 +402,7 @@ namespace display
 		       fence);
 	  device.waitForFences({fence}, true, 1000000000);
 	}
-	
+
 	vk::DescriptorImageInfo const imageInfo
 	{
 	  sampler,
@@ -442,7 +442,7 @@ namespace display
 					     for (; bestQueueIndex < queueFamilyPropertiesList.size(); ++bestQueueIndex)
 					       {
 						 vk::QueueFamilyProperties const &queueFamilyProperties(queueFamilyPropertiesList[bestQueueIndex]);
-						 
+
 						 if ((queueFamilyProperties.queueFlags & vk::QueueFlagBits::eGraphics) &&
 						     surface.isQueueFamilySuitable(physicalDevice, bestQueueIndex))
 						   {
@@ -509,7 +509,7 @@ namespace display
 								magma::asListRef(cmdBuffer.raw()),
 								magma::asListRef(renderDone)), // signal renderdone when done
 		     frame.fence); // signal the fence
-	std::cout << "about to present for index " << index << std::endl;
+	//std::cout << "about to present for index " << index << std::endl;
 	displaySystem.presentImage(renderDone, index); // present our image
       }
     };

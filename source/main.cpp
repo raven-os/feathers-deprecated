@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	  std::cerr << e.what() << std::endl;
 	}
     }
-  else
+  else if (!strcmp(argv[1], "-sc") || !strcmp(argv[1], "--sub-compositor"))
     {
       display::WaylandSurface waylandSurface;
       display::Display display(waylandSurface);
