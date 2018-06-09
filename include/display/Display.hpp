@@ -54,6 +54,11 @@ namespace display
 	  }
 
 	}
+
+	vk::Extent2D getExtent() const noexcept
+	{
+	  return vk::Extent2D{100, 100};
+	}
       };
 
       struct SwapchainUserData
