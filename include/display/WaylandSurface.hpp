@@ -8,79 +8,61 @@
 #include <wayland-client.h>
 #include <vector>
 
+#include "listeners/SeatListener.hpp"
+
 namespace  display
 {
   class WaylandSurface
   {
-    struct wl_display *wlDisplay;
-    struct wl_compositor *wlCompositor;
-    struct wl_surface *wlSurface;
-    magma::Surface surface;
+    struct wl_display *wlDisplay{nullptr};
+    struct wl_registry *wlRegistry{nullptr};
+    struct wl_compositor *wlCompositor{nullptr};
+    struct wl_surface *wlSurface{nullptr};
+    struct wl_shell *wlShell{nullptr};
+    struct wl_shell_surface *wlShellSurface{nullptr};
+    struct wl_seat *wlSeat{nullptr};
+
+    SeatListener *seatListener;
+
   public:
-    static std::vector<char const *> getRequiredExtensiosn()
+    WaylandSurface(WaylandSurface const &) = delete;
+
+    WaylandSurface(WaylandSurface &&other) = delete;
+
+    WaylandSurface();
+
+    static std::vector<char const *> getRequiredExtensions()
     {
       return {"VK_KHR_surface", "VK_KHR_wayland_surface"};
     }
 
-    magma::Surface const &getSurface()
+    magma::Surface<> createSurface(magma::Instance const &instance)
     {
-      return surface;
-    }
-
-    WaylandSurface(magma::Instance const &instance)
-      : wlDisplay([](){
-	  auto *display(wl_display_connect(NULL));
-
-	  if (!display)
-	    throw std::runtime_error("Could not connect to display");
-	  return display;
-	}())
-      , wlCompositor([&](){
-	  auto wlRegistry(wl_display_get_registry(wlDisplay));
-	  wl_compositor *result(nullptr);
-	  const struct wl_registry_listener registry_listener{[]
-	      (void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version){
-	      if (std::string_view("wl_compositor") == std::string_view(interface))
-		{
-		  *reinterpret_cast<wl_compositor **>(data) = reinterpret_cast<wl_compositor *>(wl_registry_bind(registry,
-														 id,
-														 &wl_compositor_interface,
-														 1));
-		}
-	    }, [](void *data, struct wl_registry *registry, uint32_t id)
-		 {
-		   std::cout << "TODO\n";
-		 }
-	  };
-	  wl_registry_add_listener(wlRegistry, &registry_listener, reinterpret_cast<void *>(&result));
-	  wl_display_dispatch(wlDisplay);
-	  wl_display_roundtrip(wlDisplay);
-	  if (!result)
-	    throw std::runtime_error("Could not find compositor\n");
-	  return result;
-	}())
-      , wlSurface([&](){
-	  return wl_compositor_create_surface(wlCompositor);
-	}())
-      , surface(instance, [&](){
+      return makeSurface(instance, [&](){
 	  VkWaylandSurfaceCreateInfoKHR waylnadSurfaceCreateInfo
-	  {
-	    VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-	      nullptr,
-	      0,
-	      wlDisplay,
-	      wlSurface
-	      };
-	  VkSurfaceKHR surface;
-	  vkCreateWaylandSurfaceKHR(instance.vkInstance, &waylnadSurfaceCreateInfo, nullptr, &surface);
-	  return surface;
-	}())
-    {
+	    {
+	      VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+		nullptr,
+		0,
+		wlDisplay,
+		wlSurface
+		};
+	    VkSurfaceKHR surface;
+	    vkCreateWaylandSurfaceKHR(instance.vkInstance, &waylnadSurfaceCreateInfo, nullptr, &surface);
+	    return surface;
+	}());
     }
 
-    ~WaylandSurface()
-    {
-      wl_display_disconnect(wlDisplay);
-    }
+    ~WaylandSurface() = default;
+
+    void shellSurfacePing(struct wl_shell_surface *shellSurface, uint32_t serial);
+    void shellSurfaceConfigure(struct wl_shell_surface *shellSurface, uint32_t edges, int32_t width, int32_t height);
+    void shellSurfacePopupDone (struct wl_shell_surface *shellSurface);
+
+    void registryAddObject(struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
+    void registryRemoveObject (struct wl_registry *registry, uint32_t name);
+
+    void dispatch();
+    bool isRunning() const;
   };
 }
