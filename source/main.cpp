@@ -1,8 +1,8 @@
+#include "opengl/my_opengl.hpp"
 #include "display/WaylandSurface.hpp"
 #include "display/Display.ipp"
 #include "modeset/ModeSetter.hpp"
 #include "Exception.hpp"
-
 
 int main(int argc, char **argv)
 {
@@ -12,11 +12,15 @@ int main(int argc, char **argv)
       try
 	{
 	  ModeSetter modeSetter;
+	  // TODO
+	  Texture texture = my_opengl::loadTexture("../../resource/BackgroundSpace.bmp");
+
 	  for (int i = 0; i < 600; ++i)
 	    {
 	      float progress = i / 600.0f;
-	      glClearColor (1.0f - progress, progress, 0.0, 1.0);
-	      glClear (GL_COLOR_BUFFER_BIT);
+
+	      glClearColor(1.0f - progress, progress, 0.0, 1.0);
+	      glClear(GL_COLOR_BUFFER_BIT);
 	      modeSetter.swapBuffers();
 	      usleep(100);
 	    }
