@@ -12,6 +12,7 @@ namespace display
 {
   class WindowTree
   {
+  public:
     struct Rect
     {
       std::array<uint16_t, 2u> position;
@@ -21,19 +22,15 @@ namespace display
     struct WindowData
     {
       Rect rect;
-      bool clamp;
-      bool invertClamp;
+      bool isSolid;
+      //bool relative; TODO
     };
-
-    std::vector<WindowData> windows;
-
+  private:
     struct WindowNodeTag;
-    struct WindowDataTag;
-
+  public:
     using WindowNodeIndex = claws::tagged_data<uint16_t, uint16_t, WindowNodeTag>;
-    using WindowDataIndex = claws::tagged_data<uint16_t, uint16_t, WindowDataTag>;
+  private:
 
-    static constexpr WindowDataIndex noData{uint16_t(-1u)};
     static constexpr WindowNodeIndex nullNode{uint16_t(-1u)};
 
     struct WindowNode
@@ -41,12 +38,7 @@ namespace display
       WindowNodeIndex parent;
       WindowNodeIndex firstChild;
       WindowNodeIndex nextSibling;
-      WindowDataIndex dataIndex;
-
-      constexpr bool hasData() const noexcept
-      {
-	return dataIndex == noData;
-      }
+      WindowData data;
     };
 
     WindowNodeIndex freeList;
@@ -63,10 +55,21 @@ namespace display
     }
   public:
 
-    WindowTree()
+    WindowTree(WindowData &&screen)
       : freeList(nullNode)
     {
-      nodes.emplace_back(WindowNode{nullNode, nullNode, nullNode, noData});
+      nodes.emplace_back(WindowNode{nullNode, nullNode, nullNode, std::move(screen)});
+    }
+
+    WindowTree(WindowData const &screen)
+      : freeList(nullNode)
+    {
+      nodes.emplace_back(WindowNode{nullNode, nullNode, nullNode, screen});
+    }
+
+    uint16_t getWindowCountUpperBound() const
+    {
+      return static_cast<uint16_t>(nodes.size());
     }
 
     WindowNodeIndex getRootIndex() const noexcept
@@ -123,7 +126,7 @@ namespace display
     
     WindowData &getData(WindowNodeIndex nodeIndex) noexcept
     {
-      return windows[getNode(nodeIndex).dataIndex.data];
+      return getNode(nodeIndex).data;
     }
 
     WindowData const &getData(WindowNodeIndex nodeIndex) const noexcept
@@ -149,7 +152,7 @@ namespace display
 	}
     }
 
-    void removeIndex(WindowNodeIndex index)
+    void removeIndex(WindowNodeIndex index) noexcept
     {
       WindowNodeIndex child(getFirstChild(getParent(index)));
 
@@ -172,7 +175,6 @@ namespace display
       getNode(result).parent = parent;
       getNode(result).nextSibling = getFirstChild(parent);
       getNode(result).firstChild = nullNode;
-      getNode(result).dataIndex = noData;
       getNode(parent).firstChild = result;
       return result;
     }

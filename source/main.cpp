@@ -2,10 +2,40 @@
 #include "display/Display.ipp"
 #include "modeset/ModeSetter.hpp"
 #include "Exception.hpp"
+#include "display/WindowTree.hpp"
 
 
 int main(int argc, char **argv)
 {
+  display::WindowTree windowTree{display::WindowTree::WindowData
+      {
+	{{{0, 0}}, {{600, 400}}}, true
+				    }};
+
+  {
+    auto root(windowTree.getRootIndex());
+    auto child(windowTree.addChild(root));
+
+    auto &childData(windowTree.getData(child));
+
+    childData.rect.position[0] = 10;
+    childData.rect.position[1] = 40;
+    childData.rect.size[0] = 100;
+    childData.rect.size[1] = 100;
+    childData.isSolid = true;
+    for (int i = 0; i < 4; ++i)
+      {
+	auto grandChild(windowTree.addChild(child));
+	auto &grandChildData(windowTree.getData(grandChild));
+
+	grandChildData.rect.position[0] = 50 + i * 10;
+	grandChildData.rect.position[1] = 50 + i * 60;
+	grandChildData.rect.size[0] = 50;
+	grandChildData.rect.size[1] = 200;
+	grandChildData.isSolid = true;
+      }
+  }
+
   if (argc == 1)
     {
       // RUN ON TTY
@@ -33,7 +63,7 @@ int main(int argc, char **argv)
 
       while (waylandSurface.isRunning())
 	{
-	  display.render();
+	  display.render(windowTree);
 	  waylandSurface.dispatch();
 	  //  std::cout << "presenting image" << std::endl;
 	}
