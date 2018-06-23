@@ -4,8 +4,35 @@
 #include "Exception.hpp"
 #include "protocol/WaylandServerProtocol.hpp"
 
+static void debug_server_protocol(void *user_data, enum wl_protocol_logger_type direction, const struct wl_protocol_logger_message *message)
+{
+  (void)direction;
+  (void)message;
+  printf("msg: %s\n", static_cast<char *>(user_data));
+}
+
 int main(int argc, char **argv)
 {
+  protocol::WaylandServerProtocol serverProtocol;
+
+  for (int32_t i = 1; i < argc - 1; ++i)
+    {
+      if (!strncmp(argv[i], "--socket", 8))
+	{
+	  int socket_nb = atoi(argv[i] + 8);
+	  switch (socket_nb)
+	    {
+	    case 1:
+	    case 2:
+	      printf("AddSocket method with name '%s' was %s\n", argv[i + 1], serverProtocol.AddSocket(argv[i + 1]) ? "unsuccessful" : "successful");
+	      serverProtocol.AddProtocolLogger(debug_server_protocol,
+					       static_cast<void *>(argv[i] + 8));
+	    default:
+	      break;
+	    }
+	}
+    }
+
   if (argc == 1)
     {
       // RUN ON TTY

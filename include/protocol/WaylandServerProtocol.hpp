@@ -11,12 +11,13 @@ namespace protocol
   private:
     struct wl_display *wlDisplay;
     struct wl_event_loop *wlEventLoop;
-    struct wl_protocol_logger *wlProtocolLogger = nullptr;
+    struct wl_protocol_logger *wlProtocolLogger;
 
   public:
     WaylandServerProtocol();
     ~WaylandServerProtocol();
 
+    int32_t AddSocket();
     int32_t AddSocket(std::string const &);
     void AddProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
 

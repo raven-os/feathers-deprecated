@@ -1,10 +1,10 @@
 #include "protocol/WaylandServerProtocol.hpp"
 
 protocol::WaylandServerProtocol::WaylandServerProtocol()
-{
-  wlDisplay = wl_display_create();
-  wlEventLoop = wl_display_get_event_loop(wlDisplay);
-}
+  : wlDisplay(wl_display_create()),
+    wlEventLoop(wl_display_get_event_loop(wlDisplay)),
+    wlProtocolLogger(nullptr)
+{}
 
 protocol::WaylandServerProtocol::~WaylandServerProtocol()
 {
@@ -13,9 +13,14 @@ protocol::WaylandServerProtocol::~WaylandServerProtocol()
   wl_display_destroy(wlDisplay);
 }
 
+int32_t protocol::WaylandServerProtocol::AddSocket()
+{
+  return wl_display_add_socket(wlDisplay, nullptr);
+}
+
 int32_t protocol::WaylandServerProtocol::AddSocket(std::string const &name)
 {
-  return wl_display_add_socket(wlDisplay, (name.compare("")) ? name.c_str() : nullptr);
+  return wl_display_add_socket(wlDisplay, name.c_str());
 }
 
 void protocol::WaylandServerProtocol::AddProtocolLogger(wl_protocol_logger_func_t func,
