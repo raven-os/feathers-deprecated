@@ -16,6 +16,7 @@ namespace protocol
     int32_t AddSocket();
     int32_t AddSocket(std::string const &);
     void AddProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
+    void EventDispatch(int32_t timeout);
 
     WaylandServerProtocol(WaylandServerProtocol const &) = delete;
     WaylandServerProtocol(WaylandServerProtocol &&) = delete;

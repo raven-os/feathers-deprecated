@@ -51,9 +51,11 @@ int main(int argc, char **argv)
 	      printf("AddSocket method with name '%s' was %s\n",
 		     argv[i + 1], serverProtocol.AddSocket(argv[i + 1]) ?
 		     "unsuccessful" : "successful");
+	      serverProtocol.EventDispatch(0);
 	      serverProtocol.AddProtocolLogger(static_cast<wl_protocol_logger_func_t>
 					       (debug_server_protocol),
 					       static_cast<void *>(argv[i] + 8));
+	      serverProtocol.EventDispatch(0);
 	    }
 	}
       display::WaylandSurface waylandSurface(socketname);

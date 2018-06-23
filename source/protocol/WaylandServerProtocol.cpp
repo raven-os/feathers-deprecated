@@ -39,3 +39,9 @@ void protocol::WaylandServerProtocol::AddProtocolLogger(wl_protocol_logger_func_
       wlProtocolLogger = nullptr;
     }
 }
+
+void protocol::WaylandServerProtocol::EventDispatch(int32_t timeout)
+{
+  if (wl_event_loop_dispatch(wlEventLoop, timeout) == -1)
+      fprintf(stderr, "Error while dispaching events\n");
+}
