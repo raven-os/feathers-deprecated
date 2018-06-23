@@ -34,7 +34,7 @@ void protocol::WaylandServerProtocol::AddProtocolLogger(wl_protocol_logger_func_
   if (errno)
     {
       fprintf(stderr,
-	      "WaylandServerProtocol error: addProtocolLogger: %s\n",
+	      "WaylandServerProtocol error: AddProtocolLogger: %s\n",
 	      strerror(errno));
       wlProtocolLogger = nullptr;
     }

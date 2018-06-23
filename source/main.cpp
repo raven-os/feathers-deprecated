@@ -13,25 +13,6 @@ static void debug_server_protocol(void *user_data,
 
 int main(int argc, char **argv)
 {
-  protocol::WaylandServerProtocol serverProtocol;
-
-  for (int32_t i = 1; i < argc - 1; ++i)
-    {
-      if (!strncmp(argv[i], "--socket", 8))
-	{
-	  int socket_nb = atoi(argv[i] + 8);
-	  switch (socket_nb)
-	    {
-	    case 1 ... 2:
-	      printf("AddSocket method with name '%s' was %s\n", argv[i + 1], serverProtocol.AddSocket(argv[i + 1]) ? "unsuccessful" : "successful");
-	      serverProtocol.AddProtocolLogger(debug_server_protocol,
-					       static_cast<void *>(argv[i] + 8));
-	    default:
-	      break;
-	    }
-	}
-    }
-
   if (argc == 1)
     {
       // RUN ON TTY
@@ -54,14 +35,35 @@ int main(int argc, char **argv)
     }
   else if (!strcmp(argv[1], "-sc") || !strcmp(argv[1], "--sub-compositor"))
     {
-      display::WaylandSurface waylandSurface;
+      protocol::WaylandServerProtocol serverProtocol;
+      std::string socketname("");
+
+      for (int32_t i = 1; i < argc - 1; ++i)
+	{
+	  if (!strcmp(argv[i], "--socket"))
+	    {
+	      printf("Attempting to connect to server with socket '%s'\n",
+		     argv[i + 1]);
+	      socketname = argv[i + 1];
+	    }
+	  else if (!strcmp(argv[i], "--client-socket"))
+	    {
+	      printf("AddSocket method with name '%s' was %s\n",
+		     argv[i + 1], serverProtocol.AddSocket(argv[i + 1]) ?
+		     "unsuccessful" : "successful");
+	      serverProtocol.AddProtocolLogger(static_cast<wl_protocol_logger_func_t>
+					       (debug_server_protocol),
+					       static_cast<void *>(argv[i] + 8));
+	    }
+	}
+      display::WaylandSurface waylandSurface(socketname);
       display::Display display(waylandSurface);
 
       while (waylandSurface.isRunning())
 	{
 	  display.render();
 	  waylandSurface.dispatch();
-	  //  std::cout << "presenting image" << std::endl;
+	  // std::cout << "presenting image" << std::endl;
 	}
     }
 

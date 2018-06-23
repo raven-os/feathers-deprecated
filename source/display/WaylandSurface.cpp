@@ -1,9 +1,12 @@
 #include "display/WaylandSurface.hpp"
 
+#include <string.h>
+
 namespace display
 {
-  WaylandSurface::WaylandSurface()
-    : wlDisplay(wl_display_connect(nullptr))
+  WaylandSurface::WaylandSurface(std::string const &displayname)
+    : wlDisplay(wl_display_connect(displayname.compare("") ?
+    				   displayname.c_str() : nullptr))
   {
     if (!wlDisplay)
       throw std::runtime_error("Could not connect to display");
