@@ -20,17 +20,17 @@ namespace display
 		   std::vector<WindowTree::WindowNodeIndex> delayedRender;
 		   for (WindowTree::WindowNodeIndex child : windowTree.getChildren(index))
 		     if (windowTree.getData(child).isSolid)
-		       display(child, minDepth + range * 0.5f, range * 0.5f);
+		       display(child, minDepth + range * 0.5f, range * 0.4f);
 		     else
 		       delayedRender.push_back(child);
-		   range *= 0.5f; // we just gave half our depth to our children
 		   {
+		     // std::cout << "displaying: " << index.data << ", depth: " << (minDepth + range ) << std::endl;
 		     WindowTree::Rect const &rect(windowTree.getData(index).rect);
 		     for (uint32_t i(0u); i < 4u; ++i)
 		       {
 			 for (uint32_t j(0u); j < 2u; ++j)
 			   *vertexDataIt++ = float(rect.position[j] + rect.size[j] * ((i >> j) & 1u));
-			 *vertexDataIt++ = 0.0f; // minDepth + range;
+			 *vertexDataIt++ =  minDepth + range;
 			 for (uint32_t j(0u); j < 2u; ++j)
 			   *vertexDataIt++ = float((i >> j) & 1u);
 		       }
@@ -42,7 +42,7 @@ namespace display
 		     *indexDataIt++ = windowCount * 4 + 3;
 		     ++windowCount;
 		   }
-		   float childRange(range / float(delayedRender.size()));
+		   float childRange(range * 0.5f / float(delayedRender.size()));
 		   float depth(minDepth);
 		   for (WindowTree::WindowNodeIndex child : delayedRender)
 		     {
@@ -50,7 +50,7 @@ namespace display
 		       depth += childRange;
 		     }
 		 });
-    claws::inject_self{display}(windowTree.getRootIndex(), 0.0f, 1.0f);
+    claws::inject_self{display}(windowTree.getRootIndex(), 0.0f, 0.9f);
     vertexBuffer.free(frame.vertexBufferRangeId);
     vertexBuffer.free(frame.indexBufferRangeId);
     frame.vertexBufferRangeId = vertexBuffer.allocate(static_cast<uint32_t>(vertexData.size() * sizeof(float)));
@@ -65,7 +65,6 @@ namespace display
 
       std::copy(indexData.begin(), indexData.end(), &gpuBufferRange[0]);
     }
-    std::cout << "windowCount: " << windowCount << std::endl;
     return windowCount;
   }
 
@@ -91,11 +90,14 @@ namespace display
     cmdBuffer.bindIndexBuffer(vertexBuffer.getBuffer(frame.indexBufferRangeId), frame.indexBufferRangeId.second, vk::IndexType::eUint32);
     // we bind update our descriptor so that it points to our image
     cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, displaySystem.userData.pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
-    vk::ClearValue clearValue = {vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f})}; // a nice recognisable green for debug
+    std::vector<vk::ClearValue> clearValues{
+      vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f}),
+	vk::ClearDepthStencilValue(1.0f, 0),
+    }; // a nice recognisable green for debug
     {
       // start the renderpass
       auto lock(cmdBuffer.beginRenderPass(displaySystem.swapchainUserData.renderPass, frame.framebuffer,
-					  {{0, 0}, displaySystem.getSwapchain().getExtent()}, {clearValue}, vk::SubpassContents::eInline));
+					  {{0, 0}, displaySystem.getSwapchain().getExtent()}, clearValues, vk::SubpassContents::eInline));
 
       // us our pipeline
       lock.bindGraphicsPipeline(displaySystem.swapchainUserData.pipeline);
@@ -149,12 +151,11 @@ namespace display
     std::array<vk::VertexInputAttributeDescription, 2u>
       vertexInputAttrib{vk::VertexInputAttributeDescription{0, vertexInputBindings[0].binding, vk::Format::eR32G32B32Sfloat, 0},
 	vk::VertexInputAttributeDescription{1, vertexInputBindings[0].binding, vk::Format::eR32G32Sfloat, 3 * sizeof(float)}};
-	  
+
     auto vertexInputStateCreateInfo(magma::StructBuilder<vk::PipelineVertexInputStateCreateInfo, true>::make(vertexInputBindings,
 													     vertexInputAttrib));
 
     // The viewport is st up so that the top left corner is (0, 0) and the bottom right (width, height)
-    // We don't really care about depth
     vk::Viewport viewport(-static_cast<float>(swapchain.getExtent().width),
 			  -static_cast<float>(swapchain.getExtent().height), // pos
 			  static_cast<float>(swapchain.getExtent().width) * 2.0f,
@@ -168,7 +169,7 @@ namespace display
     auto viewportStateCreateInfo(magma::StructBuilder<vk::PipelineViewportStateCreateInfo, true>::make(magma::asListRef(viewport),
 												       magma::asListRef(scissor)));
 
-    // Everything is turned off
+    // We want to benefit from earl depth test
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{
       {},
 	false,                            // VkBool32                                       depthClampEnable
@@ -182,6 +183,20 @@ namespace display
 	  0.0f,                             // float                                          depthBiasSlopeFactor
 	  1.0f                              // float                                          lineWidth
 	  };
+
+    vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo
+      (
+	{},			// VkPipelineDepthStencilStateCreateFlags    flags;
+	true,			// VkBool32                                  depthTestEnable;
+	true,			// VkBool32                                  depthWriteEnable;
+	vk::CompareOp::eLess,	// VkCompareOp                               depthCompareOp;
+	false,			// VkBool32                                  depthBoundsTestEnable;
+	false,			// VkBool32                                  stencilTestEnable;
+	vk::StencilOp::eKeep,	// VkStencilOpState                          front;
+	vk::StencilOp::eKeep,	// VkStencilOpState                          back;
+	0.0f,			// float                                     minDepthBounds;
+	1.0f			// float                                     maxDepthBounds;
+       );
 
     // Everything is turned off
     // We use only one smape per pixel
@@ -225,7 +240,11 @@ namespace display
 						     renderPass,
 						     0);
 
-    pipelineCreateInfo.addRasteringColorAttachementInfo(viewportStateCreateInfo, multisampleStateCreateInfo, colorBlendStateCreateInfo);
+    pipelineCreateInfo.addRasteringColorAttachementDepthStencilInfo(viewportStateCreateInfo,
+								    multisampleStateCreateInfo,
+								    depthStencilStateCreateInfo,
+								    colorBlendStateCreateInfo);
+    
     return device.createPipeline(pipelineCreateInfo);
   }
 

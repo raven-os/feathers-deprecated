@@ -37,13 +37,15 @@ namespace display
 	magma::PipelineLayout<> pipelineLayout;
 	magma::ShaderModule<> vert;
 	magma::ShaderModule<> frag;
+	vk::PhysicalDevice physicalDevice;
 
-	UserData(magma::Device<claws::no_delete> device, vk::PhysicalDevice, uint32_t selectedQueueFamily)
+	UserData(magma::Device<claws::no_delete> device, vk::PhysicalDevice physicalDevice, uint32_t selectedQueueFamily)
 	  : commandPool(device.createCommandPool({vk::CommandPoolCreateFlagBits::eResetCommandBuffer}, selectedQueueFamily))
 	  , descriptorSetLayout(device.createDescriptorSetLayout({
 		vk::DescriptorSetLayoutBinding{0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr
 		    }}))
 	  , pipelineLayout(device.createPipelineLayout({}, {descriptorSetLayout}, {}))
+	  , physicalDevice(physicalDevice)
 	{
 	  {
 	    std::ifstream vertSource("spirv/basic.vert.spirv");
@@ -89,14 +91,25 @@ namespace display
 		      vk::ImageLayout::eUndefined,
 		      vk::ImageLayout::ePresentSrcKHR});
 
+	      renderPassCreateInfo.attachements.push_back({{},
+		    vk::Format::eD32Sfloat,
+		      vk::SampleCountFlagBits::e1,
+		      vk::AttachmentLoadOp::eClear,
+		      vk::AttachmentStoreOp::eStore,
+		      vk::AttachmentLoadOp::eDontCare,
+		      vk::AttachmentStoreOp::eDontCare,
+		      vk::ImageLayout::eUndefined,
+		      vk::ImageLayout::eDepthStencilAttachmentOptimal});
+
 	      vk::AttachmentReference colorAttachmentReferences(0, vk::ImageLayout::eColorAttachmentOptimal);
+	      vk::AttachmentReference depthAttachmentReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	      renderPassCreateInfo.subPasses.push_back(magma::StructBuilder<vk::SubpassDescription, true>
 						       ::make(vk::PipelineBindPoint::eGraphics,
 							      magma::EmptyList{},
 							      magma::asListRef(colorAttachmentReferences),
 							      nullptr,
-							      nullptr,
+							      &depthAttachmentReference,
 							      magma::EmptyList{}));
 
 	      return device.createRenderPass(renderPassCreateInfo);
@@ -109,8 +122,8 @@ namespace display
       struct FrameData
       {
 	magma::Fence<> fence;
-	magma::Image<> depthImage;
 	magma::DeviceMemory<> depthImageMemory;
+	magma::Image<> depthImage;
 	magma::ImageView<> depthImageView;
 	magma::Framebuffer<> framebuffer;
 	magma::DynamicBuffer::RangeId vertexBufferRangeId{magma::DynamicBuffer::nullId};
@@ -118,23 +131,33 @@ namespace display
 
 	FrameData(magma::Device<claws::no_delete> device,
 		  magma::Swapchain<claws::no_delete> swapchain,
-		  UserData &,
+		  UserData const &userData,
 		  SwapchainUserData &swapchainUserData,
 		  magma::ImageView<claws::no_delete> swapchainImageView)
 	  : fence(device.createFence(vk::FenceCreateFlagBits::eSignaled))
 	  , depthImageMemory{}
 	  , depthImage([&]()
 		       {
-			 auto image(device.createImage2D({}, vk::Format::eR8G8B8A8Unorm, {swapchain.getExtent().width, swapchain.getExtent().height}, vk::SampleCountFlagBits::e1,
-							 vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::ImageLayout::eUndefined));
+			 auto image(device.createImage2D({}, vk::Format::eD32Sfloat, {swapchain.getExtent().width, swapchain.getExtent().height}, vk::SampleCountFlagBits::e1,
+							 vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eUndefined));
 			 auto memRequirements(device.getImageMemoryRequirements(depthImage));
-			 depthImageMemory = device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits);
+			 depthImageMemory = device.selectAndCreateDeviceMemory(userData.physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits);
 
 			 device.bindImageMemory(image, depthImageMemory, 0);
 			 return image;
 		       }())
+	  , depthImageView(device.createImageView({},
+						  depthImage,
+						  vk::ImageViewType::e2D,
+						  vk::Format::eD32Sfloat,
+						  vk::ComponentMapping{},
+						  vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth,
+									    0,
+									    1,
+									    0,
+									    1)))
 	  , framebuffer(device.createFramebuffer(swapchainUserData.renderPass,
-						 std::vector<vk::ImageView>{swapchainImageView},
+						 std::vector<vk::ImageView>{swapchainImageView, depthImageView},
 						 swapchain.getExtent().width,
 						 swapchain.getExtent().height,
 						 1))

@@ -5,13 +5,8 @@
 #include "Exception.hpp"
 #include "display/WindowTree.hpp"
 
-int main(int argc, char **argv)
+void addTestWindows(display::WindowTree &windowTree)
 {
-  display::WindowTree windowTree{display::WindowTree::WindowData
-      {
-	{{{0, 0}}, {{600, 400}}}, true
-				    }};
-
   {
     auto root(windowTree.getRootIndex());
     auto child(windowTree.addChild(root));
@@ -30,12 +25,19 @@ int main(int argc, char **argv)
 
 	grandChildData.rect.position[0] = 50 + i * 10;
 	grandChildData.rect.position[1] = 50 + i * 60;
-	grandChildData.rect.size[0] = 50;
-	grandChildData.rect.size[1] = 200;
+	grandChildData.rect.size[0] = 200;
+	grandChildData.rect.size[1] = 50;
 	grandChildData.isSolid = true;
       }
   }
+}
 
+int main(int argc, char **argv)
+{
+  display::WindowTree windowTree(display::WindowTree::WindowData
+				 {{{{0, 0}}, {{600, 400}}}, true });
+
+  addTestWindows(windowTree);
   if (argc == 1)
     {
       // RUN ON TTY
