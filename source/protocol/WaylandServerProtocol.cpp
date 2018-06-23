@@ -1,3 +1,7 @@
+#include <vector>
+#include <string>
+#include <string.h>
+#include <errno.h>
 #include "protocol/WaylandServerProtocol.hpp"
 
 protocol::WaylandServerProtocol::WaylandServerProtocol()

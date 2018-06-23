@@ -1,8 +1,4 @@
 #include <wayland-server.h>
-#include <vector>
-#include <string>
-#include <string.h>
-#include <errno.h>
 
 namespace protocol
 {
