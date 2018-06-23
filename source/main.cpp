@@ -2,10 +2,22 @@
 #include "display/Display.ipp"
 #include "modeset/ModeSetter.hpp"
 #include "Exception.hpp"
+#include "protocol/WaylandServerProtocol.hpp"
 
+void test(void *user_data, enum wl_protocol_logger_type direction, const struct wl_protocol_logger_message *message)
+{
+  (void)direction;
+  (void)message;
+  printf("msg: %s\n", user_data);
+}
 
 int main(int argc, char **argv)
 {
+  protocol::WaylandServerProtocol serverProtocol;
+
+  serverProtocol.AddSocket("Raven");
+  serverProtocol.AddProtocolLogger(test, (void *)"salam");
+
   if (argc == 1)
     {
       // RUN ON TTY
