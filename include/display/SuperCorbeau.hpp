@@ -8,10 +8,10 @@ namespace display {
     /*  Call this function repeatedly.  After each use, the pixel data can be extracted  */
 
     inline void headerPixel(char const * &data, unsigned char *pixel) {
-      pixel[0] = (((data[0] - 33) << 2) | ((data[1] - 33) >> 4));
-      pixel[1] = ((((data[1] - 33) & 0xF) << 4) | ((data[2] - 33) >> 2));
-      pixel[2] = ((((data[2] - 33) & 0x3) << 6) | ((data[3] - 33)));
-      data += 4;
+      pixel[0] = static_cast<unsigned char>(((data[0] - 33u) << 2u) | ((data[1] - 33u) >> 4u));
+      pixel[1] = static_cast<unsigned char>((((data[1] - 33u) & 0xFu) << 4u) | ((data[2] - 33u) >> 2u));
+      pixel[2] = static_cast<unsigned char>((((data[2] - 33u) & 0x3u) << 6u) | ((data[3] - 33u)));
+      data += 4u;
     }
 
     constexpr static char const *header_data =
