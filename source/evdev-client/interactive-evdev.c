@@ -489,9 +489,9 @@ main(int argc, char *argv[])
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGTERM, &act, NULL);
 
-    test_disable_stdin_echo();
+    //test_disable_stdin_echo();
     ret = loop(kbds);
-    test_enable_stdin_echo();
+    //test_enable_stdin_echo();
 
     free_keyboards(kbds);
 err_compose:
