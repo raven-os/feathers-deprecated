@@ -2,7 +2,10 @@
 
 #include <iostream>
 #include <signal.h>
+#include <sys/epoll.h>
 #include "XkbWrapper.hpp"
+
+#define EVDEV_OFFSET 8
 
 enum toDestroy
 {
@@ -27,7 +30,7 @@ class EvdevClient
 	const char *options;
 	const char *keymap_path;
 	const char *locale;
-	struct sigaction act;
+	bool terminate;
 	bool valid;
 	XkbWrapper xkbWrapper;
 	enum toDestroy destructionFlag;
@@ -39,4 +42,7 @@ public:
 	bool initClient();
 	void destroyClient();
 	bool isValid() const;
+	void process_event(struct keyboard *kbd, uint16_t type, uint16_t code, int32_t value);
+	int read_keyboard(struct keyboard *kbd);
+	int loop();
 };
