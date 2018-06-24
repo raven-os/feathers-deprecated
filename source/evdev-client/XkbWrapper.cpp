@@ -20,11 +20,11 @@ struct xkb_keymap *XkbWrapper::newKeymap(struct xkb_context *context) const
 }
 
 /* Some heuristics to see if the device is a keyboard. */
-bool is_keyboard(int fd)
+bool XkbWrapper::isKeyboard(int fd) const
 {
 	unsigned long evbits[NLONGS(EV_CNT)] = { 0 };
 	unsigned long keybits[NLONGS(KEY_CNT)] = { 0 };
-	auto evdev_bit_is_set(
+	auto evdevBitIsSet(
 		[](const unsigned long *array, int bit)
 		{
 			int index(bit / (CHAR_BIT * sizeof(long)));
@@ -39,7 +39,7 @@ bool is_keyboard(int fd)
 	{
 		return (false);
 	}
-	if (!evdev_bit_is_set(evbits, EV_KEY))
+	if (!evdevBitIsSet(evbits, EV_KEY))
 	{
 		return (false);
 	}
@@ -51,7 +51,7 @@ bool is_keyboard(int fd)
 	}
 	for (int i = KEY_RESERVED; i <= KEY_MIN_INTERESTING; i++)
 	{
-		if (evdev_bit_is_set(keybits, i))
+		if (evdevBitIsSet(keybits, i))
 		{
 			return (true);
 		}
@@ -59,13 +59,13 @@ bool is_keyboard(int fd)
 	return (false);
 }
 
-int keyboard_new(struct dirent *ent, struct xkb_keymap *keymap, struct keyboard **out)
+int XkbWrapper::keyboardNew(struct dirent *ent, struct xkb_keymap *keymap,
+	struct keyboard **out) const
 {
 	int ret;
 	char *path;
 	int fd;
 	struct xkb_state *state;
-	struct xkb_compose_state *compose_state(NULL);
 	struct keyboard *kbd;
 
 	ret = asprintf(&path, "/dev/input/%s", ent->d_name);
@@ -79,7 +79,7 @@ int keyboard_new(struct dirent *ent, struct xkb_keymap *keymap, struct keyboard 
 		free(path);
 		return (-errno);
 	}
-	if (!is_keyboard(fd))
+	if (!isKeyboard(fd))
 	{
 		/* Dummy "skip this device" value. */
 		close(fd);
@@ -105,12 +105,12 @@ int keyboard_new(struct dirent *ent, struct xkb_keymap *keymap, struct keyboard 
 	kbd->path = path;
 	kbd->fd = fd;
 	kbd->state = state;
-	kbd->compose_state = compose_state;
+	kbd->compose_state = NULL;
 	*out = kbd;
 	return (0);
 }
 
-static int filter_device_name(const struct dirent *ent)
+static int filterDeviceName(const struct dirent *ent)
 {
 	return (!fnmatch("event*", ent->d_name, 0));
 }
@@ -124,7 +124,7 @@ struct keyboard *XkbWrapper::getKeyboards(struct xkb_keymap *keymap) const
 	struct keyboard *kbds(NULL);
 	struct keyboard *kbd(NULL);
 
-	nents = scandir("/dev/input", &ents, filter_device_name, alphasort);
+	nents = scandir("/dev/input", &ents, filterDeviceName, alphasort);
 	if (nents < 0)
 	{
 		fprintf(stderr, "Couldn't scan /dev/input: %s\n", strerror(errno));
@@ -132,7 +132,7 @@ struct keyboard *XkbWrapper::getKeyboards(struct xkb_keymap *keymap) const
 	}
 	for (i = 0; i < nents; i++)
 	{
-		ret = keyboard_new(ents[i], keymap, &kbd);
+		ret = keyboardNew(ents[i], keymap, &kbd);
 		if (ret)
 		{
 			if (ret == -EACCES)
@@ -167,7 +167,7 @@ struct keyboard *XkbWrapper::getKeyboards(struct xkb_keymap *keymap) const
 	return (kbds);
 }
 
-static void keyboard_free(struct keyboard *kbd)
+void XkbWrapper::keyboardFree(struct keyboard *kbd) const
 {
 	if (!kbd)
 	{
@@ -189,7 +189,7 @@ void XkbWrapper::freeKeyboards(struct keyboard *kbds) const
 	while (kbds)
 	{
 		next = kbds->next;
-		keyboard_free(kbds);
+		keyboardFree(kbds);
 		kbds = next;
 	}
 }
