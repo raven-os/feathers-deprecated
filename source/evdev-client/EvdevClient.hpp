@@ -10,15 +10,16 @@ class EvdevClient
 	struct keyboard *kbds;
 	struct xkb_context *ctx;
 	struct xkb_keymap *keymap;
-	struct xkb_compose_table *compose_table = NULL;
-	const char *rules = NULL;
-	const char *model = NULL;
-	const char *layout = NULL;
-	const char *variant = NULL;
-	const char *options = NULL;
-	const char *keymap_path = NULL;
+	struct xkb_compose_table *compose_table;
+	const char *rules;
+	const char *model;
+	const char *layout;
+	const char *variant;
+	const char *options;
+	const char *keymap_path;
 	const char *locale;
 	struct sigaction act;
+	bool isValid;
 
 public:
 	EvdevClient();
