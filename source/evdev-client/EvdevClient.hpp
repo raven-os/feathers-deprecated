@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <signal.h>
+#include "XkbWrapper.hpp"
 
 class EvdevClient
 {
@@ -20,6 +21,7 @@ class EvdevClient
 	const char *locale;
 	struct sigaction act;
 	bool valid;
+	XkbWrapper xkbWrapper;
 
 public:
 	EvdevClient();
