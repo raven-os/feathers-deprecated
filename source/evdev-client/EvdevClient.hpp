@@ -4,6 +4,12 @@
 #include <signal.h>
 #include "XkbWrapper.hpp"
 
+enum toDestroy
+{
+	ALL = 0,
+	ONLY_CONTEXT
+};
+
 class EvdevClient
 {
 	int ret;
@@ -22,11 +28,13 @@ class EvdevClient
 	struct sigaction act;
 	bool valid;
 	XkbWrapper xkbWrapper;
+	enum toDestroy destructionFlag;
 
 public:
 	EvdevClient();
 	~EvdevClient();
 
 	bool initClient();
+	void destroyClient();
 	bool isValid() const;
 };

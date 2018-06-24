@@ -16,7 +16,7 @@ valid(false)
 
 EvdevClient::~EvdevClient()
 {
-	xkb_context_unref(ctx);
+	destroyClient();
 	std::cout << "EvdevClient destructed." << std::endl;
 }
 
@@ -25,11 +25,21 @@ bool EvdevClient::initClient()
 	ctx = xkbWrapper.newContext();
 	if (!ctx)
 	{
-			fprintf(stderr, "Couldn't create xkb context\n");
-			return (valid);
+		fprintf(stderr, "Couldn't create xkb context\n");
+		return (valid);
 	}
+	destructionFlag = toDestroy::ONLY_CONTEXT;
 	valid = true;
 	return (valid);
+}
+
+void EvdevClient::destroyClient()
+{
+	switch (destructionFlag) {
+		case toDestroy::ALL:
+		case toDestroy::ONLY_CONTEXT:
+		xkb_context_unref(ctx);
+	}
 }
 
 bool EvdevClient::isValid() const
