@@ -235,3 +235,9 @@ void EvdevClient::tick()
     }
     return;
 }
+
+bool EvdevClient::initClient()
+{
+	isValid = true;
+	return (isValid);
+}
