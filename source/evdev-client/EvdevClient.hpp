@@ -19,11 +19,12 @@ class EvdevClient
 	const char *keymap_path;
 	const char *locale;
 	struct sigaction act;
-	bool isValid;
+	bool valid;
 
 public:
 	EvdevClient();
 	~EvdevClient();
 
 	bool initClient();
+	bool isValid() const;
 };
