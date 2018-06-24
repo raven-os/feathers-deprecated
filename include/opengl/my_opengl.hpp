@@ -94,6 +94,7 @@ namespace	my_opengl
   void		shaderError(GLenum const shadertype, GLuint const shader);
   Shader	createShader(GLenum const shadertype, GLchar const *src);
   void		programError(GLuint const program);
+  Program	createProgram(std::string const& name);
 
   template<unsigned int count>
   Program createProgram(std::array<Shader const, count> const shaders)

@@ -3,6 +3,7 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
+#include <cstring>
 #include "opengl/my_opengl.hpp"
 
 void my_opengl::shaderError(GLenum const shadertype, GLuint const shader)
@@ -45,6 +46,29 @@ Shader my_opengl::createShader(GLenum const shadertype, GLchar const *src)
   if (status == GL_FALSE)
     shaderError(shadertype, shader);
   return (shader);
+}
+
+Program my_opengl::createProgram(std::string const& name)
+{
+  std::stringstream vert;
+  std::stringstream frag;
+  std::ifstream vertInput("shaders/" + name + ".vert");
+  std::ifstream fragInput("shaders/" + name + ".frag");
+
+  if (!fragInput || !vertInput)
+    {
+      std::cout << "shaders/" + name + ".vert" << std::endl;
+      std::cout << "shaders/" + name + ".frag" << std::endl;
+      throw std::runtime_error(strerror(errno));
+    }
+
+  vert << vertInput.rdbuf();
+  frag << fragInput.rdbuf();
+
+  Shader vertex = my_opengl::createShader(GL_VERTEX_SHADER, vert.str().c_str());
+  Shader fragment = my_opengl::createShader(GL_FRAGMENT_SHADER, frag.str().c_str());
+
+  return my_opengl::createProgram<2>({vertex, fragment});
 }
 
 Shader::Shader(GLuint shadertype)
