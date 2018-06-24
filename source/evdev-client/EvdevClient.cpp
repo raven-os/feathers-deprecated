@@ -238,6 +238,11 @@ void EvdevClient::tick()
 
 bool EvdevClient::initClient()
 {
-	isValid = true;
-	return (isValid);
+	valid = true;
+	return (valid);
+}
+
+bool EvdevClient::isValid() const
+{
+	return (valid);
 }
