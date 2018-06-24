@@ -24,4 +24,6 @@ class EvdevClient
 public:
 	EvdevClient();
 	~EvdevClient();
+
+	bool initClient();
 };
