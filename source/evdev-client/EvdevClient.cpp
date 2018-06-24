@@ -18,3 +18,9 @@ EvdevClient::~EvdevClient()
 {
 	std::cout << "EvdevClient destructed." << std::endl;
 }
+
+bool EvdevClient::initClient()
+{
+	isValid = true;
+	return (isValid);
+}
