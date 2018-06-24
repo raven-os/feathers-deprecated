@@ -16,11 +16,18 @@ valid(false)
 
 EvdevClient::~EvdevClient()
 {
+	xkb_context_unref(ctx);
 	std::cout << "EvdevClient destructed." << std::endl;
 }
 
 bool EvdevClient::initClient()
 {
+	ctx = xkbWrapper.newContext();
+	if (!ctx)
+	{
+			fprintf(stderr, "Couldn't create xkb context\n");
+			return (valid);
+	}
 	valid = true;
 	return (valid);
 }
