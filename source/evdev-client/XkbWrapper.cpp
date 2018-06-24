@@ -1,10 +1,11 @@
 #include "XkbWrapper.hpp"
 
-struct xkb_context *newContext() const
+struct xkb_context *XkbWrapper::newContext() const
 {
 	struct xkb_context *ctx;
+	enum xkb_context_flags flags(XKB_CONTEXT_NO_FLAGS);
 
-	ctx = xkb_context_new(0);
+	ctx = xkb_context_new(flags);
 	if (!ctx)
 	{
 		return NULL;
