@@ -29,6 +29,13 @@ bool EvdevClient::initClient()
 		return (valid);
 	}
 	destructionFlag = toDestroy::ONLY_CONTEXT;
+	keymap = xkbWrapper.newKeymap(ctx);
+	if (!keymap)
+	{
+		fprintf(stderr, "Couldn't create xkb keymap\n");
+		return (valid);
+	}
+	destructionFlag = toDestroy::FROM_KEYMAP;
 	valid = true;
 	return (valid);
 }
@@ -37,6 +44,9 @@ void EvdevClient::destroyClient()
 {
 	switch (destructionFlag) {
 		case toDestroy::ALL:
+		case toDestroy::FROM_KEYMAP:
+		xkb_keymap_unref(keymap);
+		[[fallthrough]];
 		case toDestroy::ONLY_CONTEXT:
 		xkb_context_unref(ctx);
 	}
