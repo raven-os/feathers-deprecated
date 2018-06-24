@@ -238,6 +238,12 @@ void EvdevClient::tick()
 
 bool EvdevClient::initClient()
 {
+	ctx = xkbWrapper.newContext();
+	if (!ctx)
+	{
+			fprintf(stderr, "Couldn't create xkb context\n");
+			return (valid);
+	}
 	valid = true;
 	return (valid);
 }
