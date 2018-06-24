@@ -7,6 +7,7 @@
 enum toDestroy
 {
 	ALL = 0,
+	FROM_KEYBOARDS,
 	FROM_KEYMAP,
 	ONLY_CONTEXT
 };
