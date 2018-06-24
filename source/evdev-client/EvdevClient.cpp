@@ -9,7 +9,7 @@ layout(NULL),
 variant(NULL),
 options(NULL),
 keymap_path(NULL),
-isValid(false)
+valid(false)
 {
 	std::cout << "EvdevClient constructed." << std::endl;
 }
@@ -21,6 +21,11 @@ EvdevClient::~EvdevClient()
 
 bool EvdevClient::initClient()
 {
-	isValid = true;
-	return (isValid);
+	valid = true;
+	return (valid);
+}
+
+bool EvdevClient::isValid() const
+{
+	return (valid);
 }
