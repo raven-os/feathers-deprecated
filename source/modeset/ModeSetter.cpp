@@ -64,7 +64,7 @@ ModeSetter::Drm::Drm()
   drmModeFreeResources(res);
 }
 
-ModeSetter::Gbm::Gbm(int fd, uint16_t hDisplay, uint16_t vDisplay)
+ModeSetter::Gbm::Gbm(int fd, uint16_t width, uint16_t height)
 {
   gbmDevice = gbm_create_device(fd);
   eglDisplay = eglGetDisplay(gbmDevice);
@@ -84,8 +84,8 @@ ModeSetter::Gbm::Gbm(int fd, uint16_t hDisplay, uint16_t vDisplay)
 
   // create the GBM and EGL surface
   gbmSurface = gbm_surface_create(gbmDevice,
-				  hDisplay,
-				  vDisplay,
+				  height,
+				  width,
 				  GBM_BO_FORMAT_XRGB8888,
 				  GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
   eglSurface = eglCreateWindowSurface(eglDisplay, config, gbmSurface, nullptr);
@@ -94,7 +94,7 @@ ModeSetter::Gbm::Gbm(int fd, uint16_t hDisplay, uint16_t vDisplay)
 
 ModeSetter::ModeSetter()
   : drm(),
-    gbm(drm.fd, drm.modeInfo.hdisplay, drm.modeInfo.vdisplay),
+    gbm(drm.fd, drm.modeInfo.vdisplay, drm.modeInfo.hdisplay),
     previousBo(nullptr),
     previousFb(0)
 {
@@ -154,4 +154,14 @@ void ModeSetter::swapBuffers()
 
   previousBo = bo;
   previousFb = fb;
+}
+
+int ModeSetter::getScreenWidth() const
+{
+  return drm.modeInfo.vdisplay;
+}
+
+int ModeSetter::getScreenHeight() const
+{
+  return drm.modeInfo.hdisplay;
 }

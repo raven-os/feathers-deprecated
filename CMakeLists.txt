@@ -25,7 +25,7 @@ find_package(Wayland REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(DRM REQUIRED)
 find_package(EGL REQUIRED)
-find_package(OpenGL REQUIRED)
+find_package(OpenGLES3 REQUIRED)
 
 include_directories(
   ${HEADER_DIRECTORY}
@@ -34,7 +34,7 @@ include_directories(
   ${DRM_INCLUDE_DIR}
   ${GBM_INCLUDE_DIR}
   ${EGL_INCLUDE_DIR}
-  ${OPENGL_INCLUDE_DIR}
+  ${OPENGLES3_INCLUDE_DIR}
   )
 
 if (DEFINED CLAWS_DIR)
@@ -58,5 +58,5 @@ target_link_libraries(${PROJECT_NAME} ${WAYLAND_SERVER_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${DRM_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${GBM_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${EGL_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OPENGLES3_LIBRARY})
 target_link_libraries(${PROJECT_NAME} xkbcommon)
