@@ -23,7 +23,7 @@ class ModeSetter
 
   struct Gbm
   {
-    Gbm(int fd, uint16_t hDisplay, uint16_t vDisplay);
+    Gbm(int fd, uint16_t width, uint16_t height);
 
     struct gbm_device *gbmDevice;
     struct gbm_surface *gbmSurface;
@@ -37,6 +37,8 @@ public:
   ~ModeSetter();
 
   void swapBuffers();
+  int getScreenWidth() const;
+  int getScreenHeight() const;
 
 private:
   Drm drm;

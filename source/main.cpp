@@ -1,6 +1,7 @@
 #include "display/WaylandSurface.hpp"
 #include "display/Display.ipp"
 #include "modeset/ModeSetter.hpp"
+#include "opengl/QuadFullscreen.hpp"
 #include "Exception.hpp"
 #include "display/WindowTree.hpp"
 
@@ -43,11 +44,12 @@ int main(int argc, char **argv)
       try
 	{
 	  ModeSetter modeSetter;
-	  for (int i = 0; i < 600; ++i)
+
+	  QuadFullscreen quadFullscreen;
+
+	  for (int i = 0; i < 100; ++i)
 	    {
-	      float progress = i / 600.0f;
-	      glClearColor (1.0f - progress, progress, 0.0, 1.0);
-	      glClear (GL_COLOR_BUFFER_BIT);
+	      quadFullscreen.draw();
 	      modeSetter.swapBuffers();
 	      usleep(100);
 	    }
