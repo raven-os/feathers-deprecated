@@ -34,7 +34,7 @@ void addTestWindows(display::WindowTree &windowTree)
 
 int main(int argc, char **argv)
 {
-  display::WindowTree windowTree(display::WindowTree::WindowData
+  display::WindowTree windowTree(display::WindowData
 				 {{{{0, 0}}, {{600, 400}}}, true });
 
   addTestWindows(windowTree);
@@ -47,11 +47,10 @@ int main(int argc, char **argv)
 
 	  QuadFullscreen quadFullscreen;
 
-	  for (int i = 0; i < 100; ++i)
+	  for (int i = 0; i < 120; ++i)
 	    {
 	      quadFullscreen.draw();
 	      modeSetter.swapBuffers();
-	      usleep(100);
 	    }
 	}
       catch (ModeSettingError const& e)
