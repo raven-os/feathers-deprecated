@@ -1,30 +1,17 @@
 #pragma once
 
+#include <vector>
 #include <iterator>
 
 #include <claws/tagged_data.hpp>
 #include <claws/iterator_util.hpp>
 
-#include <array>
-#include <vector>
+#include "display/WindowData.hpp"
 
 namespace display
 {
   class WindowTree
   {
-  public:
-    struct Rect
-    {
-      std::array<uint16_t, 2u> position;
-      std::array<uint16_t, 2u> size;
-    };
-    
-    struct WindowData
-    {
-      Rect rect;
-      bool isSolid;
-      //bool relative; TODO
-    };
   private:
     struct WindowNodeTag;
   public:
