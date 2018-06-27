@@ -1,5 +1,6 @@
 #include "display/WaylandSurface.hpp"
 #include "display/Display.ipp"
+#include "evdev-client/EvdevClient.hpp"
 #include "modeset/ModeSetter.hpp"
 #include "opengl/QuadFullscreen.hpp"
 #include "Exception.hpp"
@@ -44,13 +45,15 @@ int main(int argc, char **argv)
       try
 	{
 	  ModeSetter modeSetter;
+	  EvdevClient evdevC;
 
-	  QuadFullscreen quadFullscreen;
-
-	  for (int i = 0; i < 120; ++i)
+	  evdevC.initClient();
+	  for (int i = 0; i < 600; ++i)
 	    {
 	      quadFullscreen.draw();
 	      modeSetter.swapBuffers();
+	      evdevC.loop();
+	      usleep(100);
 	    }
 	}
       catch (ModeSettingError const& e)
