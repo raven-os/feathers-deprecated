@@ -442,13 +442,13 @@ int EvdevClient::loop()
             goto err_epoll;
         }
     }
-    while (!terminate)
-    {
-        ret = epoll_wait(epfd, evs, 16, -1);
+    //while (!terminate)
+    //{
+        ret = epoll_wait(epfd, evs, 16, 10);
         if (ret < 0)
         {
             if (errno == EINTR)
-            continue;
+	      return 0;
             ret = -errno;
             fprintf(stderr, "Couldn't poll for events: %s\n",
             strerror(errno));
@@ -463,7 +463,7 @@ int EvdevClient::loop()
                 goto err_epoll;
             }
         }
-    }
+    //}
     close(epfd);
     return 0;
     err_epoll:
