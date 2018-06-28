@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	    {
 	      quadFullscreen.draw();
 	      modeSetter.swapBuffers();
-	      evdevC.loop();
+	      evdevC.tick();
 	      usleep(100);
 	    }
 	}
