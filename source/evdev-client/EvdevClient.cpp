@@ -46,7 +46,7 @@ bool EvdevClient::initClient()
     epfd = epoll_create1(0);
     if (epfd < 0)
     {
-        fprintf(stderr, "Couldn't create epoll instance.\n");
+        fprintf(stderr, "Couldn't create epoll instance: %s\n", strerror(errno));
         return (valid);
     }
     destructionFlag = toDestroy::FROM_EPFD;
@@ -57,7 +57,8 @@ bool EvdevClient::initClient()
         ev.data.ptr = kbd;
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, kbd->fd, &ev))
         {
-            fprintf(stderr, "Couldn't add %s to epoll.\n", kbd->path);
+            fprintf(stderr, "Couldn't add %s to epoll: %s\n",
+            kbd->path, strerror(errno));
             return (valid);
         }
     }
