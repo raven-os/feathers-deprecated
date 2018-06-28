@@ -2,8 +2,8 @@
 #include "display/Display.ipp"
 #include "evdev-client/EvdevClient.hpp"
 #include "modeset/ModeSetter.hpp"
+#include "opengl/QuadFullscreen.hpp"
 #include "Exception.hpp"
-
 
 int main(int argc, char **argv)
 {
@@ -14,13 +14,12 @@ int main(int argc, char **argv)
 	{
 	  ModeSetter modeSetter;
 	  EvdevClient evdevC;
+	  QuadFullscreen quadFullscreen;
 
 	  evdevC.initClient();
-	  for (int i = 0; i < 600; ++i)
+	  for (int i = 0; i < 100; ++i)
 	    {
-	      float progress = i / 600.0f;
-	      glClearColor (1.0f - progress, progress, 0.0, 1.0);
-	      glClear (GL_COLOR_BUFFER_BIT);
+	      quadFullscreen.draw();
 	      modeSetter.swapBuffers();
 	      evdevC.tick();
 	      usleep(100);
