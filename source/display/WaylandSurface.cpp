@@ -2,8 +2,7 @@
 
 namespace display
 {
-  WaylandSurface::WaylandSurface()
-    : wlDisplay(wl_display_connect(nullptr))
+  WaylandSurface::WaylandSurface() : UserInput(true)
   {
     if (!wlDisplay)
       throw std::runtime_error("Could not connect to display");
@@ -35,7 +34,6 @@ namespace display
     }
     addListener(wlShellSurface, *this);
     wl_shell_surface_set_toplevel(wlShellSurface);
-    wl_display_roundtrip(wlDisplay);
   }
 
   void WaylandSurface::shellSurfacePing(struct wl_shell_surface *shellSurface, uint32_t serial)
@@ -76,11 +74,6 @@ namespace display
 
   void WaylandSurface::registryRemoveObject(struct wl_registry *registry, uint32_t name)
   {
-  }
-
-  void WaylandSurface::dispatch()
-  {
-    wl_display_dispatch_pending(wlDisplay);
   }
 
   bool WaylandSurface::isRunning() const
