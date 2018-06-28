@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 	      glClearColor (1.0f - progress, progress, 0.0, 1.0);
 	      glClear (GL_COLOR_BUFFER_BIT);
 	      modeSetter.swapBuffers();
-	      evdevC.loop();
+	      evdevC.tick();
 	      usleep(100);
 	    }
 	}
