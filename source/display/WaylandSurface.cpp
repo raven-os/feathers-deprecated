@@ -38,7 +38,6 @@ namespace display
     }
     addListener(wlShellSurface, *this);
     wl_shell_surface_set_toplevel(wlShellSurface);
-    wl_display_roundtrip(wlDisplay);
   }
 
   void WaylandSurface::shellSurfacePing(struct wl_shell_surface *shellSurface, uint32_t serial)
@@ -79,11 +78,6 @@ namespace display
 
   void WaylandSurface::registryRemoveObject(struct wl_registry *, [[maybe_unused]]uint32_t name)
   {
-  }
-
-  void WaylandSurface::dispatch()
-  {
-    wl_display_dispatch_pending(wlDisplay);
   }
 
   bool WaylandSurface::isRunning() const
