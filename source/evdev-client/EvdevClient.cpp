@@ -43,6 +43,24 @@ bool EvdevClient::initClient()
         return (valid);
     }
     destructionFlag = toDestroy::FROM_KEYBOARDS;
+    epfd = epoll_create1(0);
+    if (epfd < 0)
+    {
+        fprintf(stderr, "Couldn't create epoll instance.\n");
+        return (valid);
+    }
+    destructionFlag = toDestroy::FROM_EPFD;
+    for (struct keyboard *kbd = kbds; kbd; kbd = kbd->next)
+    {
+        memset(&ev, 0, sizeof(ev));
+        ev.events = EPOLLIN;
+        ev.data.ptr = kbd;
+        if (epoll_ctl(epfd, EPOLL_CTL_ADD, kbd->fd, &ev))
+        {
+            fprintf(stderr, "Couldn't add %s to epoll.\n", kbd->path);
+            return (valid);
+        }
+    }
     valid = true;
     return (valid);
 }
@@ -52,6 +70,9 @@ void EvdevClient::destroyClient()
     switch (destructionFlag)
     {
         case toDestroy::ALL:
+        case toDestroy::FROM_EPFD:
+        close(epfd);
+        [[fallthrough]];
         case toDestroy::FROM_KEYBOARDS:
         xkbWrapper.freeKeyboards(kbds);
         [[fallthrough]];
@@ -197,60 +218,27 @@ int EvdevClient::read_keyboard(struct keyboard *kbd)
     return 0;
 }
 
-int EvdevClient::loop()
+void EvdevClient::tick()
 {
-    int i, ret;
-    int epfd;
+    int ret;
     struct keyboard *kbd;
-    struct epoll_event ev;
-    struct epoll_event evs[16];
 
-    epfd = epoll_create1(0);
-    if (epfd < 0)
+    ret = epoll_wait(epfd, evs, 16, 10);
+    if (ret < 0)
     {
-        fprintf(stderr, "Couldn't create epoll instance: %s\n",
-        strerror(errno));
-        return -errno;
-    }
-    for (kbd = kbds; kbd; kbd = kbd->next)
-    {
-        memset(&ev, 0, sizeof(ev));
-        ev.events = EPOLLIN;
-        ev.data.ptr = kbd;
-        ret = epoll_ctl(epfd, EPOLL_CTL_ADD, kbd->fd, &ev);
-        if (ret)
+        if (errno == EINTR)
         {
-            ret = -errno;
-            fprintf(stderr, "Couldn't add %s to epoll: %s\n",
-            kbd->path, strerror(errno));
-            goto err_epoll;
+            return;
+        }
+        fprintf(stderr, "Couldn't poll for events: %s\n", strerror(errno));
+    }
+    for (int i = 0; i < ret; i++)
+    {
+        kbd = (struct keyboard *)evs[i].data.ptr;
+        if (read_keyboard(kbd))
+        {
+            return;
         }
     }
-    //while (!terminate)
-    //{
-        ret = epoll_wait(epfd, evs, 16, 10);
-        if (ret < 0)
-        {
-            if (errno == EINTR)
-	      return 0;
-            ret = -errno;
-            fprintf(stderr, "Couldn't poll for events: %s\n",
-            strerror(errno));
-            goto err_epoll;
-        }
-        for (i = 0; i < ret; i++)
-        {
-            kbd = (struct keyboard *)evs[i].data.ptr;
-            ret = read_keyboard(kbd);
-            if (ret)
-            {
-                goto err_epoll;
-            }
-        }
-    //}
-    close(epfd);
-    return 0;
-    err_epoll:
-    close(epfd);
-    return ret;
+    return;
 }
