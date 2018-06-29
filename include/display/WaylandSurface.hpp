@@ -5,15 +5,16 @@
 #include <vulkan/vulkan_wayland.h>
 #include <magma/VulkanHandler.hpp>
 #include <magma/Surface.hpp>
+#include <wayland-client.h>
 #include <vector>
 
-#include "UserInput.hpp"
 #include "listeners/SeatListener.hpp"
 
 namespace  display
 {
-  class WaylandSurface : public UserInput
+  class WaylandSurface
   {
+    struct wl_display *wlDisplay{nullptr};
     struct wl_registry *wlRegistry{nullptr};
     struct wl_compositor *wlCompositor{nullptr};
     struct wl_surface *wlSurface{nullptr};
@@ -61,6 +62,7 @@ namespace  display
     void registryAddObject(struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version);
     void registryRemoveObject (struct wl_registry *registry, uint32_t name);
 
+    void dispatch();
     bool isRunning() const;
   };
 }
