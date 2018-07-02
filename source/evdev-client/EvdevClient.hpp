@@ -18,6 +18,7 @@ enum toDestroy
 
 class EvdevClient
 {
+    // ATTRIBUTES
     int ret;
     int opt;
     int epfd;
@@ -39,6 +40,10 @@ class EvdevClient
     struct epoll_event ev;
     struct epoll_event evs[16];
 
+    // FUNCTIONS
+    void process_event(struct keyboard *kbd, uint16_t type, uint16_t code, int32_t value);
+    int read_keyboard(struct keyboard *kbd);
+
 public:
     EvdevClient();
     ~EvdevClient();
@@ -46,7 +51,5 @@ public:
     bool initClient();
     void destroyClient();
     bool isValid() const;
-    void process_event(struct keyboard *kbd, uint16_t type, uint16_t code, int32_t value);
-    int read_keyboard(struct keyboard *kbd);
     void tick();
 };
