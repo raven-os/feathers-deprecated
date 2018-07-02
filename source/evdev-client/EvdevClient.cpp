@@ -8,7 +8,6 @@ layout(NULL),
 variant(NULL),
 options(NULL),
 keymap_path(NULL),
-terminate(NULL),
 valid(false)
 {
     std::cout << "EvdevClient constructed." << std::endl;
@@ -355,7 +354,7 @@ void test_print_keycode_state(struct xkb_state *state,
     printf("\n");
 }
 
-void EvdevClient::process_event(struct keyboard *kbd,
+void EvdevClient::processEvent(struct keyboard *kbd,
     uint16_t type,
     uint16_t code,
     int32_t value
@@ -368,19 +367,20 @@ void EvdevClient::process_event(struct keyboard *kbd,
     {
         return;
     }
+    keycode = EVDEV_OFFSET + code;
     keymap = xkb_state_get_keymap(kbd->state);
-    if (value == KEY_STATE_REPEAT && !xkb_keymap_key_repeats(keymap, keycode))
+    if (value == keyState::KEY_STATE_REPEAT && !xkb_keymap_key_repeats(keymap, keycode))
     {
         return;
     }
-    if (value != KEY_STATE_RELEASE)
+    if (value != keyState::KEY_STATE_RELEASE)
     {
         test_print_keycode_state(kbd->state,
             keycode,
             XKB_CONSUMED_MODE_XKB
         );
     }
-    if (value == KEY_STATE_RELEASE)
+    if (value == keyState::KEY_STATE_RELEASE)
     {
         xkb_state_update_key(kbd->state, keycode, XKB_KEY_UP);
     }
@@ -390,7 +390,7 @@ void EvdevClient::process_event(struct keyboard *kbd,
     }
 }
 
-int EvdevClient::read_keyboard(struct keyboard *kbd)
+int EvdevClient::readKeyboard(struct keyboard *kbd)
 {
     ssize_t len;
     struct input_event evs[16];
@@ -401,7 +401,7 @@ int EvdevClient::read_keyboard(struct keyboard *kbd)
 
         for (size_t i = 0; i < nevs; i++)
         {
-            process_event(kbd, evs[i].type, evs[i].code, evs[i].value);
+            processEvent(kbd, evs[i].type, evs[i].code, evs[i].value);
         }
     }
     if (len < 0 && errno != EWOULDBLOCK)
@@ -416,6 +416,7 @@ void EvdevClient::tick()
 {
     int ret;
     struct keyboard *kbd;
+    struct epoll_event evs[16];
 
     ret = epoll_wait(epfd, evs, 16, 10);
     if (ret < 0)
@@ -429,7 +430,7 @@ void EvdevClient::tick()
     for (int i = 0; i < ret; i++)
     {
         kbd = (struct keyboard *)evs[i].data.ptr;
-        if (read_keyboard(kbd))
+        if (readKeyboard(kbd))
         {
             return;
         }

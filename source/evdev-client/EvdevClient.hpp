@@ -43,8 +43,6 @@ class EvdevClient
 
     bool valid;
     enum toDestroy destructionFlag;
-    struct epoll_event ev;
-    struct epoll_event evs[16];
 
     // FUNCTIONS
     void processEvent(struct keyboard *kbd, uint16_t type, uint16_t code, int32_t value);
