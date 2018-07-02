@@ -368,11 +368,6 @@ void EvdevClient::process_event(struct keyboard *kbd,
     {
         return;
     }
-    keycode = EVDEV_OFFSET + code;
-    if (keycode == 9)
-    {
-        terminate = true;
-    }
     keymap = xkb_state_get_keymap(kbd->state);
     if (value == KEY_STATE_REPEAT && !xkb_keymap_key_repeats(keymap, keycode))
     {
@@ -403,6 +398,7 @@ int EvdevClient::read_keyboard(struct keyboard *kbd)
     while ((len = read(kbd->fd, &evs, sizeof(evs))) > 0)
     {
         const size_t nevs = len / sizeof(struct input_event);
+
         for (size_t i = 0; i < nevs; i++)
         {
             process_event(kbd, evs[i].type, evs[i].code, evs[i].value);
@@ -411,9 +407,9 @@ int EvdevClient::read_keyboard(struct keyboard *kbd)
     if (len < 0 && errno != EWOULDBLOCK)
     {
         fprintf(stderr, "Couldn't read %s: %s\n", kbd->path, strerror(errno));
-        return -errno;
+        return (1);
     }
-    return 0;
+    return (0);
 }
 
 void EvdevClient::tick()
