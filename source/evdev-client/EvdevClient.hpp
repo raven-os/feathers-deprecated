@@ -16,16 +16,23 @@ enum toDestroy
     FROM_EPFD,
 };
 
+/* The meaning of the input_event 'value' field. */
+enum keyState
+{
+    KEY_STATE_RELEASE = 0,
+    KEY_STATE_PRESS = 1,
+    KEY_STATE_REPEAT = 2,
+};
+
 class EvdevClient
 {
     // ATTRIBUTES
-    int ret;
-    int opt;
     int epfd;
     struct keyboard *kbds;
+    XkbWrapper xkbWrapper;
     struct xkb_context *ctx;
     struct xkb_keymap *keymap;
-    struct xkb_compose_table *compose_table;
+
     const char *rules;
     const char *model;
     const char *layout;
@@ -33,16 +40,13 @@ class EvdevClient
     const char *options;
     const char *keymap_path;
     const char *locale;
-    bool terminate;
+
     bool valid;
-    XkbWrapper xkbWrapper;
     enum toDestroy destructionFlag;
-    struct epoll_event ev;
-    struct epoll_event evs[16];
 
     // FUNCTIONS
-    void process_event(struct keyboard *kbd, uint16_t type, uint16_t code, int32_t value);
-    int read_keyboard(struct keyboard *kbd);
+    void processEvent(struct keyboard *kbd, uint16_t type, uint16_t code, int32_t value);
+    int readKeyboard(struct keyboard *kbd);
 
 public:
     EvdevClient();
