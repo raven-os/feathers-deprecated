@@ -13,7 +13,7 @@ Ex:
 ```bash
 mkdir -p build/Debug
 cd build/Debug
-cmake ../.. -DCMAKE_BUILT_TYPE=Debug -DCLAWS_DIR=<claws dir from root> -DMAGMA_DIR=<magma dir from root>
+cmake ../.. -DCMAKE_BUILD_TYPE=Debug -DCLAWS_DIR=<claws dir from root> -DMAGMA_DIR=<magma dir from root>
 cd ../..
 cmake --build build/Debug
 ```
