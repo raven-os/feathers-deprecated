@@ -11,7 +11,7 @@ int main(int argc, char **argv)
       // RUN ON TTY
       try
 	{
-	  ModeSetter modeSetter;
+	  modeset::ModeSetter modeSetter;
 
 	  QuadFullscreen quadFullscreen;
 
