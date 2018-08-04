@@ -54,7 +54,7 @@ namespace display
       nodes.emplace_back(WindowNode{nullNode, nullNode, nullNode, screen});
     }
 
-    uint16_t getWindowCountUpperBound() const
+    uint16_t getWindowCountUpperBound() const noexcept
     {
       return static_cast<uint16_t>(nodes.size());
     }
