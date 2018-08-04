@@ -48,7 +48,7 @@ namespace display
 
     struct Swapchain
     {
-      ModeSetter const *modeset;
+      modeset::ModeSetter const *modeset;
      
       constexpr vk::Format getFormat() const noexcept
       {
@@ -61,7 +61,7 @@ namespace display
       }
     };
 
-    ModeSetter modeSetter;
+    modeset::ModeSetter modeSetter;
     QuadFullscreen quadFullscreen;
     magma::Device<> device;
     magma::Semaphore<> imageAvailable;

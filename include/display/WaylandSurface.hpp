@@ -10,7 +10,7 @@
 
 #include "listeners/SeatListener.hpp"
 
-namespace  display
+namespace display
 {
   class WaylandSurface
   {
