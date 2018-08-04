@@ -105,11 +105,11 @@ namespace	my_opengl
     for (unsigned int i(0); i < count; ++i)
       glAttachShader(program, shaders[i]);
     glLinkProgram(program);
-    for (unsigned int i(0); i < count; ++i)
-      glDetachShader(program, shaders[i]);
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (status == GL_FALSE)
       programError(program);
+    for (unsigned int i(0); i < count; ++i)
+      glDetachShader(program, shaders[i]);
     return (program);
   }
 

@@ -41,8 +41,8 @@ namespace display
     vk::Queue queue;
     magma::DescriptorPool<> descriptorPool;
     magma::DescriptorSets<> descriptorSets;
-    magma::Image<> backgroundImage;
     magma::DeviceMemory<> backgroundImageMemory;
+    magma::Image<> backgroundImage;
     magma::ImageView<> backgroundImageView;
     magma::DynamicBuffer stagingBuffer;
     magma::DynamicBuffer vertexBuffer;
@@ -58,7 +58,7 @@ namespace display
 
     vk::Extent2D getExtent() const noexcept
     {
-      return vk::Extent2D{600, 400};
+      return vk::Extent2D{1920, 1080};
     }
   };
 
@@ -69,10 +69,12 @@ namespace display
     magma::Pipeline<> pipeline;
 
     // This function handles pipeline creation
-    magma::Pipeline<> createPipeline(magma::Device<claws::no_delete> device, magma::Swapchain<claws::no_delete> swapchain, Renderer const &renderer);
+    magma::Pipeline<> createPipeline(magma::Device<claws::no_delete> device, vk::Extent2D extent, Renderer const &renderer);
 
     SwapchainUserData() = default;
-    SwapchainUserData(magma::Device<claws::no_delete> device, magma::Swapchain<claws::no_delete> swapchain, Renderer const &renderer, uint32_t imageCount)
+
+    template<class Swapchain>
+    SwapchainUserData(magma::Device<claws::no_delete> device, Swapchain swapchain, Renderer const &renderer, uint32_t imageCount, vk::ImageLayout const presentLayout = vk::ImageLayout::ePresentSrcKHR)
       : commandBuffers(renderer.commandPool.allocatePrimaryCommandBuffers(imageCount))
       , renderPass([&](){
 	  magma::RenderPassCreateInfo renderPassCreateInfo{{}};
@@ -87,7 +89,7 @@ namespace display
 		  vk::AttachmentLoadOp::eDontCare,
 		  vk::AttachmentStoreOp::eDontCare,
 		  vk::ImageLayout::eUndefined,
-		  vk::ImageLayout::ePresentSrcKHR});
+		  presentLayout});
 
 	  renderPassCreateInfo.attachements.push_back({{},
 		vk::Format::eD32Sfloat,
@@ -102,6 +104,7 @@ namespace display
 	  vk::AttachmentReference colorAttachmentReferences(0, vk::ImageLayout::eColorAttachmentOptimal);
 	  vk::AttachmentReference depthAttachmentReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
+
 	  renderPassCreateInfo.subPasses.push_back(magma::StructBuilder<vk::SubpassDescription, true>
 						   ::make(vk::PipelineBindPoint::eGraphics,
 							  magma::EmptyList{},
@@ -112,10 +115,15 @@ namespace display
 
 	  return device.createRenderPass(renderPassCreateInfo);
 	}())
-      , pipeline(createPipeline(device, swapchain, renderer))
+      , pipeline(createPipeline(device, swapchain.getExtent(), renderer))
     {
     }
-  };
+
+    SwapchainUserData(magma::Device<claws::no_delete> device, magma::Swapchain<> const &swapchain, Renderer const &renderer, uint32_t imageCount)
+      : SwapchainUserData(device, magma::Swapchain<claws::no_delete>(swapchain), renderer, imageCount)
+    {
+    }
+  };  
 
   struct FrameData
   {
@@ -127,8 +135,9 @@ namespace display
     magma::DynamicBuffer::RangeId vertexBufferRangeId{magma::DynamicBuffer::nullId};
     magma::DynamicBuffer::RangeId indexBufferRangeId{magma::DynamicBuffer::nullId};
 
+    template<class Swapchain>
     FrameData(magma::Device<claws::no_delete> device,
-	      magma::Swapchain<claws::no_delete> swapchain,
+	      Swapchain swapchain,
 	      Renderer const &renderer,
 	      SwapchainUserData &swapchainUserData,
 	      magma::ImageView<claws::no_delete> swapchainImageView)
@@ -161,5 +170,15 @@ namespace display
 					     1))
     {
     }
+
+    FrameData(magma::Device<claws::no_delete> device,
+	      magma::Swapchain<> const &swapchain,
+	      Renderer const &renderer,
+	      SwapchainUserData &swapchainUserData,
+	      magma::ImageView<claws::no_delete> swapchainImageView)
+      : FrameData(device, magma::Swapchain<claws::no_delete>(swapchain), renderer, swapchainUserData, swapchainImageView)
+    {
+    }
+	  
   };
 }

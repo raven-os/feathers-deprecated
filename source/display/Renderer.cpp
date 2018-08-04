@@ -19,14 +19,16 @@ namespace display
     , queue(device.getQueue(selectedQueueFamily, 0u))
     , descriptorPool(device.createDescriptorPool(1, {vk::DescriptorPoolSize{vk::DescriptorType::eSampler, 1}, vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage, 1}}))
     , descriptorSets(descriptorPool.allocateDescriptorSets({descriptorSetLayout}))
-    , backgroundImage(device.createImage2D({}, vk::Format::eR8G8B8A8Unorm, {display::superCorbeau::width, display::superCorbeau::height}, vk::SampleCountFlagBits::e1,
-					   vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::ImageLayout::eUndefined))
-    , backgroundImageMemory([this, device, physicalDevice](){
-	auto memRequirements(device.getImageMemoryRequirements(backgroundImage));
+    , backgroundImageMemory()
+    , backgroundImage([&](){
+	auto image(device.createImage2D({}, vk::Format::eR8G8B8A8Unorm, {display::superCorbeau::width, display::superCorbeau::height}, vk::SampleCountFlagBits::e1,
+					vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst, vk::ImageLayout::eUndefined));
 
-	auto memory(device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits));
-	device.bindImageMemory(backgroundImage, memory, 0);
-	return memory;
+	auto memRequirements(device.getImageMemoryRequirements(image));
+
+	this->backgroundImageMemory = device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eDeviceLocal, memRequirements.memoryTypeBits);
+	device.bindImageMemory(image, backgroundImageMemory, 0);
+	return image;
       }())
     , backgroundImageView(device.createImageView({},
 						 backgroundImage,
@@ -266,9 +268,9 @@ namespace display
 
 
 
-  magma::Pipeline<> SwapchainUserData::createPipeline(magma::Device<claws::no_delete> device, magma::Swapchain<claws::no_delete> swapchain, Renderer const &renderer)
+  magma::Pipeline<> SwapchainUserData::createPipeline(magma::Device<claws::no_delete> device, vk::Extent2D extent, Renderer const &renderer)
   {
-    std::cout << "creating pipeline for swapchain with extent " << swapchain.getExtent().width << ", " << swapchain.getExtent().height << std::endl;
+    std::cout << "creating pipeline for swapchain with extent " << extent.width << ", " << extent.height << std::endl;
     /// --- Specialisation info --- ///
     // The width and height are specialized rather than being push constants, because a compositor shoudn't change size often (If ever).
     // Both entries have the size of a float
@@ -278,7 +280,7 @@ namespace display
 	vk::SpecializationMapEntry{1, sizeof(float), sizeof(float)}
     };
     // These are the actual specialisation values
-    std::array<float, 2u> dimensions{static_cast<float>(swapchain.getExtent().width), static_cast<float>(swapchain.getExtent().height)};
+    std::array<float, 2u> dimensions{static_cast<float>(extent.width), static_cast<float>(extent.height)};
 
     auto specialzationInfo(magma::StructBuilder<vk::SpecializationInfo>::make(mapEntries, sizeof(float) * dimensions.size(), dimensions.data()));
     /// --- Specialisation info END --- ///
@@ -304,15 +306,15 @@ namespace display
 													     vertexInputAttrib));
 
     // The viewport is st up so that the top left corner is (0, 0) and the bottom right (width, height)
-    vk::Viewport viewport(-static_cast<float>(swapchain.getExtent().width),
-			  -static_cast<float>(swapchain.getExtent().height), // pos
-			  static_cast<float>(swapchain.getExtent().width) * 2.0f,
-			  static_cast<float>(swapchain.getExtent().height) * 2.0f, // size
+    vk::Viewport viewport(-static_cast<float>(extent.width),
+			  -static_cast<float>(extent.height), // pos
+			  static_cast<float>(extent.width) * 2.0f,
+			  static_cast<float>(extent.height) * 2.0f, // size
 			  0.0f,
 			  1.0); // depth range
 
     // Scissors cover all that is within the compositor
-    vk::Rect2D scissor({0, 0}, swapchain.getExtent());
+    vk::Rect2D scissor({0, 0}, extent);
 
     auto viewportStateCreateInfo(magma::StructBuilder<vk::PipelineViewportStateCreateInfo, true>::make(magma::asListRef(viewport),
 												       magma::asListRef(scissor)));

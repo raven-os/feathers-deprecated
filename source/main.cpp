@@ -1,7 +1,6 @@
 #include "display/WaylandSurface.hpp"
-#include "display/Display.ipp"
-#include "modeset/ModeSetter.hpp"
-#include "opengl/QuadFullscreen.hpp"
+#include "display/Display.hpp"
+#include "display/KernelDisplay.hpp"
 #include "Exception.hpp"
 #include "display/WindowTree.hpp"
 
@@ -15,18 +14,18 @@ void addTestWindows(display::WindowTree &windowTree)
 
     childData.rect.position[0] = 10;
     childData.rect.position[1] = 40;
-    childData.rect.size[0] = 100;
-    childData.rect.size[1] = 100;
+    childData.rect.size[0] = 300;
+    childData.rect.size[1] = 300;
     childData.isSolid = true;
     for (int i = 0; i < 4; ++i)
       {
 	auto grandChild(windowTree.addChild(child));
 	auto &grandChildData(windowTree.getData(grandChild));
 
-	grandChildData.rect.position[0] = 50 + i * 10;
-	grandChildData.rect.position[1] = 50 + i * 60;
-	grandChildData.rect.size[0] = 200;
-	grandChildData.rect.size[1] = 50;
+	grandChildData.rect.position[0] = 100 + i * 20;
+	grandChildData.rect.position[1] = 100 + i * 120;
+	grandChildData.rect.size[0] = 400;
+	grandChildData.rect.size[1] = 100;
 	grandChildData.isSolid = true;
       }
   }
@@ -35,7 +34,7 @@ void addTestWindows(display::WindowTree &windowTree)
 int main(int argc, char **argv)
 {
   display::WindowTree windowTree(display::WindowData
-				 {{{{0, 0}}, {{600, 400}}}, true });
+				 {{{{0, 0}}, {{1920, 1080}}}, true});
 
   addTestWindows(windowTree);
   if (argc == 1)
@@ -43,17 +42,18 @@ int main(int argc, char **argv)
       // RUN ON TTY
       try
 	{
-	  ModeSetter modeSetter;
-
-	  QuadFullscreen quadFullscreen;
+	  display::KernelDisplay kernelDisplay;
 
 	  for (int i = 0; i < 120; ++i)
 	    {
-	      quadFullscreen.draw();
-	      modeSetter.swapBuffers();
+	      kernelDisplay.render(windowTree);
 	    }
 	}
       catch (ModeSettingError const& e)
+	{
+	  std::cerr << e.what() << std::endl;
+	}
+      catch (std::runtime_error const &e)
 	{
 	  std::cerr << e.what() << std::endl;
 	}
@@ -67,7 +67,6 @@ int main(int argc, char **argv)
 	{
 	  display.render(windowTree);
 	  waylandSurface.dispatch();
-	  //  std::cout << "presenting image" << std::endl;
 	}
     }
 

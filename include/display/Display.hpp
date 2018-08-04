@@ -12,38 +12,38 @@ namespace display
 {
   class WindowTree;
 
-  struct Score
-  {
-    bool isSuitable;
-    unsigned int bestQueue;
-    vk::PhysicalDeviceType deviceType;
-
-    unsigned int deviceTypeScore() const noexcept
-    {
-      switch(deviceType)
-	{
-	case vk::PhysicalDeviceType::eIntegratedGpu:
-	  return 4;
-	case vk::PhysicalDeviceType::eDiscreteGpu:
-	  return 3;
-	case vk::PhysicalDeviceType::eVirtualGpu:
-	  return 2;
-	case vk::PhysicalDeviceType::eOther:
-	  return 1;
-	case vk::PhysicalDeviceType::eCpu:
-	default:
-	  return 0;
-	}
-    }
-
-    bool operator<(Score const &other) const noexcept
-    {
-      return (!isSuitable || (other.isSuitable && (deviceTypeScore() < other.deviceTypeScore())));
-    }
-  };
-
   class Subcompositor
   {
+    struct Score
+    {
+      bool isSuitable;
+      unsigned int bestQueue;
+      vk::PhysicalDeviceType deviceType;
+
+      unsigned int deviceTypeScore() const noexcept
+      {
+	switch(deviceType)
+	  {
+	  case vk::PhysicalDeviceType::eIntegratedGpu:
+	    return 4;
+	  case vk::PhysicalDeviceType::eDiscreteGpu:
+	    return 3;
+	  case vk::PhysicalDeviceType::eVirtualGpu:
+	    return 2;
+	  case vk::PhysicalDeviceType::eOther:
+	    return 1;
+	  case vk::PhysicalDeviceType::eCpu:
+	  default:
+	    return 0;
+	  }
+      }
+
+      bool operator<(Score const &other) const noexcept
+      {
+	return (!isSuitable || (other.isSuitable && (deviceTypeScore() < other.deviceTypeScore())));
+      }
+    };
+    
     magma::Device<> device;
     magma::Semaphore<> imageAvailable;
     magma::DisplaySystem<Renderer, SwapchainUserData, FrameData> displaySystem;

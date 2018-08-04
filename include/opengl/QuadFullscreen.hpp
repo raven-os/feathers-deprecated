@@ -1,5 +1,4 @@
-#ifndef QUADFULLSCREEN_HPP_
-# define QUADFULLSCREEN_HPP_
+#pragma once
 
 # include "my_opengl.hpp"
 
@@ -9,16 +8,13 @@ public:
   QuadFullscreen();
   ~QuadFullscreen();
 
-  void draw();
+  void draw(void const * data, GLsizei width, GLsizei height);
 
 private:
   static const int VERTICES_SIZE = 16;
 
   Texture texture;
   Program program;
-  float vertices[VERTICES_SIZE];
   Vao vao;
   glBuffer buffer;
 };
-
-#endif /* !QUADFULLSCREEN_HPP_ */

@@ -34,6 +34,7 @@ class ModeSetter
 
 public:
   ModeSetter();
+  ModeSetter(ModeSetter const &) = delete;
   ~ModeSetter();
 
   void swapBuffers();
