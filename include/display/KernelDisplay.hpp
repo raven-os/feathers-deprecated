@@ -86,7 +86,6 @@ namespace display
 					    vk::ImageTiling::eLinear, vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eUndefined));
 	    auto memRequirements(device.getImageMemoryRequirements(image));
 	    imageMemory = device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits);
-	    std::cout << "image data size: " << memRequirements.size << std::endl;
 
 	    device.bindImageMemory(image, imageMemory, 0);
 	    return image;
