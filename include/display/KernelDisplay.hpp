@@ -19,7 +19,7 @@ namespace display
     struct Score
     {
       bool isSuitable;
-      unsigned int bestQueue;
+      unsigned int bestQueueIndex;
       vk::PhysicalDeviceType deviceType;
 
       unsigned int deviceTypeScore() const noexcept
@@ -112,7 +112,7 @@ namespace display
     Compositor(std::pair<vk::PhysicalDevice, Score> const &selectedResult)
       : device([this, &selectedResult](){
 	  float priority{1.0f};
-	  vk::DeviceQueueCreateInfo deviceQueueCreateInfo{{}, selectedResult.second.bestQueue, 1, &priority};
+	  vk::DeviceQueueCreateInfo deviceQueueCreateInfo{{}, selectedResult.second.bestQueueIndex, 1, &priority};
 
 	  return magma::Device<>(selectedResult.first,
 				 std::vector<vk::DeviceQueueCreateInfo>({deviceQueueCreateInfo}),
@@ -120,7 +120,7 @@ namespace display
 	}())
       , imageAvailable(device.createSemaphore())
       , fence(device.createFence({}))
-      , renderer(device, selectedResult.first, selectedResult.second.bestQueue)
+      , renderer(device, selectedResult.first, selectedResult.second.bestQueueIndex)
       , swapchainUserData(device, Swapchain{&modeSetter}, renderer, imageCount, vk::ImageLayout::eGeneral)
       , frames(claws::init_array<imageCount>([&]()
 					     {
