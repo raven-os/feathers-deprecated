@@ -49,7 +49,7 @@ namespace display
     struct Swapchain
     {
       ModeSetter const *modeset;
-      
+     
       constexpr vk::Format getFormat() const noexcept
       {
 	return vk::Format::eR8G8B8A8Srgb;

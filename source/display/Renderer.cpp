@@ -394,7 +394,7 @@ namespace display
 								    multisampleStateCreateInfo,
 								    depthStencilStateCreateInfo,
 								    colorBlendStateCreateInfo);
-    
+   
     return device.createPipeline(pipelineCreateInfo);
   }
 

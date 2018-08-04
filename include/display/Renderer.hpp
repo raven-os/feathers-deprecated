@@ -49,7 +49,7 @@ namespace display
     magma::Sampler<> sampler;
 
     Renderer(magma::Device<claws::no_delete> device, vk::PhysicalDevice physicalDevice, uint32_t selectedQueueFamily);
-  
+ 
     ~Renderer() = default;
 
     magma::Semaphore<claws::no_delete> render(magma::Device<claws::no_delete> device, WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable);
@@ -123,7 +123,7 @@ namespace display
       : SwapchainUserData(device, magma::Swapchain<claws::no_delete>(swapchain), renderer, imageCount)
     {
     }
-  };  
+  }; 
 
   struct FrameData
   {
@@ -179,6 +179,6 @@ namespace display
       : FrameData(device, magma::Swapchain<claws::no_delete>(swapchain), renderer, swapchainUserData, swapchainImageView)
     {
     }
-	  
+	 
   };
 }

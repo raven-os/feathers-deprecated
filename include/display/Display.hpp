@@ -43,7 +43,7 @@ namespace display
 	return (!isSuitable || (other.isSuitable && (deviceTypeScore() < other.deviceTypeScore())));
       }
     };
-    
+   
     magma::Device<> device;
     magma::Semaphore<> imageAvailable;
     magma::DisplaySystem<Renderer, SwapchainUserData, FrameData> displaySystem;
@@ -107,7 +107,7 @@ namespace display
     Display(SurfaceProvider &surfaceProvider)
       : instance{[](){
 	auto out(SurfaceProvider::getRequiredExtensions());
-      
+     
 	std::cout << "required:" << std::endl;
 	for (auto const &name : out) {
 	  std::cout << name << std::endl;

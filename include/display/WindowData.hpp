@@ -12,7 +12,7 @@ namespace display
     std::array<uint16_t, 2u> position;
     std::array<uint16_t, 2u> size;
   };
- 
+
   struct WindowData
   {
     Rect rect;
