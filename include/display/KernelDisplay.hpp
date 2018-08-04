@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <magma/DisplaySystem.hpp>
 #include <magma/VulkanHandler.hpp>
 #include <magma/Device.hpp>
