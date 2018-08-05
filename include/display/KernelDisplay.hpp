@@ -107,8 +107,6 @@ namespace display
       }
     };
     std::array<Frame, imageCount> frames;
-    bool frame;
-
 
     Compositor(std::pair<vk::PhysicalDevice, Score> const &selectedResult)
       : device([this, &selectedResult](){
