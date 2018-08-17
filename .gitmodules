@@ -1,0 +1,3 @@
+[submodule "vendor/claws"]
+	path = vendor/claws
+	url = https://github.com/raven-os/claws.git
