@@ -1,28 +1,59 @@
 #include "display/WaylandSurface.hpp"
-#include "display/Display.ipp"
-#include "modeset/ModeSetter.hpp"
-#include "opengl/QuadFullscreen.hpp"
+#include "display/Display.hpp"
+#include "display/KernelDisplay.hpp"
 #include "Exception.hpp"
+#include "display/WindowTree.hpp"
+
+void addTestWindows(display::WindowTree &windowTree)
+{
+  {
+    auto root(windowTree.getRootIndex());
+    auto child(windowTree.addChild(root));
+
+    auto &childData(windowTree.getData(child));
+
+    childData.rect.position[0] = 10;
+    childData.rect.position[1] = 40;
+    childData.rect.size[0] = 300;
+    childData.rect.size[1] = 300;
+    childData.isSolid = true;
+    for (int i = 0; i < 4; ++i)
+      {
+	auto grandChild(windowTree.addChild(child));
+	auto &grandChildData(windowTree.getData(grandChild));
+
+	grandChildData.rect.position[0] = 100 + i * 20;
+	grandChildData.rect.position[1] = 100 + i * 120;
+	grandChildData.rect.size[0] = 400;
+	grandChildData.rect.size[1] = 100;
+	grandChildData.isSolid = true;
+      }
+  }
+}
 
 int main(int argc, char **argv)
 {
+  display::WindowTree windowTree(display::WindowData
+				 {{{{0, 0}}, {{1920, 1080}}}, true});
+
+  addTestWindows(windowTree);
   if (argc == 1)
     {
       // RUN ON TTY
       try
 	{
-	  modeset::ModeSetter modeSetter;
+	  display::KernelDisplay kernelDisplay;
 
-	  QuadFullscreen quadFullscreen;
-
-	  for (int i = 0; i < 100; ++i)
+	  for (int i = 0; i < 120; ++i)
 	    {
-	      quadFullscreen.draw();
-	      modeSetter.swapBuffers();
-	      usleep(100);
+	      kernelDisplay.render(windowTree);
 	    }
 	}
       catch (ModeSettingError const& e)
+	{
+	  std::cerr << e.what() << std::endl;
+	}
+      catch (std::runtime_error const &e)
 	{
 	  std::cerr << e.what() << std::endl;
 	}
@@ -34,9 +65,8 @@ int main(int argc, char **argv)
 
       while (waylandSurface.isRunning())
 	{
-	  display.render();
+	  display.render(windowTree);
 	  waylandSurface.dispatch();
-	  //  std::cout << "presenting image" << std::endl;
 	}
     }
 

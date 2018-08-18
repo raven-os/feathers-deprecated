@@ -159,11 +159,11 @@ namespace modeset {
 
   int ModeSetter::getScreenWidth() const
   {
-    return drm.modeInfo.vdisplay;
+    return drm.modeInfo.hdisplay;
   }
 
   int ModeSetter::getScreenHeight() const
   {
-    return drm.modeInfo.hdisplay;
+    return drm.modeInfo.vdisplay;
   }
 }
