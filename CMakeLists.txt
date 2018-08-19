@@ -1,6 +1,6 @@
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.9)
 project(feathers CXX)
 
 # main sources and headers
@@ -38,8 +38,11 @@ include_directories(
   )
 
 if (DEFINED CLAWS_DIR)
-  include_directories(${CLAWS_DIR}/include/)
+  include_directories(${CLAWS_DIR}/modules/utils/claws)
 endif()
+
+add_subdirectory(vendor/claws)
+
 if (DEFINED MAGMA_DIR)
   include_directories(${MAGMA_DIR}/include/)
 endif()
@@ -51,12 +54,4 @@ add_executable(
   ${HEADERS_FILE}
 )
 
-target_link_libraries(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${WAYLAND_CLIENT_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${WAYLAND_SERVER_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${DRM_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${GBM_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${EGL_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${OPENGLES3_LIBRARY})
-target_link_libraries(${PROJECT_NAME} xkbcommon)
+target_link_libraries(${PROJECT_NAME} PRIVATE claws ${Vulkan_LIBRARY} ${WAYLAND_CLIENT_LIBRARIES} ${WAYLAND_SERVER_LIBRARIES} ${DRM_LIBRARY} ${GBM_LIBRARY} ${EGL_LIBRARY} ${OPENGLES3_LIBRARY} xkbcommon)
