@@ -6,8 +6,6 @@
 #include <magma/VulkanHandler.hpp>
 #include <magma/Device.hpp>
 
-#include <claws/array_ops.hpp>
-
 #include "display/Renderer.hpp"
 #include "opengl/QuadFullscreen.hpp"
 #include "modeset/ModeSetter.hpp"
