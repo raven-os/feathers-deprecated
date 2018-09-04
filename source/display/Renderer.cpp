@@ -2,7 +2,7 @@
 #include "display/WindowTree.hpp"
 #include "display/WindowTree.hpp"
 
-#include <claws/lambda_utils.hpp>
+#include <claws/utils/lambda_utils.hpp>
 
 namespace display
 {
