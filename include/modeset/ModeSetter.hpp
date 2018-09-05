@@ -6,42 +6,47 @@
 #include <EGL/egl.h>
 #include <GL/gl.h>
 
-/*
- * Class that handles kernel mode setting
- */
-class ModeSetter
-{
-  struct Drm
+namespace modeset {
+  /*
+   * Class that handles kernel mode setting
+   */
+  class ModeSetter
   {
-    Drm();
+    struct Drm
+    {
+      Drm();
 
-    int fd;
-    uint32_t connectorId;
-    drmModeModeInfo modeInfo;
-    drmModeCrtc *crtc;
+      int fd;
+      uint32_t connectorId;
+      drmModeModeInfo modeInfo;
+      drmModeCrtc *crtc;
+    };
+
+    struct Gbm
+    {
+      Gbm(int fd, uint16_t width, uint16_t height);
+
+      struct gbm_device *gbmDevice;
+      struct gbm_surface *gbmSurface;
+      EGLDisplay eglDisplay;
+      EGLContext eglContext;
+      EGLSurface eglSurface;
+    };
+
+  public:
+    ModeSetter();
+    ModeSetter(ModeSetter const &) = delete;
+    ~ModeSetter();
+
+    void swapBuffers();
+    int getScreenWidth() const;
+    int getScreenHeight() const;
+
+  private:
+    Drm drm;
+    Gbm gbm;
+
+    struct gbm_bo *previousBo;
+    uint32_t previousFb;
   };
-
-  struct Gbm
-  {
-    Gbm(int fd, uint16_t hDisplay, uint16_t vDisplay);
-
-    struct gbm_device *gbmDevice;
-    struct gbm_surface *gbmSurface;
-    EGLDisplay eglDisplay;
-    EGLContext eglContext;
-    EGLSurface eglSurface;
-  };
-
-public:
-  ModeSetter();
-  ~ModeSetter();
-
-  void swapBuffers();
-
-private:
-  Drm drm;
-  Gbm gbm;
-
-  struct gbm_bo *previousBo;
-  uint32_t previousFb;
-};
+}
