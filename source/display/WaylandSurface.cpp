@@ -14,7 +14,7 @@ namespace display
 	std::cerr << "error: " << err << std::endl;
 	throw std::runtime_error("Received error");
       }
-    seatListener = new SeatListener();
+    seatListener = new wayland_client::SeatListener();
     wl_display_roundtrip(wlDisplay);
     if (!wlCompositor)
     {
