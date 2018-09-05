@@ -26,6 +26,8 @@ find_package(PkgConfig REQUIRED)
 find_package(DRM REQUIRED)
 find_package(EGL REQUIRED)
 find_package(OpenGLES3 REQUIRED)
+find_package(claws CONFIG REQUIRED)
+find_package(magma CONFIG REQUIRED)
 
 include_directories(
   ${HEADER_DIRECTORY}
@@ -51,12 +53,14 @@ add_executable(
   ${HEADERS_FILE}
 )
 
-target_link_libraries(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} ${Vulkan_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${WAYLAND_CLIENT_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${WAYLAND_SERVER_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${DRM_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${GBM_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${EGL_LIBRARY})
-target_link_libraries(${PROJECT_NAME} ${OPENGLES3_LIBRARY})
-target_link_libraries(${PROJECT_NAME} xkbcommon)
+target_link_libraries(${PROJECT_NAME}
+  ${Vulkan_LIBRARY}
+  ${WAYLAND_CLIENT_LIBRARIES}
+  ${WAYLAND_SERVER_LIBRARIES}
+  ${DRM_LIBRARY}
+  ${GBM_LIBRARY}
+  ${EGL_LIBRARY}
+  ${OPENGLES3_LIBRARY}
+  xkbcommon
+  magma::core
+  )

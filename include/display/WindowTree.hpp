@@ -3,8 +3,8 @@
 #include <vector>
 #include <iterator>
 
-#include <claws/tagged_data.hpp>
-#include <claws/iterator_util.hpp>
+#include <claws/utils/tagged_data.hpp>
+#include <claws/container/iterator_pair.hpp>
 
 #include "display/WindowData.hpp"
 
