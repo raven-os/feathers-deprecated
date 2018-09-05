@@ -20,7 +20,7 @@ void SeatListener::seatCapabilities(struct wl_seat *seat, uint32_t capabilities)
   }
 }
 
-void SeatListener::seatName(struct wl_seat *seat, const char *name)
+void SeatListener::seatName(struct wl_seat *, [[maybe_unused]]const char *name)
 {
 
 }
