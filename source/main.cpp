@@ -12,7 +12,7 @@ static void debug_server_protocol(void *user_data,
   printf("msg: %s\n", static_cast<char *>(user_data));
 }
 
-void addTestWindows(display::WindowTree &windowTree)
+static void addTestWindows(display::WindowTree &windowTree)
 {
   {
     auto root(windowTree.getRootIndex());
@@ -20,20 +20,20 @@ void addTestWindows(display::WindowTree &windowTree)
 
     auto &childData(windowTree.getData(child));
 
-    childData.rect.position[0] = 10;
-    childData.rect.position[1] = 40;
-    childData.rect.size[0] = 300;
-    childData.rect.size[1] = 300;
+    childData.rect.position[0] = 10u;
+    childData.rect.position[1] = 40u;
+    childData.rect.size[0] = 300u;
+    childData.rect.size[1] = 300u;
     childData.isSolid = true;
-    for (int i = 0; i < 4; ++i)
+    for (uint32_t i = 0; i < 4; ++i)
       {
 	auto grandChild(windowTree.addChild(child));
 	auto &grandChildData(windowTree.getData(grandChild));
 
-	grandChildData.rect.position[0] = 100 + i * 20;
-	grandChildData.rect.position[1] = 100 + i * 120;
-	grandChildData.rect.size[0] = 400;
-	grandChildData.rect.size[1] = 100;
+	grandChildData.rect.position[0] = uint16_t(100u + i * 20u);
+	grandChildData.rect.position[1] = uint16_t(100u + i * 120u);
+	grandChildData.rect.size[0] = 400u;
+	grandChildData.rect.size[1] = 100u;
 	grandChildData.isSolid = true;
       }
   }

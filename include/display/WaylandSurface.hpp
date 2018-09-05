@@ -22,7 +22,7 @@ namespace display
     struct wl_shell_surface *wlShellSurface{nullptr};
     struct wl_seat *wlSeat{nullptr};
 
-    SeatListener *seatListener;
+    wayland_client::SeatListener *seatListener;
 
   public:
     WaylandSurface(WaylandSurface const &) = delete;

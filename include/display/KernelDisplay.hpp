@@ -57,7 +57,7 @@ namespace display
 
       vk::Extent2D getExtent() const
       {
-	return {modeset->getScreenWidth(), modeset->getScreenHeight()};
+	return {uint32_t(modeset->getScreenWidth()), uint32_t(modeset->getScreenHeight())};
       }
     };
 
@@ -119,11 +119,11 @@ namespace display
       , fence(device.createFence({}))
       , renderer(device, selectedResult.first, selectedResult.second.bestQueueIndex)
       , swapchainUserData(device, Swapchain{&modeSetter}, renderer, imageCount, vk::ImageLayout::eGeneral)
+      , commandBuffer(renderer.commandPool.allocatePrimaryCommandBuffers(1))
       , frames(claws::init_array<imageCount>([&]()
 					     {
 					       return Frame{device, Swapchain{&modeSetter}, renderer, swapchainUserData, selectedResult.first};
 					     }))
-      , commandBuffer(renderer.commandPool.allocatePrimaryCommandBuffers(1))
     {
     }
 
