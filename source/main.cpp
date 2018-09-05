@@ -71,7 +71,7 @@ int main(int argc, char **argv)
       protocol::WaylandServerProtocol serverProtocol;
       std::string socketname("");
 
-      for (int32_t i = 1; i < argc - 1; ++i)
+      for (int32_t i = 2; i < argc - 1; ++i)
 	{
 	  if (!strcmp(argv[i], "--socket"))
 	    {
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	      serverProtocol.EventDispatch(0);
 	      serverProtocol.AddProtocolLogger(static_cast<wl_protocol_logger_func_t>
 					       (debug_server_protocol),
-					       static_cast<void *>(argv[i] + 8));
+					       static_cast<void *>(argv[i + 1]));
 	      serverProtocol.EventDispatch(0);
 	    }
 	}
