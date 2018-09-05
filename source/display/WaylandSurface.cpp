@@ -43,16 +43,16 @@ namespace display
     wl_shell_surface_pong(shellSurface, serial);
   }
 
-  void WaylandSurface::shellSurfaceConfigure(struct wl_shell_surface *shellSurface, uint32_t edges, int32_t width, int32_t height)
+  void WaylandSurface::shellSurfaceConfigure(struct wl_shell_surface *, [[maybe_unused]]uint32_t edges, [[maybe_unused]]int32_t width, [[maybe_unused]]int32_t height)
   {
     std::cout << "shell_surface_configure" << std::endl;
   }
 
-  void WaylandSurface::shellSurfacePopupDone(struct wl_shell_surface *shellSurface)
+  void WaylandSurface::shellSurfacePopupDone(struct wl_shell_surface *)
   {
   }
 
-  void WaylandSurface::registryAddObject(struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
+  void WaylandSurface::registryAddObject(struct wl_registry *registry, uint32_t name, const char *interface, [[maybe_unused]]uint32_t version)
   {
     if (!strcmp(interface,"wl_compositor"))
       {
@@ -74,7 +74,7 @@ namespace display
       }
   }
 
-  void WaylandSurface::registryRemoveObject(struct wl_registry *registry, uint32_t name)
+  void WaylandSurface::registryRemoveObject(struct wl_registry *, [[maybe_unused]]uint32_t name)
   {
   }
 

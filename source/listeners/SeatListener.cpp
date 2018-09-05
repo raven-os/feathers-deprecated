@@ -22,9 +22,8 @@ namespace wayland_client
     }
   }
 
-  void SeatListener::seatName(struct wl_seat *seat, const char *name)
+  void SeatListener::seatName(struct wl_seat *, [[maybe_unused]]const char *name)
   {
-
   }
 
   bool SeatListener::getRunning() const

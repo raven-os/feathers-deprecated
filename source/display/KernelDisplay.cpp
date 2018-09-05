@@ -47,12 +47,12 @@ namespace display
     device.waitForFences({fence}, true, 1000000000);
     device.resetFences({fence});
     {
-      auto unmap([&](void const *data)
+      auto unmap([&](void const *)
 		 {
 		   device.flushMappedMemoryRanges({flushRange});
 		   device.unmapMemory(frame.imageMemory);
 		 });
-      std::unique_ptr<void const, decltype(unmap)> data(reinterpret_cast<void *>(device.mapMemory(frame.imageMemory, 0, VK_WHOLE_SIZE, {})), unmap);
+      std::unique_ptr<void const, decltype(unmap)> data(device.mapMemory(frame.imageMemory, 0, VK_WHOLE_SIZE, {}), unmap);
 
       device.invalidateMappedMemoryRanges({flushRange});
       quadFullscreen.draw(data.get(), modeSetter.getScreenWidth(), modeSetter.getScreenHeight());

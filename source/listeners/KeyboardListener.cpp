@@ -9,7 +9,7 @@ namespace wayland_client
 
   }
 
-  void KeyboardListener::keyboardKeymap(struct wl_keyboard *keyboard, uint32_t format, int32_t fd, uint32_t size)
+  void KeyboardListener::keyboardKeymap(struct wl_keyboard *, [[maybe_unused]]uint32_t format, int32_t fd, uint32_t size)
   {
     char *keymapString = static_cast<char *>(mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0));
 
@@ -22,17 +22,17 @@ namespace wayland_client
   //  std::cout << "KEYMAP: " << xkb_keymap_get_as_string(keymap,  XKB_KEYMAP_FORMAT_TEXT_V1) << std::endl;
   }
 
-  void KeyboardListener::keyboardEnter(struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys)
+  void KeyboardListener::keyboardEnter(struct wl_keyboard *, [[maybe_unused]]uint32_t serial, struct wl_surface *, [[maybe_unused]]struct wl_array *keys)
   {
     std::cout << "Entering the window" << std::endl;
   }
 
-  void KeyboardListener::keyboardLeave(struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface)
+  void KeyboardListener::keyboardLeave(struct wl_keyboard *, [[maybe_unused]]uint32_t serial, struct wl_surface *)
   {
     std::cout << "Leaving the window" << std::endl;
   }
 
-  void KeyboardListener::keyboardKey(struct wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+  void KeyboardListener::keyboardKey(struct wl_keyboard *, [[maybe_unused]]uint32_t serial, [[maybe_unused]]uint32_t time, uint32_t key, uint32_t state)
   {
     //Offset to get the correct ascii code in the table. The key map String start to 9, so you have to shift the code by 8
     constexpr int offset = 8;
@@ -43,7 +43,7 @@ namespace wayland_client
       uint32_t utf32 = xkb_keysym_to_utf32(keysym);
       if (utf32) {
         if (utf32 >= 0x21 && utf32 <= 0x7E) {
-          std::cout << "the key " << (char)utf32 << " was pressed" << std::endl;
+          std::cout << "the key " << static_cast<char>(utf32) << " was pressed" << std::endl;
           if (utf32 == 'q')
             running = false;
         }
@@ -59,7 +59,7 @@ namespace wayland_client
     }
   }
 
-  void KeyboardListener::keyboardModifiers(struct wl_keyboard *keyboard, uint32_t serial, uint32_t modsDepressed, uint32_t modsLatched, uint32_t modsLocked, uint32_t group)
+  void KeyboardListener::keyboardModifiers(struct wl_keyboard *, [[maybe_unused]]uint32_t serial, uint32_t modsDepressed, uint32_t modsLatched, uint32_t modsLocked, uint32_t group)
   {
     xkb_state_update_mask(xkbState, modsDepressed, modsLatched, modsLocked, 0, 0, group);
   }
