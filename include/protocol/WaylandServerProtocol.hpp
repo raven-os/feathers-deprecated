@@ -2,7 +2,7 @@
 
 namespace protocol
 {
-  class WaylandServerProtocol
+  class WaylandServerProtocol : private wl_listener // inheriting to avoid using offset_of which is not non-pod friendly
   {
   private:
     struct wl_display *wlDisplay;
@@ -13,10 +13,11 @@ namespace protocol
     WaylandServerProtocol();
     ~WaylandServerProtocol();
 
-    int32_t AddSocket();
-    int32_t AddSocket(std::string const &);
-    void AddProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
-    void EventDispatch(int32_t timeout);
+    int32_t addSocket();
+    int32_t addSocket(std::string const &);
+    void addProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
+    void eventDispatch(int32_t timeout);
+    void process(struct wl_client *data);
 
     WaylandServerProtocol(WaylandServerProtocol const &) = delete;
     WaylandServerProtocol(WaylandServerProtocol &&) = delete;

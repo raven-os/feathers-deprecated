@@ -82,13 +82,13 @@ int main(int argc, char **argv)
 	  else if (!strcmp(argv[i], "--client-socket"))
 	    {
 	      printf("AddSocket method with name '%s' was %s\n",
-		     argv[i + 1], serverProtocol.AddSocket(argv[i + 1]) ?
+		     argv[i + 1], serverProtocol.addSocket(argv[i + 1]) ?
 		     "unsuccessful" : "successful");
-	      serverProtocol.EventDispatch(0);
-	      serverProtocol.AddProtocolLogger(static_cast<wl_protocol_logger_func_t>
+	      serverProtocol.eventDispatch(0);
+	      serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>
 					       (debug_server_protocol),
 					       static_cast<void *>(argv[i + 1]));
-	      serverProtocol.EventDispatch(0);
+	      serverProtocol.eventDispatch(0);
 	    }
 	}
       display::WaylandSurface waylandSurface(socketname);
@@ -98,6 +98,7 @@ int main(int argc, char **argv)
 	{
 	  display.render(windowTree);
 	  waylandSurface.dispatch();
+	  serverProtocol.eventDispatch(0);
 	}
     }
 
