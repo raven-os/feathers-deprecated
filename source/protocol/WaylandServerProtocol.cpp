@@ -24,8 +24,6 @@ namespace protocol
   {
     wl_global_create(wlDisplay, &wl_compositor_interface, wl_compositor_interface.version, this,
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
-    wl_global_create(wlDisplay, &wl_surface_interface, wl_surface_interface.version, this,
-		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindSurface>());
     wl_global_create(wlDisplay, &wl_shell_interface, wl_shell_interface.version, this,
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShell>());
     wl_global_create(wlDisplay, &wl_seat_interface, wl_seat_interface.version, this,
@@ -89,11 +87,6 @@ namespace protocol
       }
     else
       wl_client_post_no_memory(client);
-  }
-
-  void WaylandServerProtocol::bindSurface(struct wl_client *client, uint32_t version, uint32_t id)
-  {
-    printf("bindSurface called!\n");
   }
 
   void WaylandServerProtocol::bindShell(struct wl_client *client, uint32_t version, uint32_t id)
