@@ -15,6 +15,13 @@ namespace protocol
 
     int32_t addSocket();
     int32_t addSocket(std::string const &);
+    void createSurface(struct wl_client *client, uint32_t id);
+    void destroySurface(struct wl_client *client, uint32_t id);
+
+    void bindCompositor(struct wl_client *client, uint32_t version, uint32_t id);
+    void bindSeat(struct wl_client *client, uint32_t version, uint32_t id);
+    void bindSurface(struct wl_client *client, uint32_t version, uint32_t id);
+    void bindShell(struct wl_client *client, uint32_t version, uint32_t id);
     void addProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
     void eventDispatch(int32_t timeout);
     void process(struct wl_client *data);
@@ -24,4 +31,5 @@ namespace protocol
     WaylandServerProtocol operator=(WaylandServerProtocol const &) = delete;
     WaylandServerProtocol operator=(WaylandServerProtocol &&) = delete;
   };
+
 }

@@ -5,11 +5,38 @@
 #include "display/WindowTree.hpp"
 #include "protocol/WaylandServerProtocol.hpp"
 
-static void debug_server_protocol(void *user_data,
-				  enum wl_protocol_logger_type,
-				  const struct wl_protocol_logger_message *)
+static void debug_server_protocol([[maybe_unused]]void *user_data,
+				  enum wl_protocol_logger_type type,
+				  const struct wl_protocol_logger_message *message)
 {
-  printf("msg: %s\n", static_cast<char *>(user_data));
+  printf("msg: [%s]\n", type == WL_PROTOCOL_LOGGER_REQUEST ? "REQUEST" : "EVENT");
+  printf("message->name: %s\n", message->message->name);
+  printf("message->signature: %s\n", message->message->signature);
+  printf("message data:\n{\n");
+  for (unsigned int i(0u); message->message->signature[i]; ++i)
+    {
+      char c(message->message->signature[i]);
+      wl_argument arg(message->arguments[i]);
+      switch (c)
+	{
+	case 'i':
+	  printf("\t%i\n", arg.i);
+	  break;
+	case 'u':
+	  printf("\t%u\n", arg.u);
+	  break;
+	case 'f':
+	  printf("\t%i\n", arg.f);
+	  break;
+	case 's':
+	  printf("\t\"%s\"\n", arg.s);
+	  break;
+	default:
+	  printf("\t[unhandled]\n");
+	  break;
+	}
+    }
+  printf("}\n");
 }
 
 static void addTestWindows(display::WindowTree &windowTree)
