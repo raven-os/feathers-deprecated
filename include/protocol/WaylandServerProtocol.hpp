@@ -15,8 +15,8 @@ namespace protocol
 
     int32_t addSocket();
     int32_t addSocket(std::string const &);
-    void createSurface(struct wl_client *client, uint32_t id);
-    void destroySurface(struct wl_client *client, uint32_t id);
+    void createSurface(struct wl_client *client, struct wl_resource *, uint32_t id);
+    void createRegion(struct wl_client *client, struct wl_resource *, uint32_t id);
 
     void bindCompositor(struct wl_client *client, uint32_t version, uint32_t id);
     void bindSeat(struct wl_client *client, uint32_t version, uint32_t id);

@@ -3,7 +3,9 @@
 #include <cassert>
 #include <string.h>
 #include <errno.h>
+
 #include "protocol/WaylandServerProtocol.hpp"
+#include "protocol/CreateImplementation.hpp"
 
 namespace protocol
 {
@@ -52,38 +54,50 @@ namespace protocol
     return wl_display_add_socket(wlDisplay, name.c_str());
   }
 
-  void WaylandServerProtocol::createSurface(struct wl_client *client, uint32_t id)
+  void WaylandServerProtocol::createSurface(struct wl_client *client, struct wl_resource *, uint32_t id)
   {
-    printf("TODO: create surface\n");
+    // static struct wl_surface_interface surface_implementation
+    // {
+    //   [](struct wl_client *client,
+    // 	 struct wl_resource *resource,
+    // 	 uint32_t id)
+    // 	{
+    // 	  static_cast<WaylandServerProtocol*>(wl_resource_get_user_data(resource))->createSurface(client, id);
+    // 	},
+    // 	[](struct wl_client *client,
+    // 	   struct wl_resource *resource,
+    // 	   uint32_t id)
+    // 	  {
+    // 	    static_cast<WaylandServerProtocol*>(wl_resource_get_user_data(resource))->createRegion(client, id);
+    // 	  }
+    // };
+    // if (wl_resource *resource = wl_resource_create(client, &wl_surface_interface, wl_surface_interface.version, id))
+    //   {
+    // 	wl_resource_set_implementation(resource, &surface_implementation, this, [](wl_resource *resource){
+    // 	    printf("Destroying surface!\n"); // todo ?
+    // 	  });
+    //   }
+    // else 
+    //   wl_client_post_no_memory(client);
+ }
+
+  void WaylandServerProtocol::createRegion(struct wl_client *client, struct wl_resource *, uint32_t id)
+  {
+    printf("TODO: create region\n");
   }
 
-  void WaylandServerProtocol::destroySurface(struct wl_client *client, uint32_t id)
-  {
-    printf("TODO: destroy surface\n");
-  }
-
-  static struct wl_compositor_interface compositor_implementation
-  {
-    [](struct wl_client *client,
-       struct wl_resource *resource,
-       uint32_t id)
-      {
-	static_cast<WaylandServerProtocol*>(wl_resource_get_user_data(resource))->createSurface(client, id);
-      },
-      [](struct wl_client *client,
-	 struct wl_resource *resource,
-	 uint32_t id)
-	{
-	  static_cast<WaylandServerProtocol*>(wl_resource_get_user_data(resource))->destroySurface(client, id);
-	}
-  };
 
   void WaylandServerProtocol::bindCompositor(struct wl_client *client, uint32_t version, uint32_t id)
   {
+    // constexpr static auto a();
+    // constexpr static auto b(&WaylandServerProtocol::createRegion);
+    static auto compositor_implementation(createImplementation<struct wl_compositor_interface, &WaylandServerProtocol::createSurface, &WaylandServerProtocol::createRegion>());
+
     if (wl_resource *resource = wl_resource_create(client, &wl_compositor_interface, wl_compositor_interface.version, id))
       {
 	wl_resource_set_implementation(resource, &compositor_implementation, this, [](wl_resource *resource){
-	  }); // todo
+	    printf("Destroying compositor!\n"); // todo ?
+	  });
       }
     else
       wl_client_post_no_memory(client);
