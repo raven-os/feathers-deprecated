@@ -18,6 +18,11 @@ namespace protocol
     void createSurface(struct wl_client *client, struct wl_resource *, uint32_t id);
     void createRegion(struct wl_client *client, struct wl_resource *, uint32_t id);
 
+    void getShellSurface(struct wl_client *client,
+			 struct wl_resource *,
+			 uint32_t id,
+			 struct wl_resource *surface);
+
     void bindCompositor(struct wl_client *client, uint32_t version, uint32_t id);
     void bindSeat(struct wl_client *client, uint32_t version, uint32_t id);
     void bindSurface(struct wl_client *client, uint32_t version, uint32_t id);

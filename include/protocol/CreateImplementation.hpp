@@ -1,5 +1,8 @@
 #pragma once
 
+#include <wayland-server.h>
+#include <utility>
+
 namespace protocol
 {
   namespace impl
