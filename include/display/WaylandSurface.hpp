@@ -30,6 +30,7 @@ namespace display
     WaylandSurface(WaylandSurface &&other) = delete;
 
     WaylandSurface();
+    WaylandSurface(std::string const &displayname="");
 
     static std::vector<char const *> getRequiredExtensions()
     {
