@@ -70,52 +70,34 @@ int main(int argc, char **argv)
 {
   display::WindowTree windowTree(display::WindowData
 				 {{{{0, 0}}, {{1920, 1080}}}, true});
+  protocol::WaylandServerProtocol serverProtocol;
+
+  for (int32_t i = 1; i < argc - 1; ++i)
+    if (!strcmp(argv[i], "--client-socket"))
+      {
+	printf("AddSocket method with name '%s' was %s\n",
+	       argv[i + 1], serverProtocol.addSocket(argv[i + 1]) ?
+	       "unsuccessful" : "successful");
+	serverProtocol.eventDispatch(0);
+	serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>
+					 (debug_server_protocol),
+					 static_cast<void *>(argv[i + 1]));
+	serverProtocol.eventDispatch(0);
+      }
+
 
   addTestWindows(windowTree);
-  if (argc == 1)
+  if (!strcmp(argv[1], "-sc") || !strcmp(argv[1], "--sub-compositor"))
     {
-      // RUN ON TTY
-      try
-	{
-	  display::KernelDisplay kernelDisplay;
-
-	  for (int i = 0; i < 120; ++i)
-	    {
-	      kernelDisplay.render(windowTree);
-	    }
-	}
-      catch (ModeSettingError const& e)
-	{
-	  std::cerr << e.what() << std::endl;
-	}
-      catch (std::runtime_error const &e)
-	{
-	  std::cerr << e.what() << std::endl;
-	}
-    }
-  else if (!strcmp(argv[1], "-sc") || !strcmp(argv[1], "--sub-compositor"))
-    {
-      protocol::WaylandServerProtocol serverProtocol;
       std::string socketname("");
 
-      for (int32_t i = 2; i < argc - 1; ++i)
+      for (int32_t i = 1; i < argc - 1; ++i)
 	{
 	  if (!strcmp(argv[i], "--socket"))
 	    {
 	      printf("Attempting to connect to server with socket '%s'\n",
 		     argv[i + 1]);
 	      socketname = argv[i + 1];
-	    }
-	  else if (!strcmp(argv[i], "--client-socket"))
-	    {
-	      printf("AddSocket method with name '%s' was %s\n",
-		     argv[i + 1], serverProtocol.addSocket(argv[i + 1]) ?
-		     "unsuccessful" : "successful");
-	      serverProtocol.eventDispatch(0);
-	      serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>
-					       (debug_server_protocol),
-					       static_cast<void *>(argv[i + 1]));
-	      serverProtocol.eventDispatch(0);
 	    }
 	}
       display::WaylandSurface waylandSurface(socketname);
@@ -127,6 +109,31 @@ int main(int argc, char **argv)
 	  waylandSurface.dispatch();
 	  serverProtocol.eventDispatch(0);
 	}
+    }
+  else
+    {
+      {
+	// RUN ON TTY
+	try
+	  {
+	    display::KernelDisplay kernelDisplay;
+
+	    for (int i = 0; i < 120; ++i)
+	      {
+		kernelDisplay.render(windowTree);
+		serverProtocol.eventDispatch(0);
+	      }
+	  }
+	catch (ModeSettingError const& e)
+	  {
+	    std::cerr << e.what() << std::endl;
+	  }
+	catch (std::runtime_error const &e)
+	  {
+	    std::cerr << e.what() << std::endl;
+	  }
+      }
+
     }
 
   std::cout << "Exit" << std::endl;
