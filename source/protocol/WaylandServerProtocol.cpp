@@ -24,7 +24,8 @@ namespace protocol
     : wl_listener(),
       wlDisplay(wl_display_create()),
       wlEventLoop(wl_display_get_event_loop(wlDisplay)),
-      wlProtocolLogger(nullptr)
+      wlProtocolLogger(nullptr),
+      windowTree(display::WindowData{{{{0, 0}}, {{1920, 1080}}}, true})
   {
     wl_global_create(wlDisplay, &wl_compositor_interface, 1, this,
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
@@ -184,5 +185,10 @@ namespace protocol
     gid_t gid;
     wl_client_get_credentials(data, &pid, &uid, &gid);
     printf("Client with pid %d, uid %d, and gid %d connected\n", pid, uid, gid);
+  }
+
+  display::WindowTree const &WaylandServerProtocol::getWindowTree() const noexcept
+  {
+    return windowTree;
   }
 }
