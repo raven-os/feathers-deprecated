@@ -73,7 +73,11 @@ namespace display
     else if (!strcmp(interface,"wl_seat"))
       {
 	wlSeat = static_cast<wl_seat *>(wl_registry_bind(registry, name, &wl_seat_interface, 1));
-	addListener(wlSeat, *seatListener);
+	// addListener(wlSeat, *seatListener);
+      }
+    else
+      {
+	printf("unsused global: %s\n", interface);
       }
   }
 

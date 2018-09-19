@@ -1,7 +1,7 @@
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-cmake_minimum_required(VERSION 2.6)
-project(feathers CXX)
+cmake_minimum_required(VERSION 3.9)
+project(feathers CXX C)
 
 # main sources and headers
 set(HEADER_DIRECTORY "include")
@@ -18,7 +18,11 @@ endif()
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG_LAYERS")
 
 file(GLOB_RECURSE SOURCES_FILE "${SOURCE_DIRECTORY}/*.cpp")
+file(GLOB_RECURSE C_SOURCE_FILES "${SOURCE_DIRECTORY}/protocol/wayland-source/*.c")
 file(GLOB_RECURSE HEADERS_FILE "${HEADER_DIRECTORY}/*.hpp")
+file(GLOB_RECURSE HEADERS_FILE "${HEADER_DIRECTORY}/*.h")
+
+set_source_files_properties(${C_SOURCE_FILES} PROPERTIES LANGUAGE C)
 
 find_package(Vulkan REQUIRED)
 find_package(Wayland REQUIRED)
@@ -50,6 +54,7 @@ endif()
 add_executable(
   ${PROJECT_NAME}
   ${SOURCES_FILE}
+  ${C_SOURCE_FILES}
   ${HEADERS_FILE}
 )
 
@@ -64,3 +69,4 @@ target_link_libraries(${PROJECT_NAME}
   xkbcommon
   magma::core
   )
+

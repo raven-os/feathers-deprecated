@@ -1,4 +1,7 @@
 #include <wayland-server.h>
+
+#include "protocol/wayland-headers/linux-dmabuf-unstable-v1.h"
+
 #include "display/WindowTree.hpp"
 
 namespace protocol
@@ -28,11 +31,18 @@ namespace protocol
 			 struct wl_resource *,
 			 uint32_t id,
 			 struct wl_resource *surface);
+    
+    void destroyDmabuf(struct wl_client *client,
+		       struct wl_resource *resource);
+    void createParams(struct wl_client *client,
+		      struct wl_resource *resource,
+		      uint32_t paramId);
 
     void bindCompositor(struct wl_client *client, uint32_t version, uint32_t id);
     void bindSeat(struct wl_client *client, uint32_t version, uint32_t id);
     void bindSurface(struct wl_client *client, uint32_t version, uint32_t id);
     void bindShell(struct wl_client *client, uint32_t version, uint32_t id);
+    void bindDmabuf(struct wl_client *client, uint32_t version, uint32_t id);
     void addProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
     void eventDispatch(int32_t timeout);
     void process(struct wl_client *data);

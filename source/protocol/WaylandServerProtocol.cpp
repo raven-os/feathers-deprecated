@@ -31,6 +31,8 @@ namespace protocol
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
     wl_global_create(wlDisplay, &wl_shell_interface, 1, this,
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShell>());
+    wl_global_create(wlDisplay, &zwp_linux_dmabuf_v1_interface, 1, this,
+    		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindDmabuf>());
     wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindSeat>());
     notify = [](auto *that, void *data) {
@@ -129,6 +131,7 @@ namespace protocol
 	    wl_resource_set_implementation(resource, &shell_surface_implementation, new ShellSurface(surface), [](wl_resource *resource){
 		delete static_cast<ShellSurface *>(wl_resource_get_user_data(resource));
 	      });
+	    wl_shell_surface_send_configure(resource, 10 /* bot right */, 100, 100);
 	  }
 	else
 	  wl_client_post_no_memory(client);
@@ -147,6 +150,33 @@ namespace protocol
       {
 	wl_resource_set_implementation(resource, &shell_implementation, this, [](wl_resource *){
 	    printf("Destroying shell!\n"); // todo ?
+	  });
+      }
+    else
+      wl_client_post_no_memory(client);
+  }
+
+  void WaylandServerProtocol::destroyDmabuf(struct wl_client *client,
+					    struct wl_resource *resource)
+  {
+  }
+
+  void WaylandServerProtocol::createParams(struct wl_client *client,
+					   struct wl_resource *resource,
+					   uint32_t paramId)
+  {
+  }
+
+  void WaylandServerProtocol::bindDmabuf(struct wl_client *client, uint32_t version, uint32_t id)
+  {
+    static auto dmabuf_implementation(createImplementation<struct zwp_linux_dmabuf_v1_interface,
+				      &WaylandServerProtocol::destroyDmabuf,
+				      &WaylandServerProtocol::createParams>());
+
+    if (wl_resource *resource = wl_resource_create(client, &zwp_linux_dmabuf_v1_interface, version, id))
+      {
+	wl_resource_set_implementation(resource, &dmabuf_implementation, this, [](wl_resource *){
+	    printf("Destroying dmabuf!\n"); // todo ?
 	  });
       }
     else
