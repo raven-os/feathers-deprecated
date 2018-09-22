@@ -39,6 +39,7 @@ namespace modeset {
     ~ModeSetter();
 
     void swapBuffers();
+    int getScreenBufferFd() const;
     int getScreenWidth() const;
     int getScreenHeight() const;
 

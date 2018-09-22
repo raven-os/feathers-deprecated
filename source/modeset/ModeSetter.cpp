@@ -166,4 +166,9 @@ namespace modeset {
   {
     return drm.modeInfo.vdisplay;
   }
+
+  int ModeSetter::getScreenBufferFd() const
+  {
+    return drm.fd;
+  }
 }
