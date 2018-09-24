@@ -83,7 +83,9 @@ namespace protocol
       wl_client_post_no_memory(client);
  }
 
-  void WaylandServerProtocol::createRegion(struct wl_client *client, struct wl_resource *, uint32_t id)
+  void WaylandServerProtocol::createRegion([[maybe_unused]] struct wl_client *client,
+					   [[maybe_unused]] struct wl_resource *,
+					   [[maybe_unused]] uint32_t id)
   {
     printf("TODO: create region\n");
   }
@@ -156,15 +158,16 @@ namespace protocol
       wl_client_post_no_memory(client);
   }
 
-  void WaylandServerProtocol::destroyDmabuf(struct wl_client *client,
-					    struct wl_resource *resource)
+  void WaylandServerProtocol::destroyDmabuf([[maybe_unused]] struct wl_client *client,
+					    [[maybe_unused]] struct wl_resource *resource)
   {
   }
 
-  void WaylandServerProtocol::createParams(struct wl_client *client,
-					   struct wl_resource *resource,
-					   uint32_t paramId)
+  void WaylandServerProtocol::createParams([[maybe_unused]] struct wl_client *client,
+					   [[maybe_unused]] struct wl_resource *resource,
+					   [[maybe_unused]] uint32_t paramId)
   {
+    // static struct parmsImplementation(createImplementation<struct zwp_linux_buffer_params_v1_interface>())
   }
 
   void WaylandServerProtocol::bindDmabuf(struct wl_client *client, uint32_t version, uint32_t id)
