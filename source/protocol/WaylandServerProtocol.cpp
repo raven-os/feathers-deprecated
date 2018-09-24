@@ -80,7 +80,9 @@ namespace protocol
       wl_client_post_no_memory(client);
  }
 
-  void WaylandServerProtocol::createRegion(struct wl_client *client, struct wl_resource *, uint32_t id)
+  void WaylandServerProtocol::createRegion([[maybe_unused]] struct wl_client *client,
+					   [[maybe_unused]] struct wl_resource *,
+					   [[maybe_unused]] uint32_t id)
   {
     printf("TODO: create region\n");
   }
