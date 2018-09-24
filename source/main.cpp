@@ -2,7 +2,6 @@
 #include "display/Display.hpp"
 #include "display/KernelDisplay.hpp"
 #include "Exception.hpp"
-#include "display/WindowTree.hpp"
 #include "protocol/WaylandServerProtocol.hpp"
 
 static void debug_server_protocol([[maybe_unused]]void *user_data,
@@ -39,37 +38,8 @@ static void debug_server_protocol([[maybe_unused]]void *user_data,
   printf("}\n");
 }
 
-static void addTestWindows(display::WindowTree &windowTree)
-{
-  {
-    auto root(windowTree.getRootIndex());
-    auto child(windowTree.addChild(root));
-
-    auto &childData(windowTree.getData(child));
-
-    childData.rect.position[0] = 10u;
-    childData.rect.position[1] = 40u;
-    childData.rect.size[0] = 300u;
-    childData.rect.size[1] = 300u;
-    childData.isSolid = true;
-    for (uint32_t i = 0; i < 4; ++i)
-      {
-	auto grandChild(windowTree.addChild(child));
-	auto &grandChildData(windowTree.getData(grandChild));
-
-	grandChildData.rect.position[0] = uint16_t(100u + i * 20u);
-	grandChildData.rect.position[1] = uint16_t(100u + i * 120u);
-	grandChildData.rect.size[0] = 400u;
-	grandChildData.rect.size[1] = 100u;
-	grandChildData.isSolid = true;
-      }
-  }
-}
-
 int main(int argc, char **argv)
 {
-  display::WindowTree windowTree(display::WindowData
-				 {{{{0, 0}}, {{1920, 1080}}}, true});
   protocol::WaylandServerProtocol serverProtocol;
 
   for (int32_t i = 1; i < argc - 1; ++i)
@@ -86,7 +56,6 @@ int main(int argc, char **argv)
       }
 
 
-  addTestWindows(windowTree);
   if (!strcmp(argv[1], "-sc") || !strcmp(argv[1], "--sub-compositor"))
     {
       std::string socketname("");
@@ -105,7 +74,7 @@ int main(int argc, char **argv)
 
       while (waylandSurface.isRunning())
 	{
-	  display.render(windowTree);
+	  display.render(serverProtocol.getWindowTree());
 	  waylandSurface.dispatch();
 	  serverProtocol.eventDispatch(0);
 	}
@@ -120,7 +89,7 @@ int main(int argc, char **argv)
 
 	    for (int i = 0; i < 120; ++i)
 	      {
-		kernelDisplay.render(windowTree);
+		kernelDisplay.render(serverProtocol.getWindowTree());
 		serverProtocol.eventDispatch(0);
 	      }
 	  }
