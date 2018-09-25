@@ -1,4 +1,5 @@
 #include <wayland-server.h>
+#include "display/WindowTree.hpp"
 
 namespace protocol
 {
@@ -8,9 +9,14 @@ namespace protocol
     struct wl_display *wlDisplay;
     struct wl_event_loop *wlEventLoop;
     struct wl_protocol_logger *wlProtocolLogger;
+    display::WindowTree windowTree;
 
   public:
     WaylandServerProtocol();
+    WaylandServerProtocol(WaylandServerProtocol const &) = delete;
+    WaylandServerProtocol(WaylandServerProtocol &&) = delete;
+    WaylandServerProtocol operator=(WaylandServerProtocol const &) = delete;
+    WaylandServerProtocol operator=(WaylandServerProtocol &&) = delete;
     ~WaylandServerProtocol();
 
     int32_t addSocket();
@@ -31,10 +37,7 @@ namespace protocol
     void eventDispatch(int32_t timeout);
     void process(struct wl_client *data);
 
-    WaylandServerProtocol(WaylandServerProtocol const &) = delete;
-    WaylandServerProtocol(WaylandServerProtocol &&) = delete;
-    WaylandServerProtocol operator=(WaylandServerProtocol const &) = delete;
-    WaylandServerProtocol operator=(WaylandServerProtocol &&) = delete;
+    display::WindowTree const &getWindowTree() const noexcept;
   };
 
 }

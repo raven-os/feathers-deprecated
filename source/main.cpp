@@ -2,7 +2,6 @@
 #include "display/Display.hpp"
 #include "display/KernelDisplay.hpp"
 #include "Exception.hpp"
-#include "display/WindowTree.hpp"
 #include "protocol/WaylandServerProtocol.hpp"
 #include "Args.hpp"
 
@@ -68,7 +67,7 @@ static void addTestWindows(display::WindowTree &windowTree)
 }
 
 
-static void help(char const *name)
+static void help(std::string const &name)
 {
   printf("Usage: %s [OPTIONS]...\n"
 	 "\n"
@@ -77,7 +76,7 @@ static void help(char const *name)
 	 "\t-E, --sub-compositor\t sub-compositor mode\n"
 	 "\t-c, --client-socket\t clients sockets names (only in sub-compositor mode)\n"
 	 "\t-s, --socket\t\t weston socket name (default if not specify)\n\n"
-	 , name);
+	 , (name.find('/') != std::string::npos ? name.substr(name.rfind('/') + 1) : name).c_str());
 }
 
 
@@ -90,7 +89,7 @@ int main(int argc, char **argv)
 
   while (1)
     {
-      static const struct option long_options[] =
+      constexpr struct option long_options[] =
         {
          {"help", no_argument, 0, 'h'},
          {"tty", no_argument, 0, 'T'},
@@ -164,15 +163,15 @@ int main(int argc, char **argv)
       return -1;
     }
 
-  for (auto it = args.clientSocketsNames.begin(); it < args.clientSocketsNames.end(); it++)
+  for (auto const &str : args.clientSocketsNames)
     {
       printf("AddSocket method with name '%s' was %s\n",
-	     it->c_str(), serverProtocol.addSocket(*it) ?
+	     str.c_str(), serverProtocol.addSocket(str) ?
 	     "unsuccessful" : "successful");
       serverProtocol.eventDispatch(0);
       // serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>
       // 				       (debug_server_protocol),
-      // 				       static_cast<void *>(it->c_str()));
+      // 				       static_cast<void *>(str.c_str()));
       // serverProtocol.eventDispatch(0);
     }
 
@@ -187,7 +186,7 @@ int main(int argc, char **argv)
 
       while (waylandSurface.isRunning())
 	{
-	  display.render(windowTree);
+	  display.render(serverProtocol.getWindowTree());
 	  waylandSurface.dispatch();
 	  serverProtocol.eventDispatch(0);
 	}
@@ -201,7 +200,7 @@ int main(int argc, char **argv)
 
 	  for (int i = 0; i < 120; ++i)
 	    {
-	      kernelDisplay.render(windowTree);
+	      kernelDisplay.render(serverProtocol.getWindowTree());
 	      serverProtocol.eventDispatch(0);
 	    }
 	}

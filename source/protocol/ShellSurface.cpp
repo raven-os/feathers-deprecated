@@ -8,75 +8,75 @@ namespace protocol
   {}
 
   // wl interface functions
-  void ShellSurface::pong(struct wl_client *client,
-			  struct wl_resource *resource,
-			  uint32_t serial)
+  void ShellSurface::pong([[maybe_unused]] struct wl_client *client,
+			  [[maybe_unused]] struct wl_resource *resource,
+			  [[maybe_unused]] uint32_t serial)
   {
   }
 
-  void ShellSurface::move(struct wl_client *client,
-			  struct wl_resource *resource,
-			  struct wl_resource *seat,
-			  uint32_t serial)
+  void ShellSurface::move([[maybe_unused]] struct wl_client *client,
+			  [[maybe_unused]] struct wl_resource *resource,
+			  [[maybe_unused]] struct wl_resource *seat,
+			  [[maybe_unused]] uint32_t serial)
   {
   }
   
-  void ShellSurface::resize(struct wl_client *client,
-			    struct wl_resource *resource,
-			    struct wl_resource *seat,
-			    uint32_t serial,
-			    uint32_t edges)
+  void ShellSurface::resize([[maybe_unused]] struct wl_client *client,
+			    [[maybe_unused]] struct wl_resource *resource,
+			    [[maybe_unused]] struct wl_resource *seat,
+			    [[maybe_unused]] uint32_t serial,
+			    [[maybe_unused]] uint32_t edges)
   {
   }
   
-  void ShellSurface::set_toplevel(struct wl_client *client,
-				  struct wl_resource *resource)
+  void ShellSurface::set_toplevel([[maybe_unused]] struct wl_client *client,
+				  [[maybe_unused]] struct wl_resource *resource)
   {
   }
   
-  void ShellSurface::set_transient(struct wl_client *client,
-				   struct wl_resource *resource,
-				   struct wl_resource *parent,
-				   int32_t x,
-				   int32_t y,
-				   uint32_t flags)
+  void ShellSurface::set_transient([[maybe_unused]] struct wl_client *client,
+				   [[maybe_unused]] struct wl_resource *resource,
+				   [[maybe_unused]] struct wl_resource *parent,
+				   [[maybe_unused]] int32_t x,
+				   [[maybe_unused]] int32_t y,
+				   [[maybe_unused]] uint32_t flags)
   {
   }
   
-  void ShellSurface::set_fullscreen(struct wl_client *client,
-				    struct wl_resource *resource,
-				    uint32_t method,
-				    uint32_t framerate,
-				    struct wl_resource *output)
+  void ShellSurface::set_fullscreen([[maybe_unused]] struct wl_client *client,
+				    [[maybe_unused]] struct wl_resource *resource,
+				    [[maybe_unused]] uint32_t method,
+				    [[maybe_unused]] uint32_t framerate,
+				    [[maybe_unused]] struct wl_resource *output)
   {
   }
 
-  void ShellSurface::set_popup(struct wl_client *client,
-			       struct wl_resource *resource,
-			       struct wl_resource *seat,
-			       uint32_t serial,
-			       struct wl_resource *parent,
-			       int32_t x,
-			       int32_t y,
-			       uint32_t flags)
+  void ShellSurface::set_popup([[maybe_unused]] struct wl_client *client,
+			       [[maybe_unused]] struct wl_resource *resource,
+			       [[maybe_unused]] struct wl_resource *seat,
+			       [[maybe_unused]] uint32_t serial,
+			       [[maybe_unused]] struct wl_resource *parent,
+			       [[maybe_unused]] int32_t x,
+			       [[maybe_unused]] int32_t y,
+			       [[maybe_unused]] uint32_t flags)
   {
   }
 
-  void ShellSurface::set_maximized(struct wl_client *client,
-				   struct wl_resource *resource,
-				   struct wl_resource *output)
+  void ShellSurface::set_maximized([[maybe_unused]] struct wl_client *client,
+				   [[maybe_unused]] struct wl_resource *resource,
+				   [[maybe_unused]] struct wl_resource *output)
   {
   }
   
-  void ShellSurface::set_title(struct wl_client *client,
-			       struct wl_resource *resource,
-			       const char *title)
+  void ShellSurface::set_title([[maybe_unused]] struct wl_client *client,
+			       [[maybe_unused]] struct wl_resource *resource,
+			       [[maybe_unused]] const char *title)
   {
   }
 
-  void ShellSurface::set_class(struct wl_client *client,
-			       struct wl_resource *resource,
-			       const char *class_)
+  void ShellSurface::set_class([[maybe_unused]] struct wl_client *client,
+			       [[maybe_unused]] struct wl_resource *resource,
+			       [[maybe_unused]] const char *class_)
   {
   }  
 }
