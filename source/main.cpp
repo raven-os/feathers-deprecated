@@ -46,14 +46,16 @@ int main(int argc, char **argv)
 	{
 	  ModeSetter modeSetter;
 	  EvdevClient evdevC;
+	  QuadFullscreen quadFullscreen;
 
 	  evdevC.initClient();
-	  for (int i = 0; i < 600; ++i)
+	  for (int i = 0; i < 120; ++i)
 	    {
 	      quadFullscreen.draw();
 	      modeSetter.swapBuffers();
+	      quadFullscreen.draw();
+	      modeSetter.swapBuffers();
 	      evdevC.tick();
-	      usleep(100);
 	    }
 	}
       catch (ModeSettingError const& e)
