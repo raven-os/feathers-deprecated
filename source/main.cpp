@@ -75,7 +75,7 @@ static void help(std::string const &name)
 	 "\t-T, --tty\t\t tty mode\n"
 	 "\t-E, --sub-compositor\t sub-compositor mode\n"
 	 "\t-c, --client-socket\t clients sockets names (only in sub-compositor mode)\n"
-	 "\t-s, --socket\t\t weston socket name (default if not specify)\n\n"
+	 "\t-s, --socket\t\t weston socket name (default if not specified)\n\n"
 	 , (name.find('/') != std::string::npos ? name.substr(name.rfind('/') + 1) : name).c_str());
 }
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
         {
 	case 'T':
           if (args.mode == 1) {
-            puts("Mode cannot be TTY and SubCompositor\n");
+            puts("Mode can't be both 'TTY' and 'sub-compositor'\n");
             return -1;
           }
           args.mode = 0;
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 
 	case 'E':
           if (args.mode == 0) {
-            puts("Mode cannot be SubCompositor and TTY\n");
+            puts("Mode can't be both 'sub-compositor' and 'TTY'\n");
             return -1;
           }
           args.mode = 1;
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 
 	case 'c':
           if (args.mode != 1) {
-            puts("Cannot set client-socket in non SubCompositor modes\n");
+            puts("'client-socket' may only be set in TTY mode\n");
             return -1;
           }
           args.socketName = optarg;
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 
   if (optind < argc)
     {
-      printf("non-option ARGV-elements: ");
+      printf("non-option arguments: ");
       while (optind < argc)
 	printf("%s ", argv[optind++]);
       putchar('\n');
