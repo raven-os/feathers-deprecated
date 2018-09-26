@@ -155,6 +155,8 @@ int main(int argc, char **argv)
       while (optind < argc)
 	printf("%s ", argv[optind++]);
       putchar('\n');
+      help(argv[0]);
+      return -1;
     }
 
   if (args.mode == -1)

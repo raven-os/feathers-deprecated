@@ -6,8 +6,7 @@
 #include <vector>
 
 struct Args {
-  Args(): socketName(""), mode(-1) {};
   std::vector<std::string> clientSocketsNames;
-  std::string socketName;
-  int mode;
+  std::string socketName = "";
+  int mode = -1;
 };
