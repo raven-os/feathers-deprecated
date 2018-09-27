@@ -56,7 +56,7 @@ int main(int argc, char **argv)
       }
 
 
-  if (!strcmp(argv[1], "-sc") || !strcmp(argv[1], "--sub-compositor"))
+  if (argc > 1 && (!strcmp(argv[1], "-sc") || !strcmp(argv[1], "--sub-compositor")))
     {
       std::string socketname("");
 
