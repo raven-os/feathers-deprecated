@@ -41,13 +41,12 @@ bool EvdevClient::initClient()
         return (valid);
     }
     destructionFlag = toDestroy::FROM_KEYBOARDS;
-    epfd = epoll_create1(0);
-    if (epfd < 0)
+    fdWrapper.init(epoll_create1(0));
+    if (fdWrapper.fd < 0)
     {
         fprintf(stderr, "Couldn't create epoll instance: %s\n", strerror(errno));
         return (valid);
     }
-    destructionFlag = toDestroy::FROM_EPFD;
     for (struct keyboard *kbd = kbds; kbd; kbd = kbd->next)
     {
         struct epoll_event ev;
@@ -55,7 +54,7 @@ bool EvdevClient::initClient()
         memset(&ev, 0, sizeof(ev));
         ev.events = EPOLLIN;
         ev.data.ptr = kbd;
-        if (epoll_ctl(epfd, EPOLL_CTL_ADD, kbd->fd, &ev))
+        if (epoll_ctl(fdWrapper.fd, EPOLL_CTL_ADD, kbd->fd, &ev))
         {
             fprintf(stderr, "Couldn't add %s to epoll: %s\n", kbd->path, strerror(errno));
             return (valid);
@@ -70,9 +69,6 @@ void EvdevClient::destroyClient()
     switch (destructionFlag)
     {
         case toDestroy::ALL:
-        case toDestroy::FROM_EPFD:
-        close(epfd);
-        [[fallthrough]];
         case toDestroy::FROM_KEYBOARDS:
         xkbWrapper.freeKeyboards(kbds);
         [[fallthrough]];
@@ -216,7 +212,7 @@ void EvdevClient::tick()
     struct keyboard *kbd;
     struct epoll_event evs[16];
 
-    ret = epoll_wait(epfd, evs, 16, 10);
+    ret = epoll_wait(fdWrapper.fd, evs, 16, 10);
     if (ret < 0)
     {
         if (errno == EINTR)
