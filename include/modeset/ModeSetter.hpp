@@ -16,10 +16,13 @@ namespace modeset {
     {
       Drm();
 
+      int scanGpu();
+
       int fd;
       uint32_t connectorId;
       drmModeModeInfo modeInfo;
       drmModeCrtc *crtc;
+      drmModeRes *res;
     };
 
     struct Gbm
