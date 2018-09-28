@@ -3,6 +3,7 @@
 #include <iostream>
 #include <signal.h>
 #include <sys/epoll.h>
+#include "FileDescriptorWrapper.hpp"
 #include "XkbWrapper.hpp"
 
 #define EVDEV_OFFSET 8
@@ -27,9 +28,9 @@ enum keyState
 class EvdevClient
 {
     // ATTRIBUTES
-    int epfd;
-    struct keyboard *kbds;
+    FileDescriptorWrapper fdWrapper;
     XkbWrapper xkbWrapper;
+    struct keyboard *kbds;
     struct xkb_context *ctx;
     struct xkb_keymap *keymap;
 
