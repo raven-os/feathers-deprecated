@@ -8,7 +8,7 @@
 #include "protocol/CreateImplementation.hpp"
 #include "protocol/Surface.hpp"
 #include "protocol/ShellSurface.hpp"
-#include "protocol/Seat.hpp"
+#include "protocol/Seat/SeatImplem.hpp"
 
 namespace protocol
 {
@@ -159,10 +159,10 @@ namespace protocol
   void WaylandServerProtocol::bindSeat(struct wl_client *client, uint32_t version, uint32_t id)
   {
     static auto seat_implementation(createImplementation<struct wl_seat_interface,
-                &Seat::get_pointer,
-                &Seat::get_keyboard,
-                &Seat::get_touch,
-                &Seat::release
+                &SeatImplem::get_pointer,
+                &SeatImplem::get_keyboard,
+                &SeatImplem::get_touch,
+                &SeatImplem::release
                 >());
 
     if (wl_resource *resource = wl_resource_create(client, &wl_seat_interface, version, id))
