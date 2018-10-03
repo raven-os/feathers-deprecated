@@ -9,12 +9,12 @@ namespace protocol
     struct FthSeat *seat;
 
     // lists of wl_resource
-    // struct wl_list resources;
-    // struct wl_list pointers;
-    // struct wl_list keyboards;
-    // struct wl_list touches;
-    // struct wl_list data_devices;
-    // struct wl_list primary_selection_devices;
+    wl_list resources;
+    wl_list pointers;
+    wl_list keyboards;
+    wl_list touches;
+    wl_list data_devices;
+    wl_list primary_selection_devices;
 
     struct {
       wl_signal destroy;
