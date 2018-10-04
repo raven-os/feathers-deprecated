@@ -1,14 +1,20 @@
 #pragma once
 
 #include <wayland-server.h>
+#include "Implem.hpp"
 
 namespace protocol
 {
-  class KeyboardImplem
+  class KeyboardImplem : public Implem
   {
     public:
       KeyboardImplem() = delete;
+      KeyboardImplem(KeyboardImplem const &) = delete;
+      KeyboardImplem(KeyboardImplem &&) = delete;
 
-      void release(wl_client *client, wl_resource *resource);
+      KeyboardImplem(wl_resource *);
+
+      void createImplem(wl_client *client, uint32_t id) override;
+
   };
 }
