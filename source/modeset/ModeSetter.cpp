@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <iostream>
+#include <libudev.h>
+#include <cstring>
 
 #include "modeset/ModeSetter.hpp"
 #include "Exception.hpp"
@@ -10,17 +12,10 @@
 namespace modeset {
   ModeSetter::Drm::Drm()
   {
-    // TODO find card1 with proper scan
-    fd = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
+    fd = scanGpu();
     if (fd < 0)
       {
-	throw ModeSettingError("/dev/dri/card1: no such file or directory");
-      }
-
-    drmModeRes *res = drmModeGetResources(fd);
-    if (!res)
-      {
-	throw ModeSettingError("Cannot get drm resource");
+	throw ModeSettingError("Could not find gpu device");
       }
 
     drmModeConnector *conn = nullptr;
@@ -63,6 +58,74 @@ namespace modeset {
     drmModeFreeEncoder(enc);
     drmModeFreeConnector(conn);
     drmModeFreeResources(res);
+  }
+
+  int ModeSetter::Drm::scanGpu()
+  {
+    struct udev *udev = udev_new();
+    if (!udev)
+      {
+	throw ModeSettingError("Could not create udev");
+      }
+
+    struct udev_enumerate *en = udev_enumerate_new(udev);
+    if (!en)
+      {
+	throw ModeSettingError("Could not create udev enumerate");
+      }
+
+    udev_enumerate_add_match_subsystem(en, "drm");
+    udev_enumerate_add_match_sysname(en, "card[0-9]*");
+    udev_enumerate_scan_devices(en);
+
+    struct udev_list_entry *entry;
+
+    int gpuFd = -1;
+
+    udev_list_entry_foreach(entry, udev_enumerate_get_list_entry(en)) {
+      bool isBootVga = false;
+
+      const char *path = udev_list_entry_get_name(entry);
+      std::cout << "Testing device " << path << std::endl;
+      struct udev_device *dev = udev_device_new_from_syspath(udev, path);
+      if (!dev) {
+	continue;
+      }
+
+      struct udev_device *pci =
+	udev_device_get_parent_with_subsystem_devtype(dev, "pci", NULL);
+
+      if (pci) {
+	const char *id = udev_device_get_sysattr_value(pci, "boot_vga");
+	if (id && strcmp(id, "1") == 0) {
+	  isBootVga = true;
+	}
+      }
+
+      const char *devicePath = udev_device_get_devnode(dev);
+      if (!devicePath)
+	continue;
+      int fd = open(devicePath, O_RDWR|O_CLOEXEC);
+      if (fd < 0)
+	continue;
+
+      res = drmModeGetResources(fd);
+      if (!res) {
+	close(fd);
+	continue;
+      }
+      udev_device_unref(dev);
+      if (isBootVga)
+	{
+	  gpuFd = fd;
+	  break;
+	}
+      close(fd);
+    }
+
+    udev_unref(udev);
+    udev_enumerate_unref(en);
+    return gpuFd;
   }
 
   ModeSetter::Gbm::Gbm(int fd, uint16_t width, uint16_t height)

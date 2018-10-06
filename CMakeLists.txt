@@ -25,6 +25,7 @@ find_package(Wayland REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(DRM REQUIRED)
 find_package(EGL REQUIRED)
+find_package(UDEV REQUIRED)
 find_package(OpenGLES3 REQUIRED)
 find_package(claws CONFIG REQUIRED)
 find_package(magma CONFIG REQUIRED)
@@ -35,6 +36,7 @@ include_directories(
   ${WAYLAND_SERVER_INCLUDE_DIR}
   ${DRM_INCLUDE_DIR}
   ${GBM_INCLUDE_DIR}
+  ${UDEV_INCLUDE_DIR}
   ${EGL_INCLUDE_DIR}
   ${OPENGLES3_INCLUDE_DIR}
   )
@@ -59,6 +61,7 @@ target_link_libraries(${PROJECT_NAME}
   ${WAYLAND_SERVER_LIBRARIES}
   ${DRM_LIBRARY}
   ${GBM_LIBRARY}
+  ${UDEV_LIBRARY}
   ${EGL_LIBRARY}
   ${OPENGLES3_LIBRARY}
   xkbcommon
