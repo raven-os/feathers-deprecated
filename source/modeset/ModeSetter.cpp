@@ -220,18 +220,18 @@ namespace modeset {
     previousFb = fb;
   }
 
-  int ModeSetter::getScreenWidth() const
+  int ModeSetter::getScreenWidth() const noexcept
   {
     return drm.modeInfo.hdisplay;
   }
 
-  int ModeSetter::getScreenHeight() const
+  int ModeSetter::getScreenHeight() const noexcept
   {
     return drm.modeInfo.vdisplay;
   }
 
-  int ModeSetter::getScreenBufferFd() const
+  EGLDisplay ModeSetter::getDisplay() const noexcept
   {
-    return drm.fd;
+    return gbm.eglDisplay;
   }
 }

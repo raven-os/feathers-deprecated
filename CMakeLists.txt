@@ -26,7 +26,8 @@ find_package(PkgConfig REQUIRED)
 find_package(DRM REQUIRED)
 find_package(EGL REQUIRED)
 find_package(UDEV REQUIRED)
-find_package(OpenGLES3 REQUIRED)
+set(OpenGL_GL_PREFERENCE "LEGACY")
+find_package(OpenGL REQUIRED)
 find_package(claws CONFIG REQUIRED)
 find_package(magma CONFIG REQUIRED)
 
@@ -38,7 +39,7 @@ include_directories(
   ${GBM_INCLUDE_DIR}
   ${UDEV_INCLUDE_DIR}
   ${EGL_INCLUDE_DIR}
-  ${OPENGLES3_INCLUDE_DIR}
+  ${OPENGLES2_INCLUDE_DIR}
   )
 
 if (DEFINED CLAWS_DIR)
@@ -63,7 +64,7 @@ target_link_libraries(${PROJECT_NAME}
   ${GBM_LIBRARY}
   ${UDEV_LIBRARY}
   ${EGL_LIBRARY}
-  ${OPENGLES3_LIBRARY}
+  ${OPENGL_LIBRARY}
   xkbcommon
   magma::core
   )

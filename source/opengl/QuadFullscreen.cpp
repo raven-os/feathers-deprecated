@@ -2,10 +2,10 @@
 #include "opengl/my_opengl.hpp"
 
 #include <iostream>
+#include <cassert>
 
 QuadFullscreen::QuadFullscreen()
-  : texture(),
-    program(my_opengl::createProgram("texture"))
+  : program(opengl::createProgram("texture"))
 {
   constexpr float const vertices[]
     {
@@ -16,7 +16,6 @@ QuadFullscreen::QuadFullscreen()
        1.0f, -1.0f, 1.0f, 1.0f,
     };
 
-  glBindVertexArray(vao);
   glBindBuffer(GL_ARRAY_BUFFER, buffer);
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
@@ -30,22 +29,10 @@ QuadFullscreen::~QuadFullscreen()
 {
 }
 
-void QuadFullscreen::draw(void const *buffer, GLsizei width, GLsizei height)
+void QuadFullscreen::draw(opengl::Texture const &texture, GLsizei width, GLsizei height)
 {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture);
-  glPixelStorei(GL_PACK_ALIGNMENT, 1);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D,
-	       0,
-	       GL_SRGB8_ALPHA8,
-	       width,
-	       height,
-	       0,
-	       GL_RGBA,
-	       GL_UNSIGNED_BYTE,
-	       buffer);
   if (int err = glGetError())
     {
       switch (err)
@@ -68,8 +55,8 @@ void QuadFullscreen::draw(void const *buffer, GLsizei width, GLsizei height)
 	default:
 	  std::cerr << "Unknown GL error\n";
 	}
+      assert(0);
     }
-  glBindVertexArray(vao);
   glUseProgram(program);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

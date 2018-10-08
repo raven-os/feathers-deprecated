@@ -9,6 +9,13 @@
 #include "display/Renderer.hpp"
 #include "opengl/QuadFullscreen.hpp"
 #include "modeset/ModeSetter.hpp"
+#include "display/EGLVulkanImages.hpp"
+
+#define GL_GLEXT_PROTOTYPES
+
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 namespace display
 {
@@ -78,6 +85,10 @@ namespace display
       magma::Image<> image;
       magma::ImageView<> imageView;
       FrameData data;
+      magma::DeviceMemory<> bufferMemory;
+      magma::Buffer<> buffer;
+      EGLImage eglImage;
+      opengl::Texture texture; // will refer to buffer
 
       Frame(magma::Device<claws::no_delete> device, Swapchain const &swapchain, Renderer &userData, SwapchainUserData &swapchainUserData,  vk::PhysicalDevice physicalDevice)
 	: imageMemory{}
@@ -85,7 +96,7 @@ namespace display
 	    auto image(device.createImage2D({}, swapchain.getFormat(), {swapchain.getExtent().width, swapchain.getExtent().height}, vk::SampleCountFlagBits::e1,
 					    vk::ImageTiling::eLinear, vk::ImageUsageFlagBits::eColorAttachment, vk::ImageLayout::eUndefined));
 	    auto memRequirements(device.getImageMemoryRequirements(image));
-	    imageMemory = device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits);
+	    imageMemory = device.selectAndCreateDeviceMemory(physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eDeviceLocal, memRequirements.memoryTypeBits);
 
 	    device.bindImageMemory(image, imageMemory, 0);
 	    return image;
@@ -101,7 +112,68 @@ namespace display
 					   {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}))
 
 	, data{device, swapchain, userData, swapchainUserData, imageView}
+	, bufferMemory{}
+	, buffer([&](){
+	    magma::Buffer<> buffer(device.createBuffer({},
+						       swapchain.getExtent().width * swapchain.getExtent().height * 4,
+						       vk::BufferUsageFlagBits::eTransferDst));
+
+	    auto memRequirements(device.getBufferMemoryRequirements(buffer));
+
+	    vk::StructureChain<vk::MemoryAllocateInfo,
+			       vk::ExportMemoryAllocateInfo> c = {
+	      vk::MemoryAllocateInfo(memRequirements.size, magma::selectDeviceMemoryType(physicalDevice,
+											 memRequirements.size,
+											 vk::MemoryPropertyFlagBits::eDeviceLocal,
+											 memRequirements.memoryTypeBits)),
+	      vk::ExportMemoryAllocateInfo(vk::ExternalMemoryHandleTypeFlagBits::eDmaBufEXT)
+	    };
+	    bufferMemory = magma::DeviceMemory<>(magma::DeviceMemoryDeleter{device},
+						 device.allocateMemory(c.get<vk::MemoryAllocateInfo>()));
+
+	    device.bindBufferMemory(buffer, bufferMemory, 0);
+	    
+	    return buffer;
+	  }())
+	, eglImage(createEglImageFromVkMemory(device,
+					      bufferMemory,
+					      swapchain.modeset->getDisplay(),
+					      swapchain.getExtent().width,
+					      swapchain.getExtent().height))
       {
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R_OES, GL_CLAMP_TO_EDGE);
+	if (int err = glGetError())
+	  {
+	    switch (err)
+	      {
+	      case GL_INVALID_ENUM:
+		std::cerr << "GL_INVALID_ENUM\n";
+		break;
+	      case GL_INVALID_VALUE:
+		std::cerr << "GL_INVALID_VALUE\n";
+		break;
+	      case GL_INVALID_OPERATION:
+		std::cerr << "GL_INVALID_OPERATION\n";
+		break;
+	      case GL_INVALID_FRAMEBUFFER_OPERATION:
+		std::cerr << "GL_INVALID_FRAMEBUFFER_OPERATION\n";
+		break;
+	      case GL_OUT_OF_MEMORY:
+		std::cerr << "GL_OUT_OF_MEMORY\n";
+		break;
+	      default:
+		std::cerr << "Unknown GL error\n";
+	      }
+	    assert(0);
+	  }
+
       }
     };
     std::array<Frame, imageCount> frames;

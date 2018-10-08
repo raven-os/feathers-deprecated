@@ -42,9 +42,9 @@ namespace modeset {
     ~ModeSetter();
 
     void swapBuffers();
-    int getScreenBufferFd() const;
-    int getScreenWidth() const;
-    int getScreenHeight() const;
+    int getScreenWidth() const noexcept;
+    int getScreenHeight() const noexcept;
+    EGLDisplay getDisplay() const noexcept;
 
   private:
     Drm drm;

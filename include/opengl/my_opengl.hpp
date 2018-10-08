@@ -3,94 +3,86 @@
 
 # include <string>
 # include <array>
-# include <GLES3/gl3.h>
+#define GL_GLEXT_PROTOTYPES
 
-class Shader
-{
-public:
-  GLuint shader;
-private:
-  unsigned int *count;
-public:
-  Shader(GLuint);
-  ~Shader();
-  Shader(Shader const &);
-  Shader &operator=(Shader);
-  operator GLuint() const;
-};
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
-class Program
-{
-public:
-  GLuint program;
-private:
-  unsigned int *count;
-public:
-  Program();
-  ~Program();
-  Program(Program const &);
-  Program &operator=(Program);
-  operator GLuint() const;
-};
+# include <GLES2/gl2.h>
+# include <GLES2/gl2ext.h>
 
-class Vao
+namespace opengl
 {
-public:
-  GLuint vao;
-private:
-  unsigned int *count;
-public:
-  Vao();
-  ~Vao();
-  Vao(Vao const &);
-  Vao &operator=(Vao);
-  operator GLuint() const;
-};
+  class Shader
+  {
+  public:
+    GLuint shader;
+  private:
+    unsigned int *count;
+  public:
+    Shader(GLuint);
+    ~Shader();
+    Shader(Shader const &);
+    Shader &operator=(Shader);
+    operator GLuint() const;
+  };
 
-class glBuffer
-{
-public:
-  GLuint buffer;
-private:
-  unsigned int *count;
-public:
-  glBuffer();
-  ~glBuffer();
-  glBuffer(glBuffer const &);
-  glBuffer &operator=(glBuffer);
-  operator GLuint() const;
-};
+  class Program
+  {
+  public:
+    GLuint program;
+  private:
+    unsigned int *count;
+  public:
+    Program();
+    ~Program();
+    Program(Program const &);
+    Program &operator=(Program);
+    operator GLuint() const;
+  };
 
-class Framebuffer
-{
-public:
-  GLuint framebuffer;
-private:
-  unsigned int *count;
-public:
-  Framebuffer();
-  ~Framebuffer();
-  Framebuffer(Framebuffer const &);
-  Framebuffer &operator=(Framebuffer);
-  operator GLuint() const;
-};
+  class glBuffer
+  {
+  public:
+    GLuint buffer;
+  private:
+    unsigned int *count;
+  public:
+    glBuffer();
+    ~glBuffer();
+    glBuffer(glBuffer const &);
+    glBuffer &operator=(glBuffer);
+    operator GLuint() const;
+  };
 
-class Texture
-{
-public:
-  GLuint texture;
-private:
-  unsigned int *count;
-public:
-  Texture();
-  ~Texture();
-  Texture(Texture const &);
-  Texture &operator=(Texture);
-  operator GLuint() const;
-};
+  class Framebuffer
+  {
+  public:
+    GLuint framebuffer;
+  private:
+    unsigned int *count;
+  public:
+    Framebuffer();
+    ~Framebuffer();
+    Framebuffer(Framebuffer const &);
+    Framebuffer &operator=(Framebuffer);
+    operator GLuint() const;
+  };
 
-namespace	my_opengl
-{
+  class Texture
+  {
+  public:
+    GLuint texture;
+  private:
+    unsigned int *count;
+  public:
+    Texture();
+    ~Texture();
+    Texture(Texture const &);
+    Texture &operator=(Texture);
+    operator GLuint() const;
+  };
+
   void		shaderError(GLenum const shadertype, GLuint const shader);
   Shader	createShader(GLenum const shadertype, GLchar const *src);
   void		programError(GLuint const program);
