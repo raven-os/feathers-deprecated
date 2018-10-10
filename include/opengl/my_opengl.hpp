@@ -105,8 +105,6 @@ namespace opengl
       glDetachShader(program, shaders[i]);
     return (program);
   }
-
-  Texture loadTexture(std::string const &name);
 };
 
 #endif // MY_OPENGL_HPP_
