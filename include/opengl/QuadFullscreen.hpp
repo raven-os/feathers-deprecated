@@ -7,7 +7,7 @@ class QuadFullscreen
 {
 public:
   QuadFullscreen();
-  ~QuadFullscreen();
+  ~QuadFullscreen() = default;
 
   void draw(opengl::Texture const &texture, GLsizei width, GLsizei height);
 

@@ -4,10 +4,39 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <cassert>
 #include "opengl/my_opengl.hpp"
 
 namespace opengl
 {
+  void checkError()
+  {
+    if (int err = glGetError())
+    {
+      switch (err)
+	{
+	case GL_INVALID_ENUM:
+	  std::cerr << "GL_INVALID_ENUM\n";
+	  break;
+	case GL_INVALID_VALUE:
+	  std::cerr << "GL_INVALID_VALUE\n";
+	  break;
+	case GL_INVALID_OPERATION:
+	  std::cerr << "GL_INVALID_OPERATION\n";
+	  break;
+	case GL_INVALID_FRAMEBUFFER_OPERATION:
+	  std::cerr << "GL_INVALID_FRAMEBUFFER_OPERATION\n";
+	  break;
+	case GL_OUT_OF_MEMORY:
+	  std::cerr << "GL_OUT_OF_MEMORY\n";
+	  break;
+	default:
+	  std::cerr << "Unknown GL error\n";
+	}
+      assert(0);
+    }
+  }
+
   void shaderError(GLenum const shadertype, GLuint const shader)
   {
     GLint	len;
@@ -52,6 +81,7 @@ namespace opengl
 
   Program createProgram(std::string const& name)
   {
+    opengl::checkError(); // avoid propagating an error into the shader compilation
     std::stringstream vert;
     std::stringstream frag;
     std::ifstream vertInput("shaders/" + name + ".vert");

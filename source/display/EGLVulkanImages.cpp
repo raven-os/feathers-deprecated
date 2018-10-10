@@ -1,3 +1,5 @@
+#define EGL_EGLEXT_PROTOTYPES
+
 #include "display/EGLVulkanImages.hpp"
 
 #include <EGL/eglext.h>
@@ -23,7 +25,6 @@ namespace display
     }
   }
 
-
   EGLImage createEglImageFromVkMemory(VkDevice device,
 				      VkDeviceMemory memory,
 				      EGLDisplay display,
@@ -42,7 +43,7 @@ namespace display
       impl::vkGetMemoryFdKHR(device, &info, &fd);
     }
       
-    EGLAttrib const attr[] = {
+    EGLint const attr[] = {
       EGL_WIDTH, width,
       EGL_HEIGHT, height,
       EGL_LINUX_DRM_FOURCC_EXT, DRM_FORMAT_RGBA8888,
@@ -51,10 +52,13 @@ namespace display
       EGL_DMA_BUF_PLANE0_PITCH_EXT, width * 4,
       EGL_NONE
     };
-    return eglCreateImage(display,
-			  EGL_NO_CONTEXT,
-			  EGL_LINUX_DMA_BUF_EXT,
-			  nullptr,
-			  attr);
+    if (auto eglCreateImageKHR_func = reinterpret_cast<decltype(&eglCreateImageKHR)>(eglGetProcAddress("eglCreateImageKHR")))
+      return eglCreateImageKHR_func(display,
+				    EGL_NO_CONTEXT,
+				    EGL_LINUX_DMA_BUF_EXT,
+				    nullptr,
+				    attr);
+    else
+      throw std::runtime_error("Could not get eglGetProcAddress function!");
   }
 }

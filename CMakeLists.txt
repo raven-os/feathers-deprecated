@@ -26,8 +26,7 @@ find_package(PkgConfig REQUIRED)
 find_package(DRM REQUIRED)
 find_package(EGL REQUIRED)
 find_package(UDEV REQUIRED)
-set(OpenGL_GL_PREFERENCE "LEGACY")
-find_package(OpenGL REQUIRED)
+find_package(OpenGLES2 REQUIRED)
 find_package(claws CONFIG REQUIRED)
 find_package(magma CONFIG REQUIRED)
 
@@ -64,7 +63,7 @@ target_link_libraries(${PROJECT_NAME}
   ${GBM_LIBRARY}
   ${UDEV_LIBRARY}
   ${EGL_LIBRARY}
-  ${OPENGL_LIBRARY}
+  ${OPENGLES2_LIBRARY}
   xkbcommon
   magma::core
   )

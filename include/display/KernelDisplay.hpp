@@ -13,7 +13,6 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
@@ -143,7 +142,10 @@ namespace display
       {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+	if (auto glEGLImageTargetTexture2DOES_func = reinterpret_cast<decltype(&glEGLImageTargetTexture2DOES)>(eglGetProcAddress("glEGLImageTargetTexture2DOES")))
+	  glEGLImageTargetTexture2DOES_func(GL_TEXTURE_2D, image);
+	else
+	  throw std::runtime_error("Could not load function glEGLImageTargetTexture2DOES!");
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

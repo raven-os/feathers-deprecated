@@ -25,38 +25,11 @@ QuadFullscreen::QuadFullscreen()
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 }
 
-QuadFullscreen::~QuadFullscreen()
-{
-}
-
 void QuadFullscreen::draw(opengl::Texture const &texture, GLsizei width, GLsizei height)
 {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture);
-  if (int err = glGetError())
-    {
-      switch (err)
-	{
-	case GL_INVALID_ENUM:
-	  std::cerr << "GL_INVALID_ENUM\n";
-	  break;
-	case GL_INVALID_VALUE:
-	  std::cerr << "GL_INVALID_VALUE\n";
-	  break;
-	case GL_INVALID_OPERATION:
-	  std::cerr << "GL_INVALID_OPERATION\n";
-	  break;
-	case GL_INVALID_FRAMEBUFFER_OPERATION:
-	  std::cerr << "GL_INVALID_FRAMEBUFFER_OPERATION\n";
-	  break;
-	case GL_OUT_OF_MEMORY:
-	  std::cerr << "GL_OUT_OF_MEMORY\n";
-	  break;
-	default:
-	  std::cerr << "Unknown GL error\n";
-	}
-      assert(0);
-    }
+  opengl::checkError();
   glUseProgram(program);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }

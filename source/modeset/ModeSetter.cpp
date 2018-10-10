@@ -8,6 +8,7 @@
 
 #include "modeset/ModeSetter.hpp"
 #include "Exception.hpp"
+#include "opengl/my_opengl.hpp"
 
 namespace modeset {
   ModeSetter::Drm::Drm()
@@ -134,17 +135,28 @@ namespace modeset {
     eglDisplay = eglGetDisplay(gbmDevice);
     eglInitialize(eglDisplay, nullptr, nullptr);
 
-    // create an OpenGL context
-    eglBindAPI(EGL_OPENGL_API);
-    EGLint attributes[] = {
-      EGL_RED_SIZE, 8,
-      EGL_GREEN_SIZE, 8,
-      EGL_BLUE_SIZE, 8,
-      EGL_NONE};
+    printf("EGL extensions: %s\n", eglQueryString(eglDisplay, EGL_EXTENSIONS));
+
+    // create an OpenGL ES 2 context
+    eglBindAPI(EGL_OPENGL_ES_API);
     EGLConfig config;
-    EGLint numConfig;
-    eglChooseConfig(eglDisplay, attributes, &config, 1, &numConfig);
-    eglContext = eglCreateContext(eglDisplay, config, EGL_NO_CONTEXT, nullptr);
+    {
+      EGLint attributes[] = {
+	EGL_RED_SIZE, 8,
+	EGL_GREEN_SIZE, 8,
+	EGL_BLUE_SIZE, 8,
+	EGL_NONE};
+      EGLint numConfig;
+      eglChooseConfig(eglDisplay, attributes, &config, 1, &numConfig);
+    }
+    {
+      EGLint attributes[] =
+	{
+	  EGL_CONTEXT_CLIENT_VERSION, 2,
+	  EGL_NONE
+	};
+      eglContext = eglCreateContext(eglDisplay, config, EGL_NO_CONTEXT, attributes);
+    }
 
     // create the GBM and EGL surface
     gbmSurface = gbm_surface_create(gbmDevice,

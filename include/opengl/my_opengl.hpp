@@ -83,6 +83,7 @@ namespace opengl
     operator GLuint() const;
   };
 
+  void		checkError();
   void		shaderError(GLenum const shadertype, GLuint const shader);
   Shader	createShader(GLenum const shadertype, GLchar const *src);
   void		programError(GLuint const program);
