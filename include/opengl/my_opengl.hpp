@@ -41,17 +41,17 @@ namespace opengl
     operator GLuint() const;
   };
 
-  class glBuffer
+  class Buffer
   {
   public:
     GLuint buffer;
   private:
     unsigned int *count;
   public:
-    glBuffer();
-    ~glBuffer();
-    glBuffer(glBuffer const &);
-    glBuffer &operator=(glBuffer);
+    Buffer();
+    ~Buffer();
+    Buffer(Buffer const &);
+    Buffer &operator=(Buffer);
     operator GLuint() const;
   };
 

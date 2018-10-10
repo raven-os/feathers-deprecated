@@ -167,13 +167,13 @@ namespace opengl
     return program;
   }
 
-  glBuffer::glBuffer()
+  Buffer::Buffer()
     : buffer(0u), count(new unsigned int(1u))
   {
     glGenBuffers(1, &buffer);
   }
 
-  glBuffer::~glBuffer()
+  Buffer::~Buffer()
   {
     if (!--*count)
       {
@@ -182,20 +182,20 @@ namespace opengl
       }
   }
 
-  glBuffer::glBuffer(glBuffer const &s)
+  Buffer::Buffer(Buffer const &s)
     : buffer(s.buffer), count(s.count)
   {
     ++*count;
   }
 
-  glBuffer &glBuffer::operator=(glBuffer s)
+  Buffer &Buffer::operator=(Buffer s)
   {
     std::swap(s.count, count);
     std::swap(s.buffer, buffer);
     return *this;
   }
 
-  glBuffer::operator GLuint() const
+  Buffer::operator GLuint() const
   {
     return buffer;
   }

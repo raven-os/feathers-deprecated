@@ -15,5 +15,5 @@ private:
   static const int VERTICES_SIZE = 16;
 
   opengl::Program program;
-  opengl::glBuffer buffer;
+  opengl::Buffer buffer;
 };
