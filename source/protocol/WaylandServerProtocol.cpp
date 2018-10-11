@@ -6,6 +6,7 @@
 
 #include "protocol/WaylandServerProtocol.hpp"
 #include "protocol/CreateImplementation.hpp"
+#include "protocol/InstantiateImplementation.hpp"
 #include "protocol/Surface.hpp"
 #include "protocol/ShellSurface.hpp"
 #include "protocol/Seat/SeatImplem.hpp"
@@ -72,15 +73,11 @@ namespace protocol
 				       &Surface::set_buffer_scale,
 				       &Surface::damage_buffer>());
 
-    if (wl_resource *resource = wl_resource_create(client, &wl_surface_interface, 1, id))
-      {
-    	wl_resource_set_implementation(resource, &surface_implementation, new Surface(), [](wl_resource *resource){
-	    delete static_cast<Surface *>(wl_resource_get_user_data(resource));
-    	  });
-      }
-    else
-      wl_client_post_no_memory(client);
- }
+    instantiateImplementation(client, 1, id, wl_surface_interface, &surface_implementation, new Surface(), [](wl_resource *resource)
+			      {
+				delete static_cast<Surface *>(wl_resource_get_user_data(resource));
+			      });
+  }
 
   void WaylandServerProtocol::createRegion([[maybe_unused]] struct wl_client *client,
 					   [[maybe_unused]] struct wl_resource *,
@@ -91,16 +88,14 @@ namespace protocol
 
   void WaylandServerProtocol::bindCompositor(struct wl_client *client, uint32_t version, uint32_t id)
   {
-    static auto compositor_implementation(createImplementation<struct wl_compositor_interface, &WaylandServerProtocol::createSurface, &WaylandServerProtocol::createRegion>());
+    static auto compositor_implementation(createImplementation<struct wl_compositor_interface,
+					  &WaylandServerProtocol::createSurface,
+					  &WaylandServerProtocol::createRegion>());
 
-    if (wl_resource *resource = wl_resource_create(client, &wl_compositor_interface, version, id))
-      {
-	wl_resource_set_implementation(resource, &compositor_implementation, this, [](wl_resource *){
-	    printf("Destroying compositor!\n"); // todo ?
-	  });
-      }
-    else
-      wl_client_post_no_memory(client);
+    instantiateImplementation(client, version, id, wl_compositor_interface, &compositor_implementation, this, [](wl_resource *)
+			      {
+				printf("Destroying compositor!\n"); // todo ?
+			      });
   }
 
   void WaylandServerProtocol::getShellSurface(struct wl_client *client,
@@ -127,14 +122,11 @@ namespace protocol
 						 &ShellSurface::set_class
 						 >());
 
-	if (wl_resource *resource = wl_resource_create(client, &wl_shell_surface_interface, 1, id))
-	  {
-	    wl_resource_set_implementation(resource, &shell_surface_implementation, new ShellSurface(surface), [](wl_resource *resource){
-		delete static_cast<ShellSurface *>(wl_resource_get_user_data(resource));
-	      });
-	  }
-	else
-	  wl_client_post_no_memory(client);
+	instantiateImplementation(client, 1, id, wl_shell_surface_interface, &shell_surface_implementation, new ShellSurface(surface),
+				  [](wl_resource *resource)
+				  {
+				    delete static_cast<ShellSurface *>(wl_resource_get_user_data(resource));
+				  });
       }
     catch (Surface::Taken)
       {
@@ -146,14 +138,10 @@ namespace protocol
   {
     static auto shell_implementation(createImplementation<struct wl_shell_interface, &WaylandServerProtocol::getShellSurface>());
 
-    if (wl_resource *resource = wl_resource_create(client, &wl_shell_interface, version, id))
-      {
-	wl_resource_set_implementation(resource, &shell_implementation, this, [](wl_resource *){
-	    printf("Destroying shell!\n"); // todo ?
-	  });
-      }
-    else
-      wl_client_post_no_memory(client);
+    instantiateImplementation(client, version, id,  wl_shell_interface,  &shell_implementation, this, [](wl_resource *)
+			      {
+				printf("Destroying shell!\n"); // todo ?
+			      });
   }
 
   void WaylandServerProtocol::bindSeat(struct wl_client *client, uint32_t version, uint32_t id)
