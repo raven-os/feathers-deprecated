@@ -6,12 +6,12 @@ namespace protocol
   {
   }
 
-  void PointerImplem::set_cursor(wl_client *client,
-        wl_resource *resource,
-        uint32_t serial,
-        wl_resource *surface,
-        int32_t hotspot_x,
-        int32_t hotspot_y)
+  void PointerImplem::set_cursor([[maybe_unused]]wl_client *client,
+        [[maybe_unused]]wl_resource *resource,
+        [[maybe_unused]]uint32_t serial,
+        [[maybe_unused]]wl_resource *surface,
+        [[maybe_unused]]int32_t hotspot_x,
+        [[maybe_unused]]int32_t hotspot_y)
   {
 
   }
@@ -33,13 +33,8 @@ namespace protocol
       std::cerr << "Client sent get_pointer on seat without the pointer capability" << std::endl;
       return ;
     }
-    if (wl_resource *resource = wl_resource_create(client, &wl_pointer_interface, version, id))
-    {
-     wl_resource_set_implementation(resource, &pointer_implementation, seat_client, [](wl_resource *){
+    instantiateImplementation(client, version, id, wl_pointer_interface, &pointer_implementation, seat_client, [](wl_resource *){
        std::cout << "Pointer created!" << std::endl;
-      });
-    }
-    else
-      wl_client_post_no_memory(client);
+    });
   }
 }

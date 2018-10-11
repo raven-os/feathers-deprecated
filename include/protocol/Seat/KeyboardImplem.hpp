@@ -15,6 +15,5 @@ namespace protocol
       KeyboardImplem(wl_resource *);
 
       void createImplem(wl_client *client, uint32_t id) override;
-
   };
 }

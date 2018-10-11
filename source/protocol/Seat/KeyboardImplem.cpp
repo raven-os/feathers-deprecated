@@ -17,13 +17,8 @@ namespace protocol
       std::cerr << "Client sent get_keyboard on seat without the keyboard capability" << std::endl;
       return;
     }
-   if (wl_resource *resource = wl_resource_create(client, &wl_keyboard_interface, version, id))
-     {
-     wl_resource_set_implementation(resource, &keyboard_implementation, seat_client, [](wl_resource *){
-        std::cout << "Keyboardcreated!" << std::endl;
-      });
-     }
-     else
-       wl_client_post_no_memory(client);
+    instantiateImplementation(client, version, id, wl_keyboard_interface, &keyboard_implementation, seat_client, [](wl_resource *){
+      std::cout << "Keyboardcreated!" << std::endl;
+    });
   }
 }

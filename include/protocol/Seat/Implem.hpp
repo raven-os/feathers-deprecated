@@ -4,6 +4,7 @@
 #include <iostream>
 #include "FeatherSeat.hpp"
 #include "protocol/CreateImplementation.hpp"
+#include "protocol/InstantiateImplementation.hpp"
 
 namespace protocol
 {
