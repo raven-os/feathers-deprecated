@@ -147,7 +147,7 @@ namespace display
 		   {
 		     auto image(device.createImage2D({}, vk::Format::eD32Sfloat, {swapchain.getExtent().width, swapchain.getExtent().height}, vk::SampleCountFlagBits::e1,
 						     vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eUndefined));
-		     auto memRequirements(device.getImageMemoryRequirements(depthImage));
+		     auto memRequirements(device.getImageMemoryRequirements(image));
 		     depthImageMemory = device.selectAndCreateDeviceMemory(renderer.physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits);
 
 		     device.bindImageMemory(image, depthImageMemory, 0);
