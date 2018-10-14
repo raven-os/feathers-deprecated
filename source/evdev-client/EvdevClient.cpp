@@ -77,6 +77,8 @@ void EvdevClient::destroyClient()
         [[fallthrough]];
         case toDestroy::ONLY_CONTEXT:
         xkb_context_unref(ctx);
+        default:
+        break;
     }
 }
 
@@ -84,13 +86,6 @@ bool EvdevClient::isValid() const
 {
     return (valid);
 }
-
-/* The meaning of the input_event 'value' field. */
-enum {
-    KEY_STATE_RELEASE = 0,
-    KEY_STATE_PRESS = 1,
-    KEY_STATE_REPEAT = 2,
-};
 
 void test_print_keycode_state(struct xkb_state *state,
     xkb_keycode_t keycode,
