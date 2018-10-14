@@ -1,6 +1,7 @@
 #pragma once
 
 #include <wayland-server.h>
+#include "protocol/Seat/FeatherKeyboard.hpp"
 
 namespace protocol
 {
@@ -50,6 +51,20 @@ namespace protocol
 
   struct FthSeatKeyboardState
   {
+    struct FthSeat *seat;
+    FthKeyboard *keyboard;
+
+    FthSeatClient *focused_client;
+    // struct wlr_surface *focused_surface;
+
+    wl_listener keyboard_destroy;
+    wl_listener keyboard_keymap;
+    wl_listener keyboard_repeat_info;
+
+    wl_listener surface_destroy;
+
+    // struct wlr_seat_keyboard_grab *grab;
+    // struct wlr_seat_keyboard_grab *default_grab;
   };
 
   struct FthSeat

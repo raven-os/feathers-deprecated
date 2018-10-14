@@ -15,5 +15,9 @@ namespace protocol
       KeyboardImplem(wl_resource *);
 
       void createImplem(wl_client *client, uint32_t id) override;
+
+    private:
+      void sendKeymap(FthKeyboard *keyboard);
+      void sendRepeatInfo(FthKeyboard *keyboard);
   };
 }

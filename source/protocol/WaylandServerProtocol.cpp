@@ -153,14 +153,10 @@ namespace protocol
                 &SeatImplem::release
                 >());
 
-    if (wl_resource *resource = wl_resource_create(client, &wl_seat_interface, version, id))
-      {
-	wl_resource_set_implementation(resource, &seat_implementation, this, [](wl_resource *){
-      printf("bindSeat called!\n");
-	  });
-      }
-    else
-      wl_client_post_no_memory(client);
+   instantiateImplementation(client, version, id, wl_seat_interface, &seat_implementation, this, [](wl_resource *){
+     //TODO set capabilities , see seatListener in Listener files
+     printf("bindSeat called!\n");
+   });
   }
 
   void WaylandServerProtocol::addProtocolLogger(wl_protocol_logger_func_t func,
