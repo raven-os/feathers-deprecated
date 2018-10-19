@@ -44,14 +44,12 @@ namespace display
 		    physicalDevice,
 		    {},
 		    vk::BufferUsageFlagBits::eTransferSrc,
-		    vk::MemoryPropertyFlagBits::eHostVisible,
-		    std::vector<uint32_t>{selectedQueueFamily})
+		    vk::MemoryPropertyFlagBits::eHostVisible)
     , vertexBuffer(device,
 		   physicalDevice,
 		   {},
 		   vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndexBuffer,
-		   vk::MemoryPropertyFlagBits::eHostVisible,
-		   std::vector<uint32_t>{selectedQueueFamily})
+		   vk::MemoryPropertyFlagBits::eHostVisible)
     , sampler(device.createSampler(vk::Filter::eNearest,
 				   vk::Filter::eNearest,
 				   vk::SamplerMipmapMode::eNearest,
