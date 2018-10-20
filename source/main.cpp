@@ -126,14 +126,14 @@ int main(int argc, char **argv)
 
 	case 'c':
           if (args.mode != 1) {
-            puts("'client-socket' may only be set in sub-compositor mode\n");
+            puts("'client-socket' may only be set in TTY mode\n");
             return -1;
           }
-          args.clientSocketsNames.push_back(optarg);
+          args.socketName = optarg;
           break;
 
 	case 's':
-          args.socketName = optarg;
+          args.clientSocketsNames.push_back(optarg);
           break;
 
 	case 'h':
