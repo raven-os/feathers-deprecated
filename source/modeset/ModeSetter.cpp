@@ -5,6 +5,7 @@
 #include <iostream>
 #include <libudev.h>
 #include <cstring>
+#include <cassert>
 
 #include "modeset/ModeSetter.hpp"
 #include "Exception.hpp"
@@ -156,6 +157,19 @@ namespace modeset {
     eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
   }
 
+  void ModeSetter::Gbm::bindWaylandDisplay(struct wl_display *wlDisplay) const
+  {
+    if (auto eglBindWaylandDisplayWL_func = reinterpret_cast<decltype(&eglBindWaylandDisplayWL)>(eglGetProcAddress("eglBindWaylandDisplayWL")))
+      {
+	[[maybe_unused]] auto result = eglBindWaylandDisplayWL_func(eglDisplay, wlDisplay);
+	assert(result == EGL_TRUE);
+      }
+    else
+      {
+	throw std::runtime_error("Could not get eglBindWaylandDisplayWL function!");
+      }
+  }
+
   ModeSetter::ModeSetter()
     : drm(),
       gbm(drm.fd, drm.modeInfo.vdisplay, drm.modeInfo.hdisplay),
@@ -187,6 +201,11 @@ namespace modeset {
     gbm_device_destroy(gbm.gbmDevice);
 
     close(drm.fd);
+  }
+
+  void ModeSetter::bindWaylandDisplay(struct wl_display *wlDisplay) const
+  {
+    gbm.bindWaylandDisplay(wlDisplay);
   }
 
   void ModeSetter::swapBuffers()
