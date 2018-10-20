@@ -158,6 +158,7 @@ namespace display
     }
 
     void render(WindowTree const &windowTree);
+    modeset::ModeSetter const& getModeSetter() const noexcept;
   };
 
   class KernelDisplay
@@ -190,6 +191,8 @@ namespace display
     KernelDisplay(KernelDisplay &&) = delete;
     KernelDisplay operator=(KernelDisplay const &) = delete;
     KernelDisplay operator=(KernelDisplay &&) = delete;
+
+    modeset::ModeSetter const& getModeSetter() const noexcept;
 
     void render(WindowTree const &windowTree)
     {

@@ -60,4 +60,14 @@ namespace display
     }
     ++frameIndex %= imageCount;
   }
+
+  modeset::ModeSetter const &Compositor::getModeSetter() const noexcept
+  {
+    return modeSetter;
+  }
+
+  modeset::ModeSetter const &KernelDisplay::getModeSetter() const noexcept
+  {
+    return renderer.getModeSetter();
+  }
 }
