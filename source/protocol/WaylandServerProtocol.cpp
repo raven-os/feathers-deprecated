@@ -181,4 +181,9 @@ namespace protocol
   {
     return windowTree;
   }
+
+  struct wl_display *WaylandServerProtocol::getWaylandDisplay() const noexcept
+  {
+    return wlDisplay;
+  }
 }

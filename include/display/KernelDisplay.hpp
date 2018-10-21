@@ -113,7 +113,7 @@ namespace display
 
 	  return magma::Device<>(selectedResult.first,
 				 std::vector<vk::DeviceQueueCreateInfo>({deviceQueueCreateInfo}),
-				 std::vector<char const *>({VK_KHR_SWAPCHAIN_EXTENSION_NAME}));
+				 std::vector<char const *>({"VK_KHR_external_memory", "VK_KHR_external_memory_fd"}));
 	}())
       , imageAvailable(device.createSemaphore())
       , fence(device.createFence({}))
@@ -158,6 +158,7 @@ namespace display
     }
 
     void render(WindowTree const &windowTree);
+    modeset::ModeSetter const& getModeSetter() const noexcept;
   };
 
   class KernelDisplay
@@ -167,7 +168,21 @@ namespace display
 
   public:
     KernelDisplay()
-      : instance{}
+      : instance{[](){
+	std::vector<char const *> out{"VK_KHR_get_physical_device_properties2", "VK_KHR_external_memory_capabilities"};
+     
+	std::cout << "required:" << std::endl;
+	for (auto const &name : out) {
+	  std::cout << name << std::endl;
+	}
+	auto available(vk::enumerateInstanceExtensionProperties(nullptr));
+
+	std::cout << "available:" << std::endl;
+	for (auto const &ext : available) {
+	  std::cout << ext.extensionName << std::endl;
+	}
+	return out;
+      }()}
       , renderer(instance)
     {
     }
@@ -176,6 +191,8 @@ namespace display
     KernelDisplay(KernelDisplay &&) = delete;
     KernelDisplay operator=(KernelDisplay const &) = delete;
     KernelDisplay operator=(KernelDisplay &&) = delete;
+
+    modeset::ModeSetter const& getModeSetter() const noexcept;
 
     void render(WindowTree const &windowTree)
     {

@@ -38,6 +38,7 @@ namespace protocol
     void process(struct wl_client *data);
 
     display::WindowTree const &getWindowTree() const noexcept;
+    struct wl_display *getWaylandDisplay() const noexcept;
   };
 
 }
