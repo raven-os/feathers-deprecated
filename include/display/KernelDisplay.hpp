@@ -20,38 +20,37 @@ namespace display
 {
   class WindowTree;
 
+  struct Score
+  {
+    unsigned int bestQueueIndex;
+    vk::PhysicalDeviceType deviceType;
+
+    unsigned int deviceTypeScore() const noexcept
+    {
+      switch(deviceType)
+	{
+	case vk::PhysicalDeviceType::eIntegratedGpu:
+	  return 4;
+	case vk::PhysicalDeviceType::eDiscreteGpu:
+	  return 3;
+	case vk::PhysicalDeviceType::eVirtualGpu:
+	  return 2;
+	case vk::PhysicalDeviceType::eOther:
+	  return 1;
+	case vk::PhysicalDeviceType::eCpu:
+	default:
+	  return 0;
+	}
+    }
+  };
+
+  inline bool operator<(std::optional<Score> const &lh, std::optional<Score> const &rh) noexcept
+  {
+    return (!lh || (rh && (lh->deviceTypeScore() < rh->deviceTypeScore())));
+  }
+
   class Compositor
   {
-    struct Score
-    {
-      bool isSuitable;
-      unsigned int bestQueueIndex;
-      vk::PhysicalDeviceType deviceType;
-
-      unsigned int deviceTypeScore() const noexcept
-      {
-	switch(deviceType)
-	  {
-	  case vk::PhysicalDeviceType::eIntegratedGpu:
-	    return 4;
-	  case vk::PhysicalDeviceType::eDiscreteGpu:
-	    return 3;
-	  case vk::PhysicalDeviceType::eVirtualGpu:
-	    return 2;
-	  case vk::PhysicalDeviceType::eOther:
-	    return 1;
-	  case vk::PhysicalDeviceType::eCpu:
-	  default:
-	    return 0;
-	  }
-      }
-
-      bool operator<(Score const &other) const noexcept
-      {
-	return (!isSuitable || (other.isSuitable && (deviceTypeScore() < other.deviceTypeScore())));
-      }
-    };
-
     struct Swapchain
     {
       modeset::ModeSetter const *modeset;
@@ -204,10 +203,26 @@ namespace display
   public:
     Compositor(magma::Instance const &instance)
       : Compositor([&instance](){
-	  std::pair<vk::PhysicalDevice, Score>
+	  std::pair<vk::PhysicalDevice, std::optional<Score>>
 	    result(instance.selectDevice([&instance]
 					 (vk::PhysicalDevice physicalDevice)
 					 {
+					   std::vector<vk::ExtensionProperties> availableExtensions(physicalDevice.enumerateDeviceExtensionProperties());
+					   std::vector<char const *> requiredExtensions({"VK_KHR_external_memory", "VK_KHR_external_memory_fd"});
+
+					   std::cout << "available device extensions:\n";
+					   for (auto const &extension : availableExtensions)
+					     {
+					       std::cout << "\"" << extension.extensionName << "\", version " << extension.specVersion << "\n";
+
+					       auto it(std::find(requiredExtensions.begin(), requiredExtensions.end(), extension.extensionName));
+
+					       if (it != requiredExtensions.end())
+						 requiredExtensions.erase(it);
+					     }
+					   if (!requiredExtensions.empty())
+					     return std::optional<Score>{};
+
 					   std::vector<vk::QueueFamilyProperties> queueFamilyPropertiesList(physicalDevice.getQueueFamilyProperties());
 					   unsigned int bestQueueIndex = 0;
 					   for (; bestQueueIndex < queueFamilyPropertiesList.size(); ++bestQueueIndex)
@@ -219,14 +234,16 @@ namespace display
 						   break;
 						 }
 					     }
+					   if (bestQueueIndex == queueFamilyPropertiesList.size())
+					     return std::optional<Score>{};
 					   vk::PhysicalDeviceProperties properties(physicalDevice.getProperties());
-					   return Score{bestQueueIndex != queueFamilyPropertiesList.size(), bestQueueIndex, properties.deviceType};
+					   return std::optional<Score>{Score{bestQueueIndex, properties.deviceType}};
 					 }));
-	  if (!result.second.isSuitable)
+	  if (!result.second)
 	    {
 	      throw std::runtime_error("No suitable GPU found.");
 	    }
-	  return result;
+	  return std::pair<vk::PhysicalDevice, Score>{result.first, *result.second};
 	}())
     {
     }
