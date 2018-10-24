@@ -27,6 +27,7 @@ struct keyboard
 
 struct XkbWrapper
 {
+    ~XkbWrapper();
     struct xkb_context *newContext() const;
     struct xkb_keymap *newKeymap(struct xkb_context *context) const;
     struct keyboard *getKeyboards(struct xkb_keymap *keymap) const;
@@ -34,9 +35,9 @@ struct XkbWrapper
 
 private:
     bool isKeyboard(int fd) const;
-    int keyboardNew(struct dirent *ent,
+    int keyboardNew(std::string entName,
         struct xkb_keymap *keymap,
         struct keyboard **out
     ) const;
-    void keyboardFree(struct keyboard *kbd) const;
+    void freeKeyboard(struct keyboard *kbd) const;
 };

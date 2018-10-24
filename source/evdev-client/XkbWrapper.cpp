@@ -1,5 +1,10 @@
 #include "XkbWrapper.hpp"
 
+XkbWrapper::~XkbWrapper()
+{
+    //freeKeyboards();
+}
+
 struct xkb_context *XkbWrapper::newContext() const
 {
     struct xkb_context *ctx;
@@ -17,6 +22,67 @@ struct xkb_keymap *XkbWrapper::newKeymap(struct xkb_context *context) const
 
     keymap = xkb_keymap_new_from_names(context, NULL, flags);
     return (keymap);
+}
+
+static int filterDeviceName(const struct dirent *ent)
+{
+    return (!fnmatch("event*", ent->d_name, 0));
+}
+
+struct keyboard *XkbWrapper::getKeyboards(struct xkb_keymap *keymap) const
+{
+    int ret;
+    int i;
+    int nents;
+    struct dirent **ents;
+    struct keyboard *kbds(NULL);
+    struct keyboard *kbd(NULL);
+
+    nents = scandir("/dev/input", &ents, filterDeviceName, alphasort);
+    if (nents < 0)
+    {
+        fprintf(stderr, "Couldn't scan /dev/input: %s\n", strerror(errno));
+        return (NULL);
+    }
+    for (i = 0; i < nents; i++)
+    {
+        ret = keyboardNew(ents[i]->d_name, keymap, &kbd);
+        if (ret)
+        {
+            if (ret == -EACCES)
+            {
+                fprintf(stderr, "Couldn't open /dev/input/%s: %s. "
+                "You probably need root to run this.\n",
+                ents[i]->d_name, strerror(-ret));
+                break;
+            }
+            if (ret != -ENOTSUP)
+            {
+                fprintf(stderr, "Couldn't open /dev/input/%s: %s. Skipping.\n",
+                ents[i]->d_name, strerror(-ret));
+            }
+        }
+        else if (kbd != NULL)
+        {
+            kbd->next = kbds;
+            kbds = kbd;
+        }
+        else
+        {
+            std::bad_alloc e;
+            throw e;
+        }
+    }
+    if (!kbds)
+    {
+        fprintf(stderr, "Couldn't find any useable keyboards.\n");
+    }
+    for (i = 0; i < nents; i++)
+    {
+        free(ents[i]);
+    }
+    free(ents);
+    return (kbds);
 }
 
 /* Some heuristics to see if the device is a keyboard. */
@@ -59,52 +125,42 @@ bool XkbWrapper::isKeyboard(int fd) const
     return (false);
 }
 
-int XkbWrapper::keyboardNew(struct dirent *ent,
+int XkbWrapper::keyboardNew(std::string entName,
     struct xkb_keymap *keymap,
     struct keyboard **out
 ) const
 {
-    int ret;
-    char *path;
+    std::string spath("/dev/input/" + entName);
     int fd;
     struct xkb_state *state;
     struct keyboard *kbd;
 
-    ret = asprintf(&path, "/dev/input/%s", ent->d_name);
-    if (ret < 0)
-    {
-        return (-ENOMEM);
-    }
-    fd = open(path, O_NONBLOCK | O_CLOEXEC | O_RDONLY);
+    fd = open(spath.c_str(), O_NONBLOCK | O_CLOEXEC | O_RDONLY);
     if (fd < 0)
     {
-        free(path);
         return (-errno);
     }
     if (!isKeyboard(fd))
     {
         /* Dummy "skip this device" value. */
         close(fd);
-        free(path);
         return (-ENOTSUP);
     }
     state = xkb_state_new(keymap);
     if (!state)
     {
-        fprintf(stderr, "Couldn't create xkb state for %s\n", path);
+        fprintf(stderr, "Couldn't create xkb state for %s\n", spath.c_str());
         close(fd);
-        free(path);
         return (-EFAULT);
     }
-    kbd = (struct keyboard *)calloc(1, sizeof(*kbd));
+    kbd = new struct keyboard[1];
     if (!kbd)
     {
         xkb_state_unref(state);
         close(fd);
-        free(path);
         return (-ENOMEM);
     }
-    kbd->path = path;
+    kbd->path = strcpy(new char[spath.length() + 1], spath.c_str());
     kbd->fd = fd;
     kbd->state = state;
     kbd->compose_state = NULL;
@@ -112,64 +168,7 @@ int XkbWrapper::keyboardNew(struct dirent *ent,
     return (0);
 }
 
-static int filterDeviceName(const struct dirent *ent)
-{
-    return (!fnmatch("event*", ent->d_name, 0));
-}
-
-struct keyboard *XkbWrapper::getKeyboards(struct xkb_keymap *keymap) const
-{
-    int ret;
-    int i;
-    int nents;
-    struct dirent **ents;
-    struct keyboard *kbds(NULL);
-    struct keyboard *kbd(NULL);
-
-    nents = scandir("/dev/input", &ents, filterDeviceName, alphasort);
-    if (nents < 0)
-    {
-        fprintf(stderr, "Couldn't scan /dev/input: %s\n", strerror(errno));
-        return (NULL);
-    }
-    for (i = 0; i < nents; i++)
-    {
-        ret = keyboardNew(ents[i], keymap, &kbd);
-        if (ret)
-        {
-            if (ret == -EACCES)
-            {
-                fprintf(stderr, "Couldn't open /dev/input/%s: %s. "
-                "You probably need root to run this.\n",
-                ents[i]->d_name, strerror(-ret));
-                break;
-            }
-            if (ret != -ENOTSUP)
-            {
-                fprintf(stderr, "Couldn't open /dev/input/%s: %s. Skipping.\n",
-                ents[i]->d_name, strerror(-ret));
-            }
-            continue;
-        }
-        assert(kbd != NULL);
-        {
-            kbd->next = kbds;
-            kbds = kbd;
-        }
-    }
-    if (!kbds)
-    {
-        fprintf(stderr, "Couldn't find any useable keyboards.\n");
-    }
-    for (i = 0; i < nents; i++)
-    {
-        free(ents[i]);
-    }
-    free(ents);
-    return (kbds);
-}
-
-void XkbWrapper::keyboardFree(struct keyboard *kbd) const
+void XkbWrapper::freeKeyboard(struct keyboard *kbd) const
 {
     if (!kbd)
     {
@@ -179,9 +178,9 @@ void XkbWrapper::keyboardFree(struct keyboard *kbd) const
     {
         close(kbd->fd);
     }
-    free(kbd->path);
+    delete kbd->path;
     xkb_state_unref(kbd->state);
-    free(kbd);
+    delete kbd;
 }
 
 void XkbWrapper::freeKeyboards(struct keyboard *kbds) const
@@ -191,7 +190,7 @@ void XkbWrapper::freeKeyboards(struct keyboard *kbds) const
     while (kbds)
     {
         next = kbds->next;
-        keyboardFree(kbds);
+        freeKeyboard(kbds);
         kbds = next;
     }
 }

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <signal.h>
 #include <sys/epoll.h>
 #include "FileDescriptorWrapper.hpp"
 #include "XkbWrapper.hpp"
+#include "claws/utils/on_scope_exit.hpp"
 
 #define EVDEV_OFFSET 8
 
@@ -30,6 +32,7 @@ class EvdevClient
     // ATTRIBUTES
     FileDescriptorWrapper fdWrapper;
     XkbWrapper xkbWrapper;
+    //std::unique_ptr<struct keyboard> kbds;
     struct keyboard *kbds;
     struct xkb_context *ctx;
     struct xkb_keymap *keymap;
