@@ -106,8 +106,6 @@ namespace protocol
 
     try
       {
-	surface->setTaken();
-
 	static auto shell_surface_implementation(createImplementation<struct wl_shell_surface_interface,
 						 &ShellSurface::pong,
 						 &ShellSurface::move,
@@ -129,7 +127,7 @@ namespace protocol
       }
     catch (Surface::Taken)
       {
-	printf("TODO: handle wayland error\n");
+	wl_resource_post_error(surfaceResource, WL_SHELL_ERROR_ROLE, "");
       }
   }
 

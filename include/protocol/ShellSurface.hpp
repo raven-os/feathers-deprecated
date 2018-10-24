@@ -16,6 +16,8 @@ namespace protocol
 
     ShellSurface(Surface *);
 
+    void commit();
+
     // wl interface functions
     void pong(struct wl_client *client,
 	      struct wl_resource *resource,

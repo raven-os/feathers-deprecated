@@ -1,3 +1,6 @@
+#include <cassert>
+#include <cstdio>
+
 #include "protocol/ShellSurface.hpp"
 #include "protocol/Surface.hpp"
 
@@ -5,7 +8,14 @@ namespace protocol
 {
   ShellSurface::ShellSurface(Surface *surface)
     : surface(surface)
-  {}
+  {
+    this->surface->setRole(this);
+  }
+
+  void ShellSurface::commit()
+  {
+    std::puts("commiting shell surface!");
+  }
 
   // wl interface functions
   void ShellSurface::pong([[maybe_unused]] struct wl_client *client,
