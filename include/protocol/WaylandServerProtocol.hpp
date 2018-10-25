@@ -10,8 +10,8 @@ namespace protocol
     struct wl_event_loop *wlEventLoop;
     struct wl_protocol_logger *wlProtocolLogger;
     display::WindowTree windowTree;
-
   public:
+    
     WaylandServerProtocol();
     WaylandServerProtocol(WaylandServerProtocol const &) = delete;
     WaylandServerProtocol(WaylandServerProtocol &&) = delete;
@@ -38,6 +38,7 @@ namespace protocol
     void process(struct wl_client *data);
 
     display::WindowTree const &getWindowTree() const noexcept;
+    struct wl_display *getWaylandDisplay() const noexcept;
   };
 
 }

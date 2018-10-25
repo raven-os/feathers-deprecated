@@ -89,18 +89,20 @@ int main(int argc, char **argv)
 
   while (1)
     {
+      static constexpr int const DUMP_PROTOCOL = 256;
       constexpr struct option long_options[] =
         {
-         {"help", no_argument, 0, 'h'},
-         {"tty", no_argument, 0, 'T'},
-         {"sub-compositor", no_argument, 0, 'E'},
-         {"client-socket", required_argument, 0, 'c'},
-         {"socket", required_argument, 0, 's'},
-         {0, 0, 0, 0}
+	  {"help", no_argument, 0, 'h'},
+	  {"tty", no_argument, 0, 'T'},
+	  {"sub-compositor", no_argument, 0, 'E'},
+	  {"client-socket", required_argument, 0, 'c'},
+	  {"socket", required_argument, 0, 's'},
+	  {"dump-protocol", no_argument, 0, DUMP_PROTOCOL},
+	  {0, 0, 0, 0}
 	};
       int option_index = 0;
       int c = getopt_long (argc, argv, "hTEc:s:",
-                       long_options, &option_index);
+			   long_options, &option_index);
 
       /* Detect the end of the options. */
       if (c == -1)
@@ -126,19 +128,22 @@ int main(int argc, char **argv)
 
 	case 'c':
           if (args.mode != 1) {
-            puts("'client-socket' may only be set in sub-compositor mode\n");
+            puts("'client-socket' may only be set in TTY mode\n");
             return -1;
           }
-          args.clientSocketsNames.push_back(optarg);
+          args.socketName = optarg;
           break;
 
 	case 's':
-          args.socketName = optarg;
+          args.clientSocketsNames.push_back(optarg);
           break;
 
 	case 'h':
 	  help(argv[0]);
 	  return 0;
+
+	case DUMP_PROTOCOL:
+	  args.dumpProtocol = true;
 
 	case '?':
           break;
@@ -171,17 +176,18 @@ int main(int argc, char **argv)
 	     str.c_str(), serverProtocol.addSocket(str) ?
 	     "unsuccessful" : "successful");
       serverProtocol.eventDispatch(0);
-      // serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>
-      // 				       (debug_server_protocol),
-      // 				       static_cast<void *>(str.c_str()));
-      // serverProtocol.eventDispatch(0);
+    }
+  if (args.dumpProtocol)
+    {
+      serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>(debug_server_protocol),
+				       nullptr);
+      serverProtocol.eventDispatch(0);
     }
 
   addTestWindows(windowTree);
 
   if (args.mode)
     {
-      std::string socketname("");
       printf("Attempting to connect to server with socket '%s'\n", args.socketName.c_str());
       display::WaylandSurface waylandSurface(args.socketName);
       display::Display display(waylandSurface);
@@ -199,8 +205,9 @@ int main(int argc, char **argv)
       try
 	{
 	  display::KernelDisplay kernelDisplay;
+	  kernelDisplay.getModeSetter().bindWaylandDisplay(serverProtocol.getWaylandDisplay());
 
-	  for (int i = 0; i < 120; ++i)
+	  for (;;)
 	    {
 	      kernelDisplay.render(serverProtocol.getWindowTree());
 	      serverProtocol.eventDispatch(0);
