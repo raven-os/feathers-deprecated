@@ -2,6 +2,8 @@
 
 #include <wayland-server.h>
 
+#include <string>
+
 namespace protocol
 {
   class Surface;
@@ -9,6 +11,8 @@ namespace protocol
   class ShellSurface
   {
     Surface * const surface;
+    std::string title;
+    std::string class_;
   public:
     ShellSurface() = delete;
     ShellSurface(ShellSurface const &) = delete;

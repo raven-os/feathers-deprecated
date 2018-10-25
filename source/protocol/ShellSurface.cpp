@@ -78,15 +78,17 @@ namespace protocol
   {
   }
   
-  void ShellSurface::set_title([[maybe_unused]] struct wl_client *client,
-			       [[maybe_unused]] struct wl_resource *resource,
-			       [[maybe_unused]] const char *title)
+  void ShellSurface::set_title(struct wl_client *,
+			       struct wl_resource *,
+			       const char *title)
   {
+    this->title = title;
   }
 
-  void ShellSurface::set_class([[maybe_unused]] struct wl_client *client,
-			       [[maybe_unused]] struct wl_resource *resource,
-			       [[maybe_unused]] const char *class_)
+  void ShellSurface::set_class(struct wl_client *,
+			       struct wl_resource *,
+			       const char *class_)
   {
+    this->class_ = class_;
   }  
 }
