@@ -141,7 +141,11 @@ namespace display
 					     {
 					       std::cout << "\"" << extension.extensionName << "\", version " << extension.specVersion << "\n";
 
-					       auto it(std::find(requiredExtensions.begin(), requiredExtensions.end(), extension.extensionName));
+					       auto it(std::find_if(requiredExtensions.begin(), requiredExtensions.end(),
+								    [&extension](char const *str) noexcept
+								    {
+								      return !std::strcmp(extension.extensionName, str);
+								    }));
 
 					       if (it != requiredExtensions.end())
 						 requiredExtensions.erase(it);
