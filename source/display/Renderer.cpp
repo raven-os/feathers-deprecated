@@ -156,7 +156,7 @@ namespace display
     }
   }
 
-  uint32_t Renderer::prepareGpuData(FrameData &frame, WindowTree const &windowTree)
+  uint32_t Renderer::prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree)
   {
     std::vector<float> vertexData{};
     std::vector<uint32_t> indexData{};
@@ -166,17 +166,17 @@ namespace display
     auto vertexDataIt(std::back_inserter(vertexData));
     auto indexDataIt(std::back_inserter(indexData));
     uint32_t windowCount(0u);
-    auto display([this, &windowTree, &vertexDataIt, &indexDataIt, &windowCount](auto display, WindowTree::WindowNodeIndex index, float minDepth, float range) -> void
+    auto display([this, &windowTree, &vertexDataIt, &indexDataIt, &windowCount](auto display, wm::WindowTree::WindowNodeIndex index, float minDepth, float range) -> void
 		 {
-		   std::vector<WindowTree::WindowNodeIndex> delayedRender;
-		   for (WindowTree::WindowNodeIndex child : windowTree.getChildren(index))
+		   std::vector<wm::WindowTree::WindowNodeIndex> delayedRender;
+		   for (wm::WindowTree::WindowNodeIndex child : windowTree.getChildren(index))
 		     if (windowTree.getData(child).isSolid)
 		       display(child, minDepth + range * 0.5f, range * 0.4f);
 		     else
 		       delayedRender.push_back(child);
 		   if (windowTree.getData(index).isVisible())
 		     {
-		       Rect const &rect(windowTree.getData(index).rect);
+		       wm::Rect const &rect(windowTree.getData(index).rect);
 		       for (uint32_t i(0u); i < 4u; ++i)
 			 {
 			   for (uint32_t j(0u); j < 2u; ++j)
@@ -195,7 +195,7 @@ namespace display
 		     }
 		   float childRange(range * 0.5f / float(delayedRender.size()));
 		   float depth(minDepth);
-		   for (WindowTree::WindowNodeIndex child : delayedRender)
+		   for (wm::WindowTree::WindowNodeIndex child : delayedRender)
 		     {
 		       display(child, depth, depth + childRange);
 		       depth += childRange;
@@ -227,7 +227,7 @@ namespace display
 
 
 
-  magma::Semaphore<claws::no_delete> Renderer::render(magma::Device<claws::no_delete> device, WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable)
+  magma::Semaphore<claws::no_delete> Renderer::render(magma::Device<claws::no_delete> device, wm::WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable)
   {
     // wait for rendering fence
     device.waitForFences({frame.fence}, true, 1000000000);

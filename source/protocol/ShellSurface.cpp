@@ -7,7 +7,7 @@
 
 namespace protocol
 {
-  ShellSurface::ShellSurface(Surface *surface, display::WindowTree *windowTree)
+  ShellSurface::ShellSurface(Surface *surface, wm::WindowTree *windowTree)
     : surface(surface)
     , windowTree(windowTree)
   {
@@ -50,7 +50,7 @@ namespace protocol
     auto &parentData(windowTree->getData(parentIndex));
 
     data.isSolid = true;
-    data.data = display::ClientData{this};
+    data.data = wm::ClientData{this};
     std::visit([&](auto &containerData)
 	       {
 		 containerData.childResources.emplace_back(resource);
@@ -70,7 +70,7 @@ namespace protocol
 		     wl_shell_surface_send_configure(childResource, 0, childData.rect.size[0], childData.rect.size[1]);
 		     ++childIndexIt;
 		   }
-	       }, std::get<display::Container>(parentData.data).data);
+	       }, std::get<wm::Container>(parentData.data).data);
   }
   
   void ShellSurface::set_transient([[maybe_unused]] struct wl_client *client,

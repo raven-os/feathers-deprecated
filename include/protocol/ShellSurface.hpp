@@ -18,8 +18,8 @@ namespace protocol
   class ShellSurface
   {
     Surface * const surface;
-    display::WindowTree * const windowTree;
-    display::WindowTree::WindowNodeIndex windowNodeIndex{display::WindowTree::nullNode};
+    wm::WindowTree * const windowTree;
+    wm::WindowTree::WindowNodeIndex windowNodeIndex{wm::WindowTree::nullNode};
     std::string title;
     std::string class_;
     int32_t width;
@@ -30,7 +30,7 @@ namespace protocol
     ShellSurface(ShellSurface const &) = delete;
     ShellSurface(ShellSurface &&) = delete;
 
-    ShellSurface(Surface *, display::WindowTree *);
+    ShellSurface(Surface *, wm::WindowTree *);
 
     void commit();
 

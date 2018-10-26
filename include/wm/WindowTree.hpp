@@ -8,7 +8,7 @@
 
 #include "wm/WindowData.hpp"
 
-namespace display
+namespace wm
 {
   class WindowTree
   {

@@ -13,7 +13,7 @@ namespace protocol
 
 struct wl_resource;
 
-namespace display
+namespace wm
 {
   struct Rect
   {

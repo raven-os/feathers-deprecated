@@ -10,8 +10,6 @@
 
 namespace display
 {
-  class WindowTree;
-
   class Subcompositor
   {
     struct Score
@@ -93,7 +91,7 @@ namespace display
     {
     }
 
-    void render(WindowTree const &windowTree);
+    void render(wm::WindowTree const &windowTree);
   };
 
   class Display
@@ -130,7 +128,7 @@ namespace display
     Display operator=(Display const &) = delete;
     Display operator=(Display &&) = delete;
 
-    void render(WindowTree const &windowTree)
+    void render(wm::WindowTree const &windowTree)
     {
       renderer.render(windowTree);
     }
