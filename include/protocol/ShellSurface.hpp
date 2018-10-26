@@ -1,8 +1,15 @@
 #pragma once
 
+#include "display/WindowTree.hpp"
+
 #include <wayland-server.h>
 
 #include <string>
+
+namespace display
+{
+  class WindowTree;
+};
 
 namespace protocol
 {
@@ -11,14 +18,19 @@ namespace protocol
   class ShellSurface
   {
     Surface * const surface;
+    display::WindowTree * const windowTree;
+    display::WindowTree::WindowNodeIndex windowNodeIndex{display::WindowTree::nullNode};
     std::string title;
     std::string class_;
+    int32_t width;
+    int32_t height;
+
   public:
     ShellSurface() = delete;
     ShellSurface(ShellSurface const &) = delete;
     ShellSurface(ShellSurface &&) = delete;
 
-    ShellSurface(Surface *);
+    ShellSurface(Surface *, display::WindowTree *);
 
     void commit();
 

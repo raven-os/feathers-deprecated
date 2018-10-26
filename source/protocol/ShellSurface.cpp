@@ -3,11 +3,13 @@
 
 #include "protocol/ShellSurface.hpp"
 #include "protocol/Surface.hpp"
+#include "display/WindowTree.hpp"
 
 namespace protocol
 {
-  ShellSurface::ShellSurface(Surface *surface)
+  ShellSurface::ShellSurface(Surface *surface, display::WindowTree *windowTree)
     : surface(surface)
+    , windowTree(windowTree)
   {
     this->surface->setRole(this);
   }
@@ -40,8 +42,35 @@ namespace protocol
   }
   
   void ShellSurface::set_toplevel([[maybe_unused]] struct wl_client *client,
-				  [[maybe_unused]] struct wl_resource *resource)
+				  struct wl_resource *resource)
   {
+    auto parentIndex(windowTree->getRootIndex());
+    windowNodeIndex = windowTree->addChild(parentIndex);
+    auto &data(windowTree->getData(windowNodeIndex));
+    auto &parentData(windowTree->getData(parentIndex));
+
+    data.isSolid = true;
+    data.data = display::ClientData{this};
+    std::visit([&](auto &containerData)
+	       {
+		 containerData.childResources.emplace_back(resource);
+		 auto childIndexIt{windowTree->getChildren(parentIndex).begin()};
+
+		 for (size_t i(0u); i != containerData.childResources.size(); ++i)
+		   {
+		     auto childResource(containerData.childResources[i]);
+		     auto &childData(windowTree->getData(*childIndexIt));
+		     auto x((parentData.rect.size[containerData.direction] * i) / containerData.childResources.size());
+		     auto nextX((parentData.rect.size[containerData.direction] * (i + 1)) / containerData.childResources.size());
+	
+		     childData.rect.position[containerData.direction] = uint16_t(parentData.rect.position[containerData.direction] + x);
+		     childData.rect.size[containerData.direction] = uint16_t(nextX - x);
+		     childData.rect.position[!containerData.direction] = parentData.rect.position[!containerData.direction];
+		     childData.rect.size[!containerData.direction] = parentData.rect.size[!containerData.direction];
+		     wl_shell_surface_send_configure(childResource, 0, childData.rect.size[0], childData.rect.size[1]);
+		     ++childIndexIt;
+		   }
+	       }, std::get<display::Container>(parentData.data).data);
   }
   
   void ShellSurface::set_transient([[maybe_unused]] struct wl_client *client,

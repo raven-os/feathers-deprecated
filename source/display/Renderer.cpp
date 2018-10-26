@@ -175,25 +175,25 @@ namespace display
 		       display(child, minDepth + range * 0.5f, range * 0.4f);
 		     else
 		       delayedRender.push_back(child);
-		   {
-		     // std::cout << "displaying: " << index.data << ", depth: " << (minDepth + range ) << std::endl;
-		     Rect const &rect(windowTree.getData(index).rect);
-		     for (uint32_t i(0u); i < 4u; ++i)
-		       {
-			 for (uint32_t j(0u); j < 2u; ++j)
-			   *vertexDataIt++ = float(rect.position[j] + rect.size[j] * ((i >> j) & 1u));
-			 *vertexDataIt++ =  minDepth + range;
-			 for (uint32_t j(0u); j < 2u; ++j)
-			   *vertexDataIt++ = float((i >> j) & 1u);
-		       }
-		     *indexDataIt++ = windowCount * 4 + 0;
-		     *indexDataIt++ = windowCount * 4 + 1;
-		     *indexDataIt++ = windowCount * 4 + 2;
-		     *indexDataIt++ = windowCount * 4 + 1;
-		     *indexDataIt++ = windowCount * 4 + 2;
-		     *indexDataIt++ = windowCount * 4 + 3;
-		     ++windowCount;
-		   }
+		   if (windowTree.getData(index).isVisible())
+		     {
+		       Rect const &rect(windowTree.getData(index).rect);
+		       for (uint32_t i(0u); i < 4u; ++i)
+			 {
+			   for (uint32_t j(0u); j < 2u; ++j)
+			     *vertexDataIt++ = float(rect.position[j] + rect.size[j] * ((i >> j) & 1u));
+			   *vertexDataIt++ =  minDepth + range;
+			   for (uint32_t j(0u); j < 2u; ++j)
+			     *vertexDataIt++ = float((i >> j) & 1u);
+			 }
+		       *indexDataIt++ = windowCount * 4 + 0;
+		       *indexDataIt++ = windowCount * 4 + 1;
+		       *indexDataIt++ = windowCount * 4 + 2;
+		       *indexDataIt++ = windowCount * 4 + 1;
+		       *indexDataIt++ = windowCount * 4 + 2;
+		       *indexDataIt++ = windowCount * 4 + 3;
+		       ++windowCount;
+		     }
 		   float childRange(range * 0.5f / float(delayedRender.size()));
 		   float depth(minDepth);
 		   for (WindowTree::WindowNodeIndex child : delayedRender)
@@ -205,6 +205,12 @@ namespace display
     claws::inject_self{display}(windowTree.getRootIndex(), 0.0f, 0.9f);
     vertexBuffer.free(frame.vertexBufferRangeId);
     vertexBuffer.free(frame.indexBufferRangeId);
+    if (!windowCount)
+      {
+	frame.vertexBufferRangeId = magma::DynamicBuffer::nullId;
+	frame.indexBufferRangeId = magma::DynamicBuffer::nullId;
+	return windowCount;
+      }
     frame.vertexBufferRangeId = vertexBuffer.allocate(static_cast<uint32_t>(vertexData.size() * sizeof(float)));
     frame.indexBufferRangeId = vertexBuffer.allocate(static_cast<uint32_t>(indexData.size() * sizeof(uint32_t)));
     {
@@ -233,12 +239,15 @@ namespace display
 
     // being command recording
     cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-    // we bind our vertex buffer range
-    cmdBuffer.bindVertexBuffers(0, {vertexBuffer.getBuffer(frame.vertexBufferRangeId)}, {frame.vertexBufferRangeId.second});
-    // we bind our index buffer range
-    cmdBuffer.bindIndexBuffer(vertexBuffer.getBuffer(frame.indexBufferRangeId), frame.indexBufferRangeId.second, vk::IndexType::eUint32);
-    // we bind update our descriptor so that it points to our image
-    cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
+    if (vertexCount)
+      {
+	// we bind our vertex buffer range
+	cmdBuffer.bindVertexBuffers(0, {vertexBuffer.getBuffer(frame.vertexBufferRangeId)}, {frame.vertexBufferRangeId.second});
+	// we bind our index buffer range
+	cmdBuffer.bindIndexBuffer(vertexBuffer.getBuffer(frame.indexBufferRangeId), frame.indexBufferRangeId.second, vk::IndexType::eUint32);
+	// we bind update our descriptor so that it points to our image
+	cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
+      }
     std::vector<vk::ClearValue> clearValues{
       vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f}),
 	vk::ClearDepthStencilValue(1.0f, 0),
@@ -250,8 +259,11 @@ namespace display
 
       // us our pipeline
       lock.bindGraphicsPipeline(swapchainUserData.pipeline);
+
+      
       // draw our quad
-      lock.drawIndexed(vertexCount, 1, 0, 0, 0);
+      if (vertexCount)
+	lock.drawIndexed(vertexCount, 1, 0, 0, 0);
     }
     cmdBuffer.end();
 
