@@ -3,21 +3,16 @@
 #include <vector>
 #include <iterator>
 
-#include <claws/utils/tagged_data.hpp>
 #include <claws/container/iterator_pair.hpp>
 
+#include "wm/WindowNodeIndex.hpp"
 #include "wm/WindowData.hpp"
 
 namespace wm
 {
   class WindowTree
   {
-  private:
-    struct WindowNodeTag;
-  public:
-    using WindowNodeIndex = claws::tagged_data<uint16_t, uint16_t, WindowNodeTag>;
 
-    static constexpr WindowNodeIndex nullNode{uint16_t(-1u)};
   private:
     struct WindowNode
     {

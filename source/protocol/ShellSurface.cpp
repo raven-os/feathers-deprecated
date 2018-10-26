@@ -10,6 +10,7 @@ namespace protocol
   ShellSurface::ShellSurface(Surface *surface, wm::WindowTree *windowTree)
     : surface(surface)
     , windowTree(windowTree)
+    , resource(nullptr)
   {
     this->surface->setRole(this);
   }
@@ -17,6 +18,23 @@ namespace protocol
   void ShellSurface::commit()
   {
     std::puts("commiting shell surface!");
+  }
+
+  void ShellSurface::destroy()
+  {
+    auto parentIndex(windowTree->getParent(windowNodeIndex));
+
+    windowTree->removeIndex(windowNodeIndex);
+
+    auto &parentData(windowTree->getData(parentIndex));
+
+    std::visit([&](auto &containerData)
+	       {
+		 containerData.childResources.erase(std::remove(containerData.childResources.begin(),
+								containerData.childResources.end(),
+								resource)); // TODO: refactor into clean function
+	       }, std::get<wm::Container>(parentData.data).data);
+    parentData.recalculateChildren(parentIndex, *windowTree);
   }
 
   // wl interface functions
@@ -45,7 +63,10 @@ namespace protocol
 				  struct wl_resource *resource)
   {
     auto parentIndex(windowTree->getRootIndex());
+
     windowNodeIndex = windowTree->addChild(parentIndex);
+    this->resource = resource;
+
     auto &data(windowTree->getData(windowNodeIndex));
     auto &parentData(windowTree->getData(parentIndex));
 
@@ -53,24 +74,9 @@ namespace protocol
     data.data = wm::ClientData{this};
     std::visit([&](auto &containerData)
 	       {
-		 containerData.childResources.emplace_back(resource);
-		 auto childIndexIt{windowTree->getChildren(parentIndex).begin()};
-
-		 for (size_t i(0u); i != containerData.childResources.size(); ++i)
-		   {
-		     auto childResource(containerData.childResources[i]);
-		     auto &childData(windowTree->getData(*childIndexIt));
-		     auto x((parentData.rect.size[containerData.direction] * i) / containerData.childResources.size());
-		     auto nextX((parentData.rect.size[containerData.direction] * (i + 1)) / containerData.childResources.size());
-	
-		     childData.rect.position[containerData.direction] = uint16_t(parentData.rect.position[containerData.direction] + x);
-		     childData.rect.size[containerData.direction] = uint16_t(nextX - x);
-		     childData.rect.position[!containerData.direction] = parentData.rect.position[!containerData.direction];
-		     childData.rect.size[!containerData.direction] = parentData.rect.size[!containerData.direction];
-		     wl_shell_surface_send_configure(childResource, 0, childData.rect.size[0], childData.rect.size[1]);
-		     ++childIndexIt;
-		   }
+		 containerData.childResources.emplace_back(resource); // TODO: refactor into clean function
 	       }, std::get<wm::Container>(parentData.data).data);
+    parentData.recalculateChildren(parentIndex, *windowTree);
   }
   
   void ShellSurface::set_transient([[maybe_unused]] struct wl_client *client,

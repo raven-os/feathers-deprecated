@@ -1,12 +1,12 @@
 #pragma once
 
-#include "wm/WindowTree.hpp"
+#include "wm/WindowNodeIndex.hpp"
 
 #include <wayland-server.h>
 
 #include <string>
 
-namespace display
+namespace wm
 {
   class WindowTree;
 };
@@ -19,11 +19,12 @@ namespace protocol
   {
     Surface * const surface;
     wm::WindowTree * const windowTree;
-    wm::WindowTree::WindowNodeIndex windowNodeIndex{wm::WindowTree::nullNode};
+    wm::WindowNodeIndex windowNodeIndex{wm::nullNode};
     std::string title;
     std::string class_;
     int32_t width;
     int32_t height;
+    struct wl_resource *resource;
 
   public:
     ShellSurface() = delete;
@@ -33,6 +34,7 @@ namespace protocol
     ShellSurface(Surface *, wm::WindowTree *);
 
     void commit();
+    void destroy();
 
     // wl interface functions
     void pong(struct wl_client *client,

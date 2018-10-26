@@ -7,6 +7,10 @@ namespace protocol
   void Surface::destroy([[maybe_unused]] struct wl_client *client,
 			[[maybe_unused]] struct wl_resource *resource)
   {
+    std::visit([](auto role)
+	       {
+		 role->destroy();
+	       }, role);
   }
 
   void Surface::attach([[maybe_unused]] struct wl_client *client,
@@ -79,6 +83,10 @@ namespace protocol
   }
 
   void Surface::NoRole::commit()
+  {
+  }
+
+  void Surface::NoRole::destroy()
   {
   }
 }

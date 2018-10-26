@@ -166,10 +166,10 @@ namespace display
     auto vertexDataIt(std::back_inserter(vertexData));
     auto indexDataIt(std::back_inserter(indexData));
     uint32_t windowCount(0u);
-    auto display([this, &windowTree, &vertexDataIt, &indexDataIt, &windowCount](auto display, wm::WindowTree::WindowNodeIndex index, float minDepth, float range) -> void
+    auto display([this, &windowTree, &vertexDataIt, &indexDataIt, &windowCount](auto display, wm::WindowNodeIndex index, float minDepth, float range) -> void
 		 {
-		   std::vector<wm::WindowTree::WindowNodeIndex> delayedRender;
-		   for (wm::WindowTree::WindowNodeIndex child : windowTree.getChildren(index))
+		   std::vector<wm::WindowNodeIndex> delayedRender;
+		   for (wm::WindowNodeIndex child : windowTree.getChildren(index))
 		     if (windowTree.getData(child).isSolid)
 		       display(child, minDepth + range * 0.5f, range * 0.4f);
 		     else
@@ -195,7 +195,7 @@ namespace display
 		     }
 		   float childRange(range * 0.5f / float(delayedRender.size()));
 		   float depth(minDepth);
-		   for (wm::WindowTree::WindowNodeIndex child : delayedRender)
+		   for (wm::WindowNodeIndex child : delayedRender)
 		     {
 		       display(child, depth, depth + childRange);
 		       depth += childRange;

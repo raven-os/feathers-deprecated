@@ -6,12 +6,12 @@
 #include <magma/Image.hpp>
 #include <magma/DeviceMemory.hpp>
 
+#include "wm/Tilling.hpp"
+
 namespace protocol
 {
   class ShellSurface;
 }
-
-struct wl_resource;
 
 namespace wm
 {
@@ -26,17 +26,11 @@ namespace wm
     std::variant<protocol::ShellSurface *> data;
   };
 
-  struct Tilling
-  {
-    static constexpr bool const horizontalTiling{false};
-    static constexpr bool const verticalTiling{!horizontalTiling};
-    bool direction{horizontalTiling};
-    std::vector<wl_resource *> childResources;
-  };
-
   struct Container
   {
     std::variant<Tilling> data;
+
+    void recalculateChildren(WindowNodeIndex index, WindowTree &windowTree, WindowData const &windowData);
   };
 
   struct WindowData
@@ -44,6 +38,8 @@ namespace wm
     Rect rect;
     bool isSolid;
     std::variant<Container, ClientData> data;
+
+    void recalculateChildren(WindowNodeIndex index, WindowTree &windowTree);
 
     bool isVisible() const noexcept
     {
