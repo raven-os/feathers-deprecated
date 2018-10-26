@@ -6,7 +6,7 @@
 #include <claws/utils/tagged_data.hpp>
 #include <claws/container/iterator_pair.hpp>
 
-#include "display/WindowData.hpp"
+#include "wm/WindowData.hpp"
 
 namespace display
 {

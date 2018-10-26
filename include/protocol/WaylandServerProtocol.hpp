@@ -1,5 +1,5 @@
 #include <wayland-server.h>
-#include "display/WindowTree.hpp"
+#include "wm/WindowTree.hpp"
 
 namespace protocol
 {

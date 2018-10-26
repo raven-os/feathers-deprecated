@@ -1,6 +1,5 @@
 #include "display/Renderer.hpp"
-#include "display/WindowTree.hpp"
-#include "display/WindowTree.hpp"
+#include "wm/WindowTree.hpp"
 
 #include <claws/utils/lambda_utils.hpp>
 

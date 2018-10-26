@@ -1,6 +1,6 @@
 #include "protocol/Surface.hpp"
 #include "protocol/ShellSurface.hpp"
-#include "display/WindowTree.hpp"
+#include "wm/WindowTree.hpp"
 
 namespace protocol
 {

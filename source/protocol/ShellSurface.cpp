@@ -3,7 +3,7 @@
 
 #include "protocol/ShellSurface.hpp"
 #include "protocol/Surface.hpp"
-#include "display/WindowTree.hpp"
+#include "wm/WindowTree.hpp"
 
 namespace protocol
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "display/WindowTree.hpp"
+#include "wm/WindowTree.hpp"
 
 #include <wayland-server.h>
 
