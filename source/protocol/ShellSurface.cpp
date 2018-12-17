@@ -1,11 +1,41 @@
+#include <cassert>
+#include <cstdio>
+
 #include "protocol/ShellSurface.hpp"
 #include "protocol/Surface.hpp"
+#include "wm/WindowTree.hpp"
 
 namespace protocol
 {
-  ShellSurface::ShellSurface(Surface *surface)
+  ShellSurface::ShellSurface(Surface *surface, wm::WindowTree *windowTree)
     : surface(surface)
-  {}
+    , windowTree(windowTree)
+    , resource(nullptr)
+  {
+    this->surface->setRole(this);
+  }
+
+  void ShellSurface::commit()
+  {
+    std::puts("commiting shell surface!");
+  }
+
+  void ShellSurface::destroy()
+  {
+    auto parentIndex(windowTree->getParent(windowNodeIndex));
+
+    windowTree->removeIndex(windowNodeIndex);
+
+    auto &parentData(windowTree->getData(parentIndex));
+
+    std::visit([&](auto &containerData)
+	       {
+		 containerData.childResources.erase(std::remove(containerData.childResources.begin(),
+								containerData.childResources.end(),
+								resource)); // TODO: refactor into clean function
+	       }, std::get<wm::Container>(parentData.data).data);
+    parentData.recalculateChildren(parentIndex, *windowTree);
+  }
 
   // wl interface functions
   void ShellSurface::pong([[maybe_unused]] struct wl_client *client,
@@ -30,8 +60,23 @@ namespace protocol
   }
   
   void ShellSurface::set_toplevel([[maybe_unused]] struct wl_client *client,
-				  [[maybe_unused]] struct wl_resource *resource)
+				  struct wl_resource *resource)
   {
+    auto parentIndex(windowTree->getRootIndex());
+
+    windowNodeIndex = windowTree->addChild(parentIndex);
+    this->resource = resource;
+
+    auto &data(windowTree->getData(windowNodeIndex));
+    auto &parentData(windowTree->getData(parentIndex));
+
+    data.isSolid = true;
+    data.data = wm::ClientData{this};
+    std::visit([&](auto &containerData)
+	       {
+		 containerData.childResources.emplace_back(resource); // TODO: refactor into clean function
+	       }, std::get<wm::Container>(parentData.data).data);
+    parentData.recalculateChildren(parentIndex, *windowTree);
   }
   
   void ShellSurface::set_transient([[maybe_unused]] struct wl_client *client,
@@ -68,15 +113,17 @@ namespace protocol
   {
   }
   
-  void ShellSurface::set_title([[maybe_unused]] struct wl_client *client,
-			       [[maybe_unused]] struct wl_resource *resource,
-			       [[maybe_unused]] const char *title)
+  void ShellSurface::set_title(struct wl_client *,
+			       struct wl_resource *,
+			       const char *title)
   {
+    this->title = title;
   }
 
-  void ShellSurface::set_class([[maybe_unused]] struct wl_client *client,
-			       [[maybe_unused]] struct wl_resource *resource,
-			       [[maybe_unused]] const char *class_)
+  void ShellSurface::set_class(struct wl_client *,
+			       struct wl_resource *,
+			       const char *class_)
   {
+    this->class_ = class_;
   }  
 }

@@ -39,34 +39,6 @@ static void debug_server_protocol([[maybe_unused]]void *user_data,
   printf("}\n");
 }
 
-static void addTestWindows(display::WindowTree &windowTree)
-{
-  {
-    auto root(windowTree.getRootIndex());
-    auto child(windowTree.addChild(root));
-
-    auto &childData(windowTree.getData(child));
-
-    childData.rect.position[0] = 10u;
-    childData.rect.position[1] = 40u;
-    childData.rect.size[0] = 300u;
-    childData.rect.size[1] = 300u;
-    childData.isSolid = true;
-    for (uint32_t i = 0; i < 4; ++i)
-      {
-	auto grandChild(windowTree.addChild(child));
-	auto &grandChildData(windowTree.getData(grandChild));
-
-	grandChildData.rect.position[0] = uint16_t(100u + i * 20u);
-	grandChildData.rect.position[1] = uint16_t(100u + i * 120u);
-	grandChildData.rect.size[0] = 400u;
-	grandChildData.rect.size[1] = 100u;
-	grandChildData.isSolid = true;
-      }
-  }
-}
-
-
 static void help(std::string const &name)
 {
   printf("Usage: %s [OPTIONS]...\n"
@@ -82,25 +54,25 @@ static void help(std::string const &name)
 
 int main(int argc, char **argv)
 {
-  display::WindowTree windowTree(display::WindowData
-				 {{{{0, 0}}, {{1920, 1080}}}, true});
   protocol::WaylandServerProtocol serverProtocol;
   struct Args args;
 
   while (1)
     {
+      static constexpr int const DUMP_PROTOCOL = 256;
       constexpr struct option long_options[] =
         {
-         {"help", no_argument, 0, 'h'},
-         {"tty", no_argument, 0, 'T'},
-         {"sub-compositor", no_argument, 0, 'E'},
-         {"client-socket", required_argument, 0, 'c'},
-         {"socket", required_argument, 0, 's'},
-         {0, 0, 0, 0}
+	  {"help", no_argument, 0, 'h'},
+	  {"tty", no_argument, 0, 'T'},
+	  {"sub-compositor", no_argument, 0, 'E'},
+	  {"client-socket", required_argument, 0, 'c'},
+	  {"socket", required_argument, 0, 's'},
+	  {"dump-protocol", no_argument, 0, DUMP_PROTOCOL},
+	  {0, 0, 0, 0}
 	};
       int option_index = 0;
       int c = getopt_long (argc, argv, "hTEc:s:",
-                       long_options, &option_index);
+			   long_options, &option_index);
 
       /* Detect the end of the options. */
       if (c == -1)
@@ -126,19 +98,22 @@ int main(int argc, char **argv)
 
 	case 'c':
           if (args.mode != 1) {
-            puts("'client-socket' may only be set in sub-compositor mode\n");
+            puts("'client-socket' may only be set in TTY mode\n");
             return -1;
           }
-          args.clientSocketsNames.push_back(optarg);
+          args.socketName = optarg;
           break;
 
 	case 's':
-          args.socketName = optarg;
+          args.clientSocketsNames.push_back(optarg);
           break;
 
 	case 'h':
 	  help(argv[0]);
 	  return 0;
+
+	case DUMP_PROTOCOL:
+	  args.dumpProtocol = true;
 
 	case '?':
           break;
@@ -171,17 +146,16 @@ int main(int argc, char **argv)
 	     str.c_str(), serverProtocol.addSocket(str) ?
 	     "unsuccessful" : "successful");
       serverProtocol.eventDispatch(0);
-      // serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>
-      // 				       (debug_server_protocol),
-      // 				       static_cast<void *>(str.c_str()));
-      // serverProtocol.eventDispatch(0);
     }
-
-  addTestWindows(windowTree);
+  if (args.dumpProtocol)
+    {
+      serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>(debug_server_protocol),
+				       nullptr);
+      serverProtocol.eventDispatch(0);
+    }
 
   if (args.mode)
     {
-      std::string socketname("");
       printf("Attempting to connect to server with socket '%s'\n", args.socketName.c_str());
       display::WaylandSurface waylandSurface(args.socketName);
       display::Display display(waylandSurface);
@@ -200,7 +174,9 @@ int main(int argc, char **argv)
 	{
 	  display::KernelDisplay kernelDisplay;
 
-	  for (int i = 0; i < 120; ++i)
+	  kernelDisplay.getModeSetter().bindWaylandDisplay(serverProtocol.getWaylandDisplay());
+
+	  for (;;)
 	    {
 	      kernelDisplay.render(serverProtocol.getWindowTree());
 	      serverProtocol.eventDispatch(0);

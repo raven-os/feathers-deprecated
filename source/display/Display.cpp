@@ -2,7 +2,7 @@
 
 namespace display
 {
-  void Subcompositor::render(WindowTree const &windowTree)
+  void Subcompositor::render(wm::WindowTree const &windowTree)
   {
     // get next image data, and image to present
     auto [index, frame] = displaySystem.getImage(imageAvailable);

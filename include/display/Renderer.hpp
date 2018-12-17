@@ -22,9 +22,13 @@
 
 #include "display/SuperCorbeau.hpp"
 
-namespace display
+namespace wm
 {
   class WindowTree;
+}
+
+namespace display
+{
 
   struct SwapchainUserData;
   struct FrameData;
@@ -52,8 +56,8 @@ namespace display
  
     ~Renderer() = default;
 
-    magma::Semaphore<claws::no_delete> render(magma::Device<claws::no_delete> device, WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable);
-    uint32_t prepareGpuData(FrameData &frame, WindowTree const &windowTree);
+    magma::Semaphore<claws::no_delete> render(magma::Device<claws::no_delete> device, wm::WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable);
+    uint32_t prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree);
 
 
     vk::Extent2D getExtent() const noexcept
@@ -147,7 +151,7 @@ namespace display
 		   {
 		     auto image(device.createImage2D({}, vk::Format::eD32Sfloat, {swapchain.getExtent().width, swapchain.getExtent().height}, vk::SampleCountFlagBits::e1,
 						     vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::ImageLayout::eUndefined));
-		     auto memRequirements(device.getImageMemoryRequirements(depthImage));
+		     auto memRequirements(device.getImageMemoryRequirements(image));
 		     depthImageMemory = device.selectAndCreateDeviceMemory(renderer.physicalDevice, memRequirements.size, vk::MemoryPropertyFlagBits::eHostVisible, memRequirements.memoryTypeBits);
 
 		     device.bindImageMemory(image, depthImageMemory, 0);

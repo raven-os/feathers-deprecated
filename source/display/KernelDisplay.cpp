@@ -2,7 +2,7 @@
 
 namespace display
 {
-  void Compositor::render(WindowTree const &windowTree)
+  void Compositor::render(wm::WindowTree const &windowTree)
   {
     Frame &frame(frames[frameIndex]);
 
@@ -59,5 +59,15 @@ namespace display
       modeSetter.swapBuffers();
     }
     ++frameIndex %= imageCount;
+  }
+
+  modeset::ModeSetter const &Compositor::getModeSetter() const noexcept
+  {
+    return modeSetter;
+  }
+
+  modeset::ModeSetter const &KernelDisplay::getModeSetter() const noexcept
+  {
+    return renderer.getModeSetter();
   }
 }

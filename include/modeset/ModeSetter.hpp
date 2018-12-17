@@ -3,8 +3,19 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <gbm.h>
+
+#define GL_GLEXT_PROTOTYPES
+
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+#define EGL_EGLEXT_PROTOTYPES
+
 #include <EGL/egl.h>
-#include <GL/gl.h>
+#include <EGL/eglext.h>
+#include <EGL/eglmesaext.h>
+
+struct wl_display;
 
 namespace modeset {
   /*
@@ -34,6 +45,8 @@ namespace modeset {
       EGLDisplay eglDisplay;
       EGLContext eglContext;
       EGLSurface eglSurface;
+
+      void bindWaylandDisplay(struct wl_display *display) const;
     };
 
   public:
@@ -44,6 +57,7 @@ namespace modeset {
     void swapBuffers();
     int getScreenWidth() const;
     int getScreenHeight() const;
+    void bindWaylandDisplay(struct wl_display *display) const;
 
   private:
     Drm drm;

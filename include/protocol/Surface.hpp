@@ -1,23 +1,45 @@
 #pragma once
 
 #include <wayland-server.h>
+#include <variant>
 
 namespace protocol
 {
+  class ShellSurface;
+
   class Surface
   {
-    bool taken{false}; // surface already has a role
+    wl_output_transform transform{wl_output_transform::WL_OUTPUT_TRANSFORM_NORMAL};
+    struct wl_resource *buffer{nullptr};
+    int32_t scale{1};
+    class NoRole
+    {
+    public:
+      NoRole *operator->()
+      {
+	return this;
+      }
+
+      void commit();
+      void destroy();
+    };
+    std::variant<NoRole, ShellSurface *> role{NoRole{}};
   public:
     class Taken{};
 
-    void setTaken()
-    {
-      if (taken)
-	throw Taken{};
-      taken = true;
-    }
-      
+    Surface() = default;
+    Surface(Surface const &) = delete;
+    Surface(Surface &&) = delete;
 
+    template<class Role>
+    void setRole(Role *role)
+    {
+      if (!std::holds_alternative<NoRole>(this->role))
+	throw Taken{};
+      this->role = role;
+    }
+
+  public:
     // wl interface functions
     void destroy(struct wl_client *client,
 		 struct wl_resource *resource);
