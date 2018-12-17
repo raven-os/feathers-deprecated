@@ -14,18 +14,18 @@ namespace protocol
           wl_resource *resource,
           uint32_t id)
   {
-    Implem *pointer = new PointerImplem(resource);
+    PointerImplem *pointer = new PointerImplem(resource);
 
-    pointer->createImplem(client, id);
+    pointer->createImplem(&fthSeat.pointer, client, id);
   }
 
   void SeatImplem::get_keyboard(wl_client *client,
           wl_resource *resource,
           uint32_t id)
   {
-    Implem *keyboard = new KeyboardImplem(resource);
+    KeyboardImplem *keyboard = new KeyboardImplem(resource);
 
-    keyboard->createImplem(client, id);
+    keyboard->createImplem(&fthSeat.keyboard, client, id);
   }
 
   void SeatImplem::get_touch([[maybe_unused]] wl_client *client,

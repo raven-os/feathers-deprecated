@@ -6,26 +6,53 @@
 namespace protocol
 {
   struct RepeatInfo{
-		int32_t rate;
-		int32_t delay;
-	};
+    int32_t rate;
+    int32_t delay;
+  };
+
+  struct KeyboardHandler {
+  	bool (*key)(struct keyboard *keyboard, uint32_t time, struct key *key, uint32_t state);
+  	bool (*modifiers)(struct keyboard *keyboard, const struct keyboard_modifier_state *state);
+
+  	struct wl_list link;
+  };
+
+  struct XkbHandler {
+  	struct xkb_context *context;
+  	struct xkb_state *state;
+
+  	struct {
+  		struct xkb_keymap *map;
+  		int fd;
+  		uint32_t size;
+  		char *area;
+  	} keymap;
+
+  	struct {
+  		uint32_t ctrl, alt, super, shift;
+  	} indices;
+  };
 
   struct FthKeyboard
   {
-    char *keymap_string;
-	  size_t keymap_size;
-	  struct xkb_keymap *keymap;
-	  struct xkb_state *xkb_state;
-    RepeatInfo repeat_info;
+    // struct press press;
+    // struct input_focus focus;
+    // struct input_focus_handler focus_handler;
+    XkbHandler xkb;
+    struct wl_array keys;
+	  struct wl_list handlers;
+    struct wl_array client_keys;
+	  KeyboardHandler client_handler;
 
-    struct {
-		    struct wl_signal key;
+    RepeatInfo repeatInfo;
 
-		    struct wl_signal modifiers;
-		    struct wl_signal keymap;
-		    struct wl_signal repeat_info;
-	  } events;
+	  struct {
+      uint32_t depressed;
+    	uint32_t latched;
+    	uint32_t locked;
+    	uint32_t group;
+    } modifiers_states;
 
-	  void *data;
+	  uint32_t modifiers;
   };
 }
