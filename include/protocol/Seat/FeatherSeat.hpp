@@ -2,10 +2,11 @@
 
 #include <wayland-server.h>
 #include "protocol/Seat/FeatherKeyboard.hpp"
+#include "protocol/Seat/FeatherPointer.hpp"
 
 namespace protocol
 {
-  struct FthSeatClient {
+  /*struct FthSeatClient {
     wl_client *client;
     struct FthSeat *seat;
 
@@ -65,41 +66,18 @@ namespace protocol
 
     // struct wlr_seat_keyboard_grab *grab;
     // struct wlr_seat_keyboard_grab *default_grab;
-  };
+  };*/
 
   struct FthSeat
   {
     wl_global *global;
-    wl_display *display;
-    wl_list clients;
+    wl_list resources;
 
     char *seat_name;
     uint32_t capabilities;
 
-    FthSeatPointerState pointer_state;
-	  FthSeatKeyboardState keyboard_state;
-	  FthSeatTouchState touch_state;
-
-    struct {
-  		wl_signal pointer_grab_begin;
-  		wl_signal pointer_grab_end;
-
-  		wl_signal keyboard_grab_begin;
-  		wl_signal keyboard_grab_end;
-
-  		wl_signal touch_grab_begin;
-  		wl_signal touch_grab_end;
-
-  		wl_signal request_set_cursor;
-
-  		wl_signal selection;
-  		wl_signal primary_selection;
-
-  		wl_signal start_drag;
-  		wl_signal new_drag_icon;
-
-  		wl_signal destroy;
-  	} events;
+    FthKeyboard *keyboard;
+    FthPointer *pointer;
   };
 
 }

@@ -1,23 +1,25 @@
 #pragma once
 
 #include <wayland-server.h>
-#include "Implem.hpp"
+#include "protocol/CreateImplementation.hpp"
+#include "protocol/InstantiateImplementation.hpp"
+#include "FeatherKeyboard.hpp"
 
 namespace protocol
 {
-  class KeyboardImplem : public Implem
+  class KeyboardImplem
   {
     public:
       KeyboardImplem() = delete;
       KeyboardImplem(KeyboardImplem const &) = delete;
       KeyboardImplem(KeyboardImplem &&) = delete;
 
-      KeyboardImplem(wl_resource *);
+      KeyboardImplem(wl_resource *resource);
 
-      void createImplem(wl_client *client, uint32_t id) override;
+      void createImplem(FthKeyboard *fthKeyboard, wl_client *client, uint32_t id);
+      void release(wl_client *client, wl_resource *resource);
 
     private:
-      void sendKeymap(FthKeyboard *keyboard);
-      void sendRepeatInfo(FthKeyboard *keyboard);
+      uint32_t version;
   };
 }

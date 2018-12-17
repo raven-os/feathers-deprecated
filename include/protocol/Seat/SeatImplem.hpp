@@ -11,9 +11,12 @@ namespace protocol
   public:
     SeatImplem();
 
-    void get_pointer( wl_client *client,  wl_resource *resource, uint32_t id);
-    void get_keyboard( wl_client *client,  wl_resource *resource, uint32_t id);
-    void get_touch( wl_client *client,  wl_resource *resource, uint32_t id);
-    void release( wl_client *client,  wl_resource *resource);
+    void get_pointer (wl_client *client,  wl_resource *resource, uint32_t id);
+    void get_keyboard (wl_client *client,  wl_resource *resource, uint32_t id);
+    void get_touch (wl_client *client,  wl_resource *resource, uint32_t id);
+    void release (wl_client *client,  wl_resource *resource);
+
+  private:
+    FthSeat fthSeat;
   };
 }
