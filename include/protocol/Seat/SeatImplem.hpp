@@ -9,7 +9,7 @@ namespace protocol
   class SeatImplem
   {
   public:
-    SeatImplem() = delete;
+    SeatImplem();
 
     void get_pointer( wl_client *client,  wl_resource *resource, uint32_t id);
     void get_keyboard( wl_client *client,  wl_resource *resource, uint32_t id);

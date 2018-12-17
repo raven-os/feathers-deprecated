@@ -151,9 +151,9 @@ namespace protocol
                 &SeatImplem::release
                 >());
 
-   instantiateImplementation(client, version, id, wl_seat_interface, &seat_implementation, this, [](wl_resource *){
+   instantiateImplementation(client, version, id, wl_seat_interface, &seat_implementation, new SeatImplem(), [](wl_resource *){
      //TODO set capabilities , see seatListener in Listener files
-     printf("bindSeat called!\n");
+     //printf("bindSeat called!\n");
    });
   }
 

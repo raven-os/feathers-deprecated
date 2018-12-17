@@ -16,11 +16,6 @@ namespace protocol
 
   }
 
-  void PointerImplem::release([[maybe_unused]]wl_client *client, wl_resource *resource)
-  {
-    wl_resource_destroy(resource);
-  }
-
   void PointerImplem::createImplem(wl_client *client, uint32_t id)
   {
     static auto pointer_implementation(createImplementation<struct wl_pointer_interface,
