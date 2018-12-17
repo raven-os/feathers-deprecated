@@ -1,8 +1,20 @@
 #pragma once
 
-namespace protocol {
+#include "protocol/Input.hpp"
 
-  struct FthPointer {
+namespace protocol
+{
 
+  class FthPointer : public Input
+  {
+  public:
+    FthPointer();
+    FthPointer(FthPointer const &) = delete;
+    FthPointer(FthPointer &&) = delete;
+
+    void enter(struct wl_list *resources) override;
+    void leave(struct wl_list *resources) override ;
+
+  private:
   };
 }
