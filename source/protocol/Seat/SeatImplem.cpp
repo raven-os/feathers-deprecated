@@ -5,6 +5,11 @@
 
 namespace protocol
 {
+
+  SeatImplem::SeatImplem() {
+    printf("SeatImplem called\n");
+  }
+
   void SeatImplem::get_pointer(wl_client *client,
           wl_resource *resource,
           uint32_t id)
