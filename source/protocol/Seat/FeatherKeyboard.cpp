@@ -7,12 +7,12 @@ namespace protocol {
 
   }
 
-  bool FthKeyboard::handleKey(uint32_t time, uint32_t state)
+  bool FthKeyboard::key(uint32_t time, uint32_t state)
   {
 
   }
 
-  bool FthKeyboard::handleModifiers()
+  bool FthKeyboard::modifiers()
   {
 
   }

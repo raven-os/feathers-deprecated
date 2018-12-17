@@ -32,19 +32,19 @@ namespace protocol
   public:
     FthKeyboard();
 
-    bool handleKey(uint32_t time, uint32_t state);
-    bool handleModifiers();
+    bool key(uint32_t time, uint32_t state);
+    bool modifiers();
     void enter(struct wl_list *resources) override;
     void leave(struct wl_list *resources) override;
+    bool initialize();
+    void finalize();
+    bool reset();
 
     uint32_t const getRate() const;
     uint32_t const getDelay() const;
     XkbHandler& getXkbHandler();
 
   private:
-    // struct press press;
-    // struct input_focus focus;
-    // struct input_focus_handler focus_handler;
     XkbHandler xkb;
     struct wl_array keys;
 	  struct wl_list handlers;
@@ -61,6 +61,6 @@ namespace protocol
     	uint32_t group;
     } modifiers_states;
 
-	  uint32_t modifiers;
+	  uint32_t modifs;
   };
 }

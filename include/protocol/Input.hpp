@@ -11,14 +11,14 @@ namespace protocol
     Input(Input const &) = delete;
     Input(Input &&) = delete;
 
-    virtual void enter(struct wl_list *resources) = 0;
-	  virtual void leave(struct wl_list *resources) = 0 ;
+    ~Input();
 
-    bool focusInitialize();
-    void focusFinalize();
+    virtual void enter(struct wl_list *resources) = 0;
+    virtual void leave(struct wl_list *resources) = 0;
+
     void focusAddResource(struct wl_resource *resource);
     void focusRemoveResource(struct wl_resource *resource);
-    void focusSet();
+    void focusSet(/*struct compositor_view *view*/);
 
   protected:
     struct {
@@ -28,11 +28,12 @@ namespace protocol
     } press;
 
     wl_client *client;
-  	//struct compositor_view *view;
-  	wl_listener view_destroy_listener;
+    //struct compositor_view *view;
+    wl_listener view_destroy_listener;
 
-  	wl_list active, inactive;
+    wl_list active;
+    wl_list inactive;
 
-  	wl_signal event_signal;
+    wl_signal event_signal;
   };
 }
