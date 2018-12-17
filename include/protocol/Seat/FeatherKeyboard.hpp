@@ -2,19 +2,13 @@
 
 #include <wayland-server.h>
 #include <xkbcommon/xkbcommon.h>
+#include "protocol/Input.hpp"
 
 namespace protocol
 {
   struct RepeatInfo{
     int32_t rate;
     int32_t delay;
-  };
-
-  struct KeyboardHandler {
-  	bool (*key)(struct keyboard *keyboard, uint32_t time, struct key *key, uint32_t state);
-  	bool (*modifiers)(struct keyboard *keyboard, const struct keyboard_modifier_state *state);
-
-  	struct wl_list link;
   };
 
   struct XkbHandler {
@@ -33,8 +27,21 @@ namespace protocol
   	} indices;
   };
 
-  struct FthKeyboard
+  class FthKeyboard : public Input
   {
+  public:
+    FthKeyboard();
+
+    bool handleKey(uint32_t time, uint32_t state);
+    bool handleModifiers();
+    void enter(struct wl_list *resources) override;
+    void leave(struct wl_list *resources) override;
+
+    uint32_t const getRate() const;
+    uint32_t const getDelay() const;
+    XkbHandler& getXkbHandler();
+
+  private:
     // struct press press;
     // struct input_focus focus;
     // struct input_focus_handler focus_handler;
@@ -42,7 +49,8 @@ namespace protocol
     struct wl_array keys;
 	  struct wl_list handlers;
     struct wl_array client_keys;
-	  KeyboardHandler client_handler;
+
+    struct wl_list link;
 
     RepeatInfo repeatInfo;
 

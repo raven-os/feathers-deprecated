@@ -76,8 +76,8 @@ namespace protocol
     char *seat_name;
     uint32_t capabilities;
 
-    FthKeyboard keyboard;
-    FthPointer pointer;
+    FthKeyboard *keyboard;
+    FthPointer *pointer;
   };
 
 }

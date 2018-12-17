@@ -23,10 +23,10 @@ namespace protocol
       std::cout << "Keyboard unbind!" << std::endl;
     });
 
-    wl_keyboard_send_keymap(resource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, fthKeyboard->xkb.keymap.fd, fthKeyboard->xkb.keymap.size - 1);
+    wl_keyboard_send_keymap(resource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, fthKeyboard->getXkbHandler().keymap.fd, fthKeyboard->getXkbHandler().keymap.size - 1);
 
     if (wl_resource_get_version(resource) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION) {
-      wl_keyboard_send_repeat_info(resource, fthKeyboard->repeatInfo.rate, fthKeyboard->repeatInfo.delay);
+      wl_keyboard_send_repeat_info(resource, fthKeyboard->getRate(), fthKeyboard->getDelay());
     }
   }
 
