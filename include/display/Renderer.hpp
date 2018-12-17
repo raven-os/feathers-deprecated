@@ -22,9 +22,13 @@
 
 #include "display/SuperCorbeau.hpp"
 
-namespace display
+namespace wm
 {
   class WindowTree;
+}
+
+namespace display
+{
 
   struct SwapchainUserData;
   struct FrameData;
@@ -52,8 +56,8 @@ namespace display
  
     ~Renderer() = default;
 
-    magma::Semaphore<claws::no_delete> render(magma::Device<claws::no_delete> device, WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable);
-    uint32_t prepareGpuData(FrameData &frame, WindowTree const &windowTree);
+    magma::Semaphore<claws::no_delete> render(magma::Device<claws::no_delete> device, wm::WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable);
+    uint32_t prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree);
 
 
     vk::Extent2D getExtent() const noexcept

@@ -2,7 +2,7 @@
 
 namespace display
 {
-  void Compositor::render(WindowTree const &windowTree)
+  void Compositor::render(wm::WindowTree const &windowTree)
   {
     Frame &frame(frames[frameIndex]);
 

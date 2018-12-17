@@ -21,6 +21,7 @@ namespace protocol
       }
 
       void commit();
+      void destroy();
     };
     std::variant<NoRole, ShellSurface *> role{NoRole{}};
   public:

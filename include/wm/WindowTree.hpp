@@ -3,23 +3,17 @@
 #include <vector>
 #include <iterator>
 
-#include <claws/utils/tagged_data.hpp>
 #include <claws/container/iterator_pair.hpp>
 
-#include "display/WindowData.hpp"
+#include "wm/WindowNodeIndex.hpp"
+#include "wm/WindowData.hpp"
 
-namespace display
+namespace wm
 {
   class WindowTree
   {
-  private:
-    struct WindowNodeTag;
-  public:
-    using WindowNodeIndex = claws::tagged_data<uint16_t, uint16_t, WindowNodeTag>;
-  private:
 
-    static constexpr WindowNodeIndex nullNode{uint16_t(-1u)};
-
+  private:
     struct WindowNode
     {
       WindowNodeIndex parent;
@@ -41,6 +35,9 @@ namespace display
       return const_cast<WindowTree &>(*this).getNode(nodeIndex);
     }
   public:
+    WindowTree() = delete;
+    WindowTree(WindowTree &&) = delete;
+    WindowTree(WindowTree const &) = delete;
 
     WindowTree(WindowData &&screen)
       : freeList(nullNode)
