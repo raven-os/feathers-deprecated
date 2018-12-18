@@ -42,6 +42,7 @@ namespace protocol {
     wl_array_init(&keys);
     wl_list_init(&handlers);
     wl_list_insert(&handlers, &link);
+    std::cout << "Keyboard bind !" << std::endl;
   }
 
   FthKeyboard::~FthKeyboard()
@@ -97,7 +98,7 @@ namespace protocol {
 
     std::string keymap_path = std::string(keymap_directory) + "\n" + KEYMAP_FILE_TEMPLATE;
 
-    xkb.keymap.size = keymap_string.size() + 1;
+    xkb.keymap.size = static_cast<uint32_t>(keymap_string.size() + 1);
     xkb.keymap.fd = mkostemp(const_cast<char *>(keymap_path.c_str()), O_CLOEXEC);
 
     if (xkb.keymap.fd == -1) {

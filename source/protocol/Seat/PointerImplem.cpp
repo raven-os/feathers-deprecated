@@ -6,6 +6,7 @@ namespace protocol
   PointerImplem::PointerImplem(wl_resource *resource)
   {
     version = wl_resource_get_version(resource);
+    fthPointer = new FthPointer();
   }
 
   void PointerImplem::set_cursor([[maybe_unused]]wl_client *client,
@@ -18,12 +19,13 @@ namespace protocol
 
   }
 
-  void PointerImplem::createImplem(FthPointer *pointer, wl_client *client, uint32_t id)
+  void PointerImplem::createImplem(wl_client *client, uint32_t id)
   {
     static auto pointer_implementation(createImplementation<struct wl_pointer_interface,
                 &PointerImplem::set_cursor,
                 &PointerImplem::release
                 >());
+    FthPointer *pointer = dynamic_cast<FthPointer*>(this->fthPointer);
 
     // if (!(seat_client->seat->capabilities & WL_SEAT_CAPABILITY_POINTER))
     // {
