@@ -11,7 +11,7 @@ namespace protocol
     Input(Input const &) = delete;
     Input(Input &&) = delete;
 
-    ~Input();
+    virtual ~Input();
 
     virtual void enter(struct wl_list *resources) = 0;
 	  virtual void leave(struct wl_list *resources) = 0 ;

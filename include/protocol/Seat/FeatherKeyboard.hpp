@@ -7,8 +7,8 @@
 namespace protocol
 {
   struct RepeatInfo{
-    int32_t rate;
-    int32_t delay;
+    const int32_t rate = 40;
+    const int32_t delay = 500;
   };
 
   struct XkbHandler {
@@ -23,7 +23,10 @@ namespace protocol
   	} keymap;
 
   	struct {
-  		uint32_t ctrl, alt, super, shift;
+  		uint32_t ctrl;
+      uint32_t alt;
+      uint32_t super;
+      uint32_t shift;
   	} indices;
   };
 
@@ -31,6 +34,7 @@ namespace protocol
   {
   public:
     FthKeyboard();
+    ~FthKeyboard();
 
     bool key(uint32_t time, uint32_t state);
     bool modifiers();
@@ -40,9 +44,12 @@ namespace protocol
     void finalize();
     bool reset();
 
-    uint32_t const getRate() const;
-    uint32_t const getDelay() const;
+    uint32_t getRate() const;
+    uint32_t getDelay() const;
     XkbHandler& getXkbHandler();
+
+  private:
+    bool updateKeymap();
 
   private:
     XkbHandler xkb;
@@ -62,5 +69,7 @@ namespace protocol
     } modifiers_states;
 
 	  uint32_t modifs;
+
+    const char *KEYMAP_FILE_TEMPLATE = "swc-xkb-keymap-XXXXXX";
   };
 }

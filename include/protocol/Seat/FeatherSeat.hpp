@@ -76,8 +76,8 @@ namespace protocol
     char *seat_name;
     uint32_t capabilities;
 
-    Input *keyboard;
-    Input *pointer;
+    Input *keyboard = nullptr;
+    Input *pointer = nullptr;
   };
 
 }
