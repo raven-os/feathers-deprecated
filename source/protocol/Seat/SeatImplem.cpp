@@ -7,27 +7,23 @@ namespace protocol
 {
 
   SeatImplem::SeatImplem() {
-    fthSeat.keyboard = new FthKeyboard();
-    fthSeat.pointer = new FthPointer();
-    printf("SeatImplem called\n");
+    printf("Seat binded\n");
   }
 
   void SeatImplem::get_pointer(wl_client *client,
           wl_resource *resource,
           uint32_t id)
   {
-    PointerImplem *pointer = new PointerImplem(resource);
-
-    pointer->createImplem(dynamic_cast<FthPointer*>(fthSeat.pointer), client, id);
+    pointer = new PointerImplem(resource);
+    pointer->createImplem(client, id);
   }
 
   void SeatImplem::get_keyboard(wl_client *client,
           wl_resource *resource,
           uint32_t id)
   {
-    KeyboardImplem *keyboard = new KeyboardImplem(resource);
-
-    keyboard->createImplem(dynamic_cast<FthKeyboard*>(fthSeat.keyboard), client, id);
+    keyboard = new KeyboardImplem(resource);
+    keyboard->createImplem(client, id);
   }
 
   void SeatImplem::get_touch([[maybe_unused]] wl_client *client,

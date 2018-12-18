@@ -1,7 +1,8 @@
 #pragma once
 
 #include <wayland-server.h>
-#include "FeatherSeat.hpp"
+#include "KeyboardImplem.hpp"
+#include "PointerImplem.hpp"
 
 namespace protocol
 {
@@ -17,6 +18,13 @@ namespace protocol
     void release (wl_client *client,  wl_resource *resource);
 
   private:
-    FthSeat fthSeat;
+    wl_global *global;
+    wl_list resources;
+
+    char *seat_name;
+    uint32_t capabilities;
+
+    KeyboardImplem *keyboard = nullptr;
+    PointerImplem *pointer = nullptr;
   };
 }

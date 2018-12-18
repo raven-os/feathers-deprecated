@@ -16,8 +16,10 @@ namespace protocol
 
       KeyboardImplem(wl_resource *resource);
 
-      void createImplem(FthKeyboard *fthKeyboard, wl_client *client, uint32_t id);
+      void createImplem(wl_client *client, uint32_t id);
       void release(wl_client *client, wl_resource *resource);
+
+      Input *fthKeyboard = nullptr;
 
     private:
       uint32_t version;
