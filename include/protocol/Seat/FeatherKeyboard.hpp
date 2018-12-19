@@ -36,12 +36,14 @@ namespace protocol
     FthKeyboard();
     ~FthKeyboard();
 
-    bool key(uint32_t time, uint32_t state);
-    bool modifiers();
     void enter(struct wl_list *resources) override;
     void leave(struct wl_list *resources) override;
-    bool initialize();
-    void finalize();
+
+    void handleKeymap();
+    bool handleKey(uint32_t time, uint32_t state);
+    bool handleModifiers();
+    void handleRepeatInfo();
+
     bool reset();
 
     uint32_t getRate() const;
@@ -68,7 +70,7 @@ namespace protocol
     	uint32_t group;
     } modifiers_states;
 
-	  uint32_t modifs;
+	  uint32_t modifiers;
 
     const char *KEYMAP_FILE_TEMPLATE = "swc-xkb-keymap-XXXXXX";
   };

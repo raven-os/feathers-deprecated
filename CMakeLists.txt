@@ -65,5 +65,6 @@ target_link_libraries(${PROJECT_NAME}
   ${EGL_LIBRARY}
   ${OPENGLES3_LIBRARY}
   xkbcommon
+  libinput
   magma::core
   )

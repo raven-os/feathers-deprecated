@@ -1,5 +1,6 @@
 #include <wayland-server.h>
 #include "wm/WindowTree.hpp"
+#include "protocol/Seat/SeatImplem.hpp"
 
 namespace protocol
 {
@@ -10,8 +11,10 @@ namespace protocol
     struct wl_event_loop *wlEventLoop;
     struct wl_protocol_logger *wlProtocolLogger;
     wm::WindowTree windowTree;
+    SeatImplem *fthSeat;
+
   public:
-    
+
     WaylandServerProtocol();
     WaylandServerProtocol(WaylandServerProtocol const &) = delete;
     WaylandServerProtocol(WaylandServerProtocol &&) = delete;

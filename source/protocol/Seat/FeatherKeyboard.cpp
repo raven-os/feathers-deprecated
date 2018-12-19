@@ -37,7 +37,7 @@ namespace protocol {
   	}
 
     modifiers_states = {0};
-    modifs = 0;
+    modifiers = 0;
     wl_array_init(&client_keys);
     wl_array_init(&keys);
     wl_list_init(&handlers);
@@ -56,15 +56,6 @@ namespace protocol {
   	xkb_context_unref(xkb.context);
   }
 
-  bool FthKeyboard::key(uint32_t time, uint32_t state)
-  {
-    return true;
-  }
-
-  bool FthKeyboard::modifiers()
-  {
-    return true;
-  }
 
   void FthKeyboard::enter(struct wl_list *resources)
   {
@@ -72,6 +63,26 @@ namespace protocol {
   }
 
   void FthKeyboard::leave(struct wl_list *resources)
+  {
+
+  }
+
+  void FthKeyboard::handleKeymap()
+  {
+
+  }
+
+  bool FthKeyboard::handleKey(uint32_t time, uint32_t state)
+  {
+    return true;
+  }
+
+  bool FthKeyboard::handleModifiers()
+  {
+    return true;
+  }
+
+  void FthKeyboard::handleRepeatInfo()
   {
 
   }

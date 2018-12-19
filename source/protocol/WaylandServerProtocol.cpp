@@ -144,17 +144,8 @@ namespace protocol
 
   void WaylandServerProtocol::bindSeat(struct wl_client *client, uint32_t version, uint32_t id)
   {
-    static auto seat_implementation(createImplementation<struct wl_seat_interface,
-                &SeatImplem::get_pointer,
-                &SeatImplem::get_keyboard,
-                &SeatImplem::get_touch,
-                &SeatImplem::release
-                >());
-
-   instantiateImplementation(client, version, id, wl_seat_interface, &seat_implementation, new SeatImplem(), [](wl_resource *){
-     //TODO set capabilities , see seatListener in Listener files
-     //printf("bindSeat called!\n");
-   });
+    fthSeat = new SeatImplem();
+    fthSeat->createImplem(client, version, id);
   }
 
   void WaylandServerProtocol::addProtocolLogger(wl_protocol_logger_func_t func,
