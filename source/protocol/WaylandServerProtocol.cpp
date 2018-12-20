@@ -26,7 +26,7 @@ namespace protocol
       wlDisplay(wl_display_create()),
       wlEventLoop(wl_display_get_event_loop(wlDisplay)),
       wlProtocolLogger(nullptr),
-      windowTree(display::WindowData{{{{0, 0}}, {{1920, 1080}}}, true})
+      windowTree(wm::WindowData{{{{0, 0}}, {{1920, 1080}}}, true, wm::Container{wm::Tilling{}}})
   {
     wl_global_create(wlDisplay, &wl_compositor_interface, 1, this,
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
@@ -119,7 +119,7 @@ namespace protocol
 						 &ShellSurface::set_class
 						 >());
 
-	instantiateImplementation(client, 1, id, wl_shell_surface_interface, &shell_surface_implementation, new ShellSurface(surface),
+	instantiateImplementation(client, 1, id, wl_shell_surface_interface, &shell_surface_implementation, new ShellSurface(surface, &windowTree),
 				  [](wl_resource *resource)
 				  {
 				    delete static_cast<ShellSurface *>(wl_resource_get_user_data(resource));
@@ -175,7 +175,7 @@ namespace protocol
     printf("Client with pid %d, uid %d, and gid %d connected\n", pid, uid, gid);
   }
 
-  display::WindowTree const &WaylandServerProtocol::getWindowTree() const noexcept
+  wm::WindowTree const &WaylandServerProtocol::getWindowTree() const noexcept
   {
     return windowTree;
   }

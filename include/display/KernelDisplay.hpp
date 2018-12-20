@@ -12,8 +12,6 @@
 
 namespace display
 {
-  class WindowTree;
-
   struct Score
   {
     unsigned int bestQueueIndex;
@@ -178,7 +176,7 @@ namespace display
     {
     }
 
-    void render(WindowTree const &windowTree);
+    void render(wm::WindowTree const &windowTree);
     modeset::ModeSetter const& getModeSetter() const noexcept;
   };
 
@@ -215,7 +213,7 @@ namespace display
 
     modeset::ModeSetter const& getModeSetter() const noexcept;
 
-    void render(WindowTree const &windowTree)
+    void render(wm::WindowTree const &windowTree)
     {
       renderer.render(windowTree);
     }

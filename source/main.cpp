@@ -39,34 +39,6 @@ static void debug_server_protocol([[maybe_unused]]void *user_data,
   printf("}\n");
 }
 
-static void addTestWindows(display::WindowTree &windowTree)
-{
-  {
-    auto root(windowTree.getRootIndex());
-    auto child(windowTree.addChild(root));
-
-    auto &childData(windowTree.getData(child));
-
-    childData.rect.position[0] = 10u;
-    childData.rect.position[1] = 40u;
-    childData.rect.size[0] = 300u;
-    childData.rect.size[1] = 300u;
-    childData.isSolid = true;
-    for (uint32_t i = 0; i < 4; ++i)
-      {
-	auto grandChild(windowTree.addChild(child));
-	auto &grandChildData(windowTree.getData(grandChild));
-
-	grandChildData.rect.position[0] = uint16_t(100u + i * 20u);
-	grandChildData.rect.position[1] = uint16_t(100u + i * 120u);
-	grandChildData.rect.size[0] = 400u;
-	grandChildData.rect.size[1] = 100u;
-	grandChildData.isSolid = true;
-      }
-  }
-}
-
-
 static void help(std::string const &name)
 {
   printf("Usage: %s [OPTIONS]...\n"
@@ -82,8 +54,6 @@ static void help(std::string const &name)
 
 int main(int argc, char **argv)
 {
-  display::WindowTree windowTree(display::WindowData
-				 {{{{0, 0}}, {{1920, 1080}}}, true});
   protocol::WaylandServerProtocol serverProtocol;
   struct Args args;
 
@@ -184,8 +154,6 @@ int main(int argc, char **argv)
       serverProtocol.eventDispatch(0);
     }
 
-  addTestWindows(windowTree);
-
   if (args.mode)
     {
       printf("Attempting to connect to server with socket '%s'\n", args.socketName.c_str());
@@ -205,6 +173,7 @@ int main(int argc, char **argv)
       try
 	{
 	  display::KernelDisplay kernelDisplay;
+
 	  kernelDisplay.getModeSetter().bindWaylandDisplay(serverProtocol.getWaylandDisplay());
 
 	  for (;;)
