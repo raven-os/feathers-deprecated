@@ -23,6 +23,7 @@ namespace protocol
     int32_t addSocket(std::string const &);
     void createSurface(struct wl_client *client, struct wl_resource *, uint32_t id);
     void createRegion(struct wl_client *client, struct wl_resource *, uint32_t id);
+    void createShmPool(struct wl_client *client, struct wl_resource *, uint32_t id, int fd, int size);
 
     void getShellSurface(struct wl_client *client,
 			 struct wl_resource *,
@@ -31,8 +32,8 @@ namespace protocol
 
     void bindCompositor(struct wl_client *client, uint32_t version, uint32_t id);
     void bindSeat(struct wl_client *client, uint32_t version, uint32_t id);
-    void bindSurface(struct wl_client *client, uint32_t version, uint32_t id);
     void bindShell(struct wl_client *client, uint32_t version, uint32_t id);
+    void bindShm(struct wl_client *client, uint32_t version, uint32_t id);
     void addProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
     void eventDispatch(int32_t timeout);
     void process(struct wl_client *data);

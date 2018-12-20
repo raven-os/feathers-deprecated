@@ -9,6 +9,7 @@
 #include "protocol/InstantiateImplementation.hpp"
 #include "protocol/Surface.hpp"
 #include "protocol/ShellSurface.hpp"
+#include "protocol/ShmPool.hpp"
 
 namespace protocol
 {
@@ -34,6 +35,8 @@ namespace protocol
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShell>());
     wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindSeat>());
+    wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
+    		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShm>());
     notify = [](auto *that, void *data) {
       static_cast<WaylandServerProtocol *>(that)->process(static_cast<struct wl_client *>(data));
     };
@@ -145,6 +148,33 @@ namespace protocol
   {
     printf("bindSeat called!\n");
   }
+
+  /// wl_shm::create_pool
+  void WaylandServerProtocol::createShmPool(struct wl_client *client, struct wl_resource *, uint32_t id, int fd, int size)
+  {
+    static auto shm_pool_implementation(createImplementation<struct wl_shm_pool_interface,
+					&ShmPool::create_buffer,
+					&ShmPool::destroy,
+					&ShmPool::resize>());
+
+    instantiateImplementation(client, 1, id, wl_shm_pool_interface, &shm_pool_implementation, new ShmPool(fd, size), [](wl_resource *resource)
+                              {
+                                delete static_cast<ShmPool *>(wl_resource_get_user_data(resource));
+                              });
+    
+  }
+
+  void WaylandServerProtocol::bindShm(struct wl_client *client, uint32_t version, uint32_t id)
+  {
+    static auto shm_implementation(createImplementation<struct wl_shm_interface, &WaylandServerProtocol::createShmPool>());
+
+    printf("TODO: post formats\n");
+    instantiateImplementation(client, version, id,  wl_shm_interface,  &shm_implementation, this, [](wl_resource *)
+			      {
+				printf("Destroying shm!\n"); // todo ?
+			      });
+  }
+
 
   void WaylandServerProtocol::addProtocolLogger(wl_protocol_logger_func_t func,
 						void *userData)
