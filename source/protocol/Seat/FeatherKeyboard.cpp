@@ -11,30 +11,30 @@ namespace protocol {
   FthKeyboard::FthKeyboard() : Input()
   {
     if (!(xkb.context = xkb_context_new(XKB_CONTEXT_NO_FLAGS))) {
-  		std::cerr << "Could not create XKB context" << std::endl;
+      std::cerr << "Could not create XKB context" << std::endl;
       return ; //TODO throw exeception
-  	}
+    }
 
-  	if (!(xkb.keymap.map = xkb_keymap_new_from_names(xkb.context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS))) {
-  		std::cerr << "Could not create XKB keymap" << std::endl;
+    if (!(xkb.keymap.map = xkb_keymap_new_from_names(xkb.context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS))) {
+      std::cerr << "Could not create XKB keymap" << std::endl;
       xkb_context_unref(xkb.context);
       return ;
-  	}
+    }
 
-  	if (!(xkb.state = xkb_state_new(xkb.keymap.map))) {
-  		std::cerr << "Could not create XKB state" << std::endl;
-      xkb_context_unref(xkb.context);
-  		xkb_keymap_unref(xkb.keymap.map);
-      return ;
-  	}
-
-  	if (!updateKeymap()) {
-  		std::cerr << "Could not update XKB keymap" << std::endl;
+    if (!(xkb.state = xkb_state_new(xkb.keymap.map))) {
+      std::cerr << "Could not create XKB state" << std::endl;
       xkb_context_unref(xkb.context);
       xkb_keymap_unref(xkb.keymap.map);
-  		xkb_state_unref(xkb.state);
       return ;
-  	}
+    }
+
+    if (!updateKeymap()) {
+      std::cerr << "Could not update XKB keymap" << std::endl;
+      xkb_context_unref(xkb.context);
+      xkb_keymap_unref(xkb.keymap.map);
+      xkb_state_unref(xkb.state);
+      return ;
+    }
 
     modifiers_states = {0};
     modifs = 0;
@@ -48,12 +48,12 @@ namespace protocol {
   FthKeyboard::~FthKeyboard()
   {
     wl_array_release(&client_keys);
-  	wl_array_release(&keys);
-  	munmap(xkb.keymap.area, xkb.keymap.size);
-  	close(xkb.keymap.fd);
-  	xkb_state_unref(xkb.state);
-  	xkb_keymap_unref(xkb.keymap.map);
-  	xkb_context_unref(xkb.context);
+    wl_array_release(&keys);
+    munmap(xkb.keymap.area, xkb.keymap.size);
+    close(xkb.keymap.fd);
+    xkb_state_unref(xkb.state);
+    xkb_keymap_unref(xkb.keymap.map);
+    xkb_context_unref(xkb.context);
   }
 
   bool FthKeyboard::key(uint32_t time, uint32_t state)

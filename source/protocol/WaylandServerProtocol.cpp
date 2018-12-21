@@ -29,6 +29,7 @@ namespace protocol
       wlProtocolLogger(nullptr),
       windowTree(wm::WindowData{{{{0, 0}}, {{1920, 1080}}}, true, wm::Container{wm::Tilling{}}})
   {
+    // TODO Destroy wayland globals ?
     wl_global_create(wlDisplay, &wl_compositor_interface, 1, this,
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
     wl_global_create(wlDisplay, &wl_shell_interface, 1, this,
@@ -145,16 +146,22 @@ namespace protocol
   void WaylandServerProtocol::bindSeat(struct wl_client *client, uint32_t version, uint32_t id)
   {
     static auto seat_implementation(createImplementation<struct wl_seat_interface,
-                &SeatImplem::get_pointer,
+		&SeatImplem::get_pointer,
                 &SeatImplem::get_keyboard,
                 &SeatImplem::get_touch,
                 &SeatImplem::release
                 >());
 
-   instantiateImplementation(client, version, id, wl_seat_interface, &seat_implementation, new SeatImplem(), [](wl_resource *){
-     //TODO set capabilities , see seatListener in Listener files
-     //printf("bindSeat called!\n");
-   });
+    SeatImplem *seat = new SeatImplem();
+
+    struct wl_resource *seatResource = instantiateImplementation(client, version, id, wl_seat_interface, &seat_implementation, seat, [](wl_resource *){
+      //TODO set capabilities , see seatListener in Listener files
+      //printf("bindSeat called!\n");
+    });
+    // TODO Handle failure
+    // wl_list_insert(&seat.resources, wl_resource_get_link(resource));
+    // wl_seat_send_capabilities(seatResource, WL_SEAT_CAPABILITY_POINTER|WL_SEAT_CAPABILITY_KEYBOARD);
+    wl_seat_send_capabilities(seatResource, WL_SEAT_CAPABILITY_POINTER);
   }
 
   void WaylandServerProtocol::addProtocolLogger(wl_protocol_logger_func_t func,

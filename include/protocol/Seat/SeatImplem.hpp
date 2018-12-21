@@ -1,6 +1,7 @@
 #pragma once
 
 #include <wayland-server.h>
+#include <iostream>
 #include "KeyboardImplem.hpp"
 #include "PointerImplem.hpp"
 
@@ -12,16 +13,15 @@ namespace protocol
   public:
     SeatImplem();
 
-    void get_pointer (wl_client *client,  wl_resource *resource, uint32_t id);
-    void get_keyboard (wl_client *client,  wl_resource *resource, uint32_t id);
-    void get_touch (wl_client *client,  wl_resource *resource, uint32_t id);
-    void release (wl_client *client,  wl_resource *resource);
+    void get_pointer(wl_client *client, wl_resource *resource, uint32_t id);
+    void get_keyboard(wl_client *client, wl_resource *resource, uint32_t id);
+    void get_touch(wl_client *client, wl_resource *resource, uint32_t id);
+    void release(wl_client *client, wl_resource *resource);
 
   private:
-    wl_global *global;
     wl_list resources;
 
-    char *seat_name;
+    std::string name;
     uint32_t capabilities;
 
     KeyboardImplem *keyboard = nullptr;

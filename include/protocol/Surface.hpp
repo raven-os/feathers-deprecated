@@ -12,6 +12,7 @@ namespace protocol
     wl_output_transform transform{wl_output_transform::WL_OUTPUT_TRANSFORM_NORMAL};
     struct wl_resource *buffer{nullptr};
     int32_t scale{1};
+
     class NoRole
     {
     public:
@@ -49,14 +50,14 @@ namespace protocol
 		struct wl_resource *buffer,
 		int32_t x,
 		int32_t y);
-    
+
     void damage(struct wl_client *client,
 		struct wl_resource *resource,
 		int32_t x,
 		int32_t y,
 		int32_t width,
 		int32_t height);
-    
+
     void frame(struct wl_client *client,
 	       struct wl_resource *resource,
 	       uint32_t callback);

@@ -13,8 +13,12 @@ namespace protocol
     FthPointer(FthPointer &&) = delete;
 
     void enter(struct wl_list *resources) override;
-    void leave(struct wl_list *resources) override ;
+    void leave(struct wl_list *resources) override;
 
   private:
+    struct wl_array buttons;
+    struct wl_list handlers;
+    wl_fixed_t x;
+    wl_fixed_t y;
   };
 }
