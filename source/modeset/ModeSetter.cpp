@@ -137,11 +137,16 @@ namespace modeset {
 
     // create an OpenGL context
     eglBindAPI(EGL_OPENGL_API);
-    EGLint attributes[] = {
-      EGL_RED_SIZE, 8,
-      EGL_GREEN_SIZE, 8,
-      EGL_BLUE_SIZE, 8,
-      EGL_NONE};
+    EGLint const attributes[] = {
+       EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+       EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+       EGL_BLUE_SIZE, 8,
+       EGL_GREEN_SIZE, 8,
+       EGL_RED_SIZE, 8,
+       EGL_ALPHA_SIZE, 8,
+       EGL_BUFFER_SIZE, 32,
+       EGL_DEPTH_SIZE, 24,
+       EGL_NONE};
     EGLConfig config;
     EGLint numConfig;
     eglChooseConfig(eglDisplay, attributes, &config, 1, &numConfig);
