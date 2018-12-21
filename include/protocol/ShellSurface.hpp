@@ -24,7 +24,6 @@ namespace protocol
     std::string class_;
     int32_t width;
     int32_t height;
-    struct wl_resource *resource;
 
   public:
     ShellSurface() = delete;
