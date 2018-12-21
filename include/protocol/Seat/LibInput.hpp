@@ -27,7 +27,7 @@ namespace protocol
     #endif
 
   private:
-    int handleOpenRestricted(const char *path, int flags, void *userData);
-    void handleCloseRestricted(int fd, void *userData);
+    int handleOpenRestricted(const char *path, int flags);
+    void handleCloseRestricted(int fd);
   };
 }

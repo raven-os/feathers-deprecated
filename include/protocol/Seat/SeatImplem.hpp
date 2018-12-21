@@ -24,7 +24,7 @@ namespace protocol
     wl_global *global;
     wl_list resources;
 
-    char *name = "seat0";
+    char *name;
     uint32_t capabilities;
 
     KeyboardImplem *keyboard = nullptr;
@@ -33,7 +33,7 @@ namespace protocol
     LibInput input;
 
   private:
-    void setCapabilitites();
+    void setCapabilitites(uint32_t capabilities);
     void setName();
 
   };

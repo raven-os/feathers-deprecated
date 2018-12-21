@@ -1,3 +1,4 @@
+#include <string.h>
 #include <iostream>
 #include "protocol/Seat/SeatImplem.hpp"
 #include "protocol/Seat/PointerImplem.hpp"
@@ -7,6 +8,7 @@ namespace protocol
 {
 
   SeatImplem::SeatImplem() {
+    name = strdup("seat0");
   }
 
   void SeatImplem::createImplem(wl_client *client, uint32_t version, uint32_t id)
@@ -56,5 +58,29 @@ namespace protocol
           [[maybe_unused]] wl_resource *resource)
   {
     wl_resource_destroy(resource);
+  }
+
+  void SeatImplem::setCapabilitites(uint32_t capabilities)
+  {
+    struct wl_resource *resource;
+
+    if (!(capabilities & WL_SEAT_CAPABILITY_POINTER) ||
+        !(capabilities & WL_SEAT_CAPABILITY_KEYBOARD)) {
+    	return ;
+    }
+    this->capabilities |= capabilities;
+    wl_list_for_each(resource, &this->resources, link) {
+    	wl_seat_send_capabilities(resource, this->capabilities);
+  	}
+  }
+
+  void SeatImplem::setName()
+  {
+    free(name);
+    name = strdup(name);
+    struct wl_resource *resource;
+      wl_list_for_each(resource, &resources, link) {
+        wl_seat_send_name(resource, name);
+      }
   }
 }

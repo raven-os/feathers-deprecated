@@ -8,8 +8,14 @@ namespace protocol
   LibInput::LibInput()
   {
     libinputInterface = libinput_interface {
-      &LibInput::handleOpenRestricted,
-      &LibInput::handleCloseRestricted
+      [](const char* path, int flags, void *data)
+      {
+          return static_cast<LibInput *>(data)->handleOpenRestricted(path, flags);
+      },
+      [](int fd, void *data)
+      {
+          return static_cast<LibInput *>(data)->handleCloseRestricted(fd);
+      },
     };
 
     #ifdef ENABLE_LIBUDEV
@@ -66,13 +72,13 @@ namespace protocol
 
   }
 
-  int LibInput::handleOpenRestricted(const char *path, int flags, [[maybe_unused]]void *userData)
+  int LibInput::handleOpenRestricted(const char *path, int flags)
   {
     //TODO seems we have to return the 'in' socket fd
     return -1;
   }
 
-  void LibInput::handleCloseRestricted(int fd, [[maybe_unused]]void *userData)
+  void LibInput::handleCloseRestricted(int fd)
   {
     close(fd);
   }
