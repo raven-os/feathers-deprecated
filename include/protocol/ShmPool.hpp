@@ -2,10 +2,25 @@
 
 #include <wayland-server.h>
 
+#include <memory>
+
 namespace protocol
 {
   class ShmPool
   {
+  public:
+    struct Data
+    {
+      void *data;
+      int size;
+
+      ~Data() noexcept;
+    };
+
+  private:
+    int const fd;
+    std::shared_ptr<Data> data;
+
   public:
     ShmPool(int fd, int size);
 
