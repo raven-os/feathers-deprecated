@@ -33,9 +33,9 @@ namespace protocol
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
     wl_global_create(wlDisplay, &wl_shell_interface, 1, this,
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShell>());
-    wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
-    		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindSeat>());
-    wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
+    // wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
+    // 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindSeat>());
+    wl_global_create(wlDisplay, &wl_shm_interface, 1, this,
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShm>());
     notify = [](auto *that, void *data) {
       static_cast<WaylandServerProtocol *>(that)->process(static_cast<struct wl_client *>(data));
@@ -169,10 +169,12 @@ namespace protocol
     static auto shm_implementation(createImplementation<struct wl_shm_interface, &WaylandServerProtocol::createShmPool>());
 
     printf("TODO: post formats\n");
-    instantiateImplementation(client, version, id,  wl_shm_interface,  &shm_implementation, this, [](wl_resource *)
-			      {
-				printf("Destroying shm!\n"); // todo ?
-			      });
+    wl_resource *shm = instantiateImplementation(client, version, id,  wl_shm_interface,  &shm_implementation, this, [](wl_resource *)
+														     {
+														       printf("Destroying shm!\n"); // todo ?
+														     });
+    wl_shm_send_format(shm, WL_SHM_FORMAT_ARGB8888);
+    wl_shm_send_format(shm, WL_SHM_FORMAT_XRGB8888);
   }
 
 
