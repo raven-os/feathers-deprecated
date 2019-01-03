@@ -62,9 +62,6 @@ namespace protocol
 		       int newSize)
   {
     assert(data);
-    Data newData{mapData(fd, newSize), newSize};
-
-    std::memcpy(newData.data, data->data, data->size);
-    *data = newData;
+    *data = Data{mapData(fd, newSize), newSize};
   }
 }
