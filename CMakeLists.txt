@@ -1,11 +1,12 @@
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 cmake_minimum_required(VERSION 2.6)
-project(feathers CXX)
+project(feathers CXX C)
 
 # main sources and headers
 set(HEADER_DIRECTORY "include")
 set(SOURCE_DIRECTORY "source")
+set(GENERATED_SOURCE_DIRECTORY "source/generated")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,7 +18,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG_LAYERS")
 
-file(GLOB_RECURSE SOURCES_FILE "${SOURCE_DIRECTORY}/*.cpp")
+file(GLOB_RECURSE SOURCES_FILE "${SOURCE_DIRECTORY}/*.cpp" "${GENERATED_SOURCE_DIRECTORY}/*.c")
 file(GLOB_RECURSE HEADERS_FILE "${HEADER_DIRECTORY}/*.hpp")
 
 find_package(Vulkan REQUIRED)

@@ -33,6 +33,7 @@ namespace protocol
     void bindCompositor(struct wl_client *client, uint32_t version, uint32_t id);
     void bindSeat(struct wl_client *client, uint32_t version, uint32_t id);
     void bindShell(struct wl_client *client, uint32_t version, uint32_t id);
+    void bindXDGShell(struct wl_client *client, uint32_t version, uint32_t id);
     void bindShm(struct wl_client *client, uint32_t version, uint32_t id);
     void addProtocolLogger(wl_protocol_logger_func_t func, void *user_data);
     void eventDispatch(int32_t timeout);

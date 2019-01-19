@@ -33,7 +33,7 @@ namespace protocol
     ShellSurface(Surface *, wm::WindowTree *);
 
     void commit();
-    void destroy();
+    void surfaceDestroyed();
 
     // wl interface functions
     void pong(struct wl_client *client,

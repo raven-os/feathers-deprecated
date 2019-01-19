@@ -6,6 +6,7 @@
 namespace protocol
 {
   class ShellSurface;
+  class XDGSurface;
 
   class Surface
   {
@@ -21,9 +22,9 @@ namespace protocol
       }
 
       void commit();
-      void destroy();
+      void surfaceDestroyed();
     };
-    std::variant<NoRole, ShellSurface *> role{NoRole{}};
+    std::variant<NoRole, ShellSurface *, XDGSurface *> role{NoRole{}};
   public:
     class Taken{};
 
