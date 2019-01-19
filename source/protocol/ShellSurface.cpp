@@ -10,7 +10,6 @@ namespace protocol
   ShellSurface::ShellSurface(Surface *surface, wm::WindowTree *windowTree)
     : surface(surface)
     , windowTree(windowTree)
-    , resource(nullptr)
   {
     this->surface->setRole(this);
   }
@@ -30,9 +29,12 @@ namespace protocol
 
     std::visit([&](auto &containerData)
 	       {
-		 containerData.childResources.erase(std::remove(containerData.childResources.begin(),
-								containerData.childResources.end(),
-								resource)); // TODO: refactor into clean function
+		 containerData.childResources.erase(std::remove_if(containerData.childResources.begin(),
+								   containerData.childResources.end(),
+								   [this](wl_resource *resource) noexcept
+								   {
+								     return wl_resource_get_user_data(resource) == this;
+								   })); // TODO: refactor into clean function
 	       }, std::get<wm::Container>(parentData.data).data);
     parentData.recalculateChildren(parentIndex, *windowTree);
   }
@@ -65,8 +67,7 @@ namespace protocol
     auto parentIndex(windowTree->getRootIndex());
 
     windowNodeIndex = windowTree->addChild(parentIndex);
-    this->resource = resource;
-
+    
     auto &data(windowTree->getData(windowNodeIndex));
     auto &parentData(windowTree->getData(parentIndex));
 
