@@ -9,7 +9,10 @@
 #include "protocol/InstantiateImplementation.hpp"
 #include "protocol/Surface.hpp"
 #include "protocol/ShellSurface.hpp"
+#include "protocol/XDGShell.hpp"
 #include "protocol/ShmPool.hpp"
+
+#include "generated/xdg-shell-unstable-v6-server-protocol.h"
 
 namespace protocol
 {
@@ -31,10 +34,12 @@ namespace protocol
   {
     wl_global_create(wlDisplay, &wl_compositor_interface, 1, this,
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
-    wl_global_create(wlDisplay, &wl_shell_interface, 1, this,
-    		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShell>());
-    // wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
-    // 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindSeat>());
+    // wl_global_create(wlDisplay, &wl_shell_interface, 1, this,
+    // 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShell>());
+    wl_global_create(wlDisplay, &zxdg_shell_v6_interface, 1, this,
+    		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindXDGShell>());
+    wl_global_create(wlDisplay, &wl_seat_interface, 1, this,
+    		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindSeat>());
     wl_global_create(wlDisplay, &wl_shm_interface, 1, this,
     		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindShm>());
     notify = [](auto *that, void *data) {
@@ -141,6 +146,20 @@ namespace protocol
     instantiateImplementation(client, version, id,  wl_shell_interface,  &shell_implementation, this, [](wl_resource *)
 			      {
 				printf("Destroying shell!\n"); // todo ?
+			      });
+  }
+
+  void WaylandServerProtocol::bindXDGShell(struct wl_client *client, uint32_t version, uint32_t id)
+  {
+    static auto shell_implementation(createImplementation<struct zxdg_shell_v6_interface,
+				     &XDGShell::destroy,
+				     &XDGShell::create_positioner,
+				     &XDGShell::get_xdg_surface,
+				     &XDGShell::pong>());
+
+    instantiateImplementation(client, version, id, zxdg_shell_v6_interface,  &shell_implementation, new XDGShell(windowTree), [](wl_resource *resource)
+			      {
+				delete static_cast<XDGShell *>(wl_resource_get_user_data(resource));
 			      });
   }
 

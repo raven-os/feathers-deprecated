@@ -11,6 +11,7 @@
 namespace protocol
 {
   class ShellSurface;
+  class XDGSurface;
 }
 
 namespace wm
@@ -23,7 +24,7 @@ namespace wm
 
   struct ClientData
   {
-    std::variant<protocol::ShellSurface *> data;
+    std::variant<protocol::ShellSurface *, protocol::XDGSurface *> data;
   };
 
   struct Container

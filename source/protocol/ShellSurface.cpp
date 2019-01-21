@@ -19,7 +19,7 @@ namespace protocol
     std::puts("commiting shell surface!");
   }
 
-  void ShellSurface::destroy()
+  void ShellSurface::surfaceDestroyed()
   {
     auto parentIndex(windowTree->getParent(windowNodeIndex));
 

@@ -2,6 +2,7 @@
 #include "wm/WindowTree.hpp"
 
 #include <wayland-server.h>
+#include "generated/xdg-shell-unstable-v6-server-protocol.h"
 
 namespace wm
 {
@@ -20,7 +21,23 @@ namespace wm
 	childData.rect.size[direction] = uint16_t(nextX - x);
 	childData.rect.position[!direction] = windowData.rect.position[!direction];
 	childData.rect.size[!direction] = windowData.rect.size[!direction];
-	wl_shell_surface_send_configure(childResource, 0, childData.rect.size[0], childData.rect.size[1]);
+
+	try
+	  {
+	    auto const &childSurfaceData(std::get<ClientData>(childData.data));
+	    if (std::holds_alternative<protocol::ShellSurface *>(childSurfaceData.data))
+	      wl_shell_surface_send_configure(childResource, 0, childData.rect.size[0], childData.rect.size[1]);
+	    else
+	      {
+		struct wl_array states;
+
+		wl_array_init(&states);
+		*reinterpret_cast<uint32_t *>(wl_array_add(&states, sizeof(uint32_t))) = ZXDG_TOPLEVEL_V6_STATE_RESIZING;
+		zxdg_toplevel_v6_send_configure(childResource, childData.rect.size[0], childData.rect.size[1], &states);
+	      }
+	  }
+	catch (std::bad_variant_access const &)
+	  {}
 	++childIndexIt;
       }
   }

@@ -1,5 +1,6 @@
 #include "protocol/Surface.hpp"
 #include "protocol/ShellSurface.hpp"
+#include "protocol/XDGSurface.hpp"
 #include "wm/WindowTree.hpp"
 
 namespace protocol
@@ -9,7 +10,7 @@ namespace protocol
   {
     std::visit([](auto role)
 	       {
-		 role->destroy();
+		 role->surfaceDestroyed();
 	       }, role);
   }
 
@@ -86,7 +87,7 @@ namespace protocol
   {
   }
 
-  void Surface::NoRole::destroy()
+  void Surface::NoRole::surfaceDestroyed()
   {
   }
 }
