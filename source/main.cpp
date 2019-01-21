@@ -1,6 +1,7 @@
 #include "display/WaylandSurface.hpp"
 #include "display/Display.hpp"
 #include "display/KernelDisplay.hpp"
+#include "evdev-client/EvdevClient.hpp"
 #include "Exception.hpp"
 #include "protocol/WaylandServerProtocol.hpp"
 #include "Args.hpp"
@@ -176,10 +177,14 @@ int main(int argc, char **argv)
 
 	  kernelDisplay.getModeSetter().bindWaylandDisplay(serverProtocol.getWaylandDisplay());
 
+	  EvdevClient evdevClient;
+
+	  evdevClient.initClient();
 	  for (;;)
 	    {
 	      kernelDisplay.render(serverProtocol.getWindowTree());
 	      serverProtocol.eventDispatch(0);
+	      evdevClient.tick();
 	    }
 	}
       catch (ModeSettingError const& e)
