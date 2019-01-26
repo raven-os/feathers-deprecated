@@ -44,7 +44,19 @@ namespace protocol
 								   })); // TODO: refactor into clean function
 	       }, std::get<wm::Container>(parentData.data).data);
     parentData.recalculateChildren(parentIndex, *windowTree);
-  }  
+  }
+  
+  void XDGSurface::sendConfigure(wl_resource *resource, wm::Rect const &rect)
+  {
+    struct wl_array states;
+
+    wl_array_init(&states);
+    *reinterpret_cast<uint32_t *>(wl_array_add(&states, sizeof(uint32_t))) = ZXDG_TOPLEVEL_V6_STATE_RESIZING;
+    zxdg_toplevel_v6_send_configure(topLevelResource, rect.size[0], rect.size[1], &states);
+    zxdg_surface_v6_send_configure(resource, 0);
+    std::cout << "send configure" << std::endl;
+  }
+
 
   /**
    * destroy the xdg_surface
@@ -96,7 +108,7 @@ namespace protocol
 					&XDGTopLevel::unset_fullscreen,
 					&XDGTopLevel::set_minimized>());
 
-    wl_resource *topLevelResource =
+    topLevelResource =
       instantiateImplementation(client, 1, id, zxdg_toplevel_v6_interface,  &toplevel_implementation, new XDGTopLevel(),
 				[](wl_resource *resource)
 				{
@@ -105,7 +117,7 @@ namespace protocol
 
     std::visit([&](auto &containerData)
 	       {
-		 containerData.childResources.emplace_back(topLevelResource); // TODO: refactor into clean function
+		 containerData.childResources.emplace_back(resource); // TODO: refactor into clean function
 	       }, std::get<wm::Container>(parentData.data).data);
     parentData.recalculateChildren(parentIndex, *windowTree);
   }
@@ -195,5 +207,6 @@ namespace protocol
 				 struct wl_resource *resource,
 				 uint32_t serial)
   {
+    std::cout << "configure acknowledged" << std::endl;
   }
 }

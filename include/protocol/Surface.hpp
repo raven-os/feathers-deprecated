@@ -3,6 +3,11 @@
 #include <wayland-server.h>
 #include <variant>
 
+namespace display
+{
+  class Renderer;
+};
+
 namespace protocol
 {
   class ShellSurface;
@@ -25,10 +30,11 @@ namespace protocol
       void surfaceDestroyed();
     };
     std::variant<NoRole, ShellSurface *, XDGSurface *> role{NoRole{}};
+    display::Renderer *renderer;
   public:
     class Taken{};
 
-    Surface() = default;
+    Surface(display::Renderer *renderer) noexcept;
     Surface(Surface const &) = delete;
     Surface(Surface &&) = delete;
 

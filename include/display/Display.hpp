@@ -44,7 +44,10 @@ namespace display
    
     magma::Device<> device;
     magma::Semaphore<> imageAvailable;
+  public:
     magma::DisplaySystem<Renderer, SwapchainUserData, FrameData> displaySystem;
+
+  private:
 
     Subcompositor(std::pair<vk::PhysicalDevice, Score> const &selectedResult, magma::Surface<claws::no_delete> surface)
       : device([this, &selectedResult, surface](){
@@ -127,6 +130,16 @@ namespace display
     Display(Display &&) = delete;
     Display operator=(Display const &) = delete;
     Display operator=(Display &&) = delete;
+
+    Renderer &getRenderer() noexcept
+    {
+      return renderer.displaySystem.userData;
+    }
+
+    Renderer const &getRenderer() const noexcept
+    {
+      return renderer.displaySystem.userData;
+    }
 
     void render(wm::WindowTree const &windowTree)
     {

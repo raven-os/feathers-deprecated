@@ -54,7 +54,6 @@ static void help(std::string const &name)
 
 int main(int argc, char **argv)
 {
-  protocol::WaylandServerProtocol serverProtocol;
   struct Args args;
 
   while (1)
@@ -62,13 +61,13 @@ int main(int argc, char **argv)
       static constexpr int const DUMP_PROTOCOL = 256;
       constexpr struct option long_options[] =
         {
-	  {"help", no_argument, 0, 'h'},
-	  {"tty", no_argument, 0, 'T'},
-	  {"sub-compositor", no_argument, 0, 'E'},
-	  {"client-socket", required_argument, 0, 'c'},
-	  {"socket", required_argument, 0, 's'},
-	  {"dump-protocol", no_argument, 0, DUMP_PROTOCOL},
-	  {0, 0, 0, 0}
+	 {"help", no_argument, 0, 'h'},
+	 {"tty", no_argument, 0, 'T'},
+	 {"sub-compositor", no_argument, 0, 'E'},
+	 {"client-socket", required_argument, 0, 'c'},
+	 {"socket", required_argument, 0, 's'},
+	 {"dump-protocol", no_argument, 0, DUMP_PROTOCOL},
+	 {0, 0, 0, 0}
 	};
       int option_index = 0;
       int c = getopt_long (argc, argv, "hTEc:s:",
@@ -139,32 +138,36 @@ int main(int argc, char **argv)
       puts("Mode's not set");
       return -1;
     }
-
-  for (auto const &str : args.clientSocketsNames)
-    {
-      printf("AddSocket method with name '%s' was %s\n",
-	     str.c_str(), serverProtocol.addSocket(str) ?
-	     "unsuccessful" : "successful");
-      serverProtocol.eventDispatch(0);
-    }
-  if (args.dumpProtocol)
-    {
-      serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>(debug_server_protocol),
-				       nullptr);
-      serverProtocol.eventDispatch(0);
-    }
+  auto processServerProtocolArgs([&](protocol::WaylandServerProtocol &serverProtocol)
+				 {
+				   if (args.dumpProtocol)
+				     {
+				       serverProtocol.addProtocolLogger(static_cast<wl_protocol_logger_func_t>(debug_server_protocol),
+									nullptr);
+				       serverProtocol.eventDispatch(0);
+				     }
+				   for (auto const &str : args.clientSocketsNames)
+				     {
+				       printf("AddSocket method with name '%s' was %s\n",
+					      str.c_str(), serverProtocol.addSocket(str) ?
+					      "unsuccessful" : "successful");
+				       serverProtocol.eventDispatch(0);
+				     }
+				 });
 
   if (args.mode)
     {
       printf("Attempting to connect to server with socket '%s'\n", args.socketName.c_str());
       display::WaylandSurface waylandSurface(args.socketName);
       display::Display display(waylandSurface);
+      protocol::WaylandServerProtocol serverProtocol(display.getRenderer());
+      processServerProtocolArgs(serverProtocol);
 
       while (waylandSurface.isRunning())
 	{
 	  display.render(serverProtocol.getWindowTree());
-	  waylandSurface.dispatch();
 	  serverProtocol.eventDispatch(0);
+	  waylandSurface.dispatch();
 	}
     }
   else
@@ -173,7 +176,9 @@ int main(int argc, char **argv)
       try
 	{
 	  display::KernelDisplay kernelDisplay;
+	  protocol::WaylandServerProtocol serverProtocol(kernelDisplay.getRenderer());
 
+	  processServerProtocolArgs(serverProtocol);
 	  kernelDisplay.getModeSetter().bindWaylandDisplay(serverProtocol.getWaylandDisplay());
 
 	  for (;;)

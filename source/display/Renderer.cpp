@@ -64,85 +64,26 @@ namespace display
 				   0.0f,
 				   vk::BorderColor::eIntOpaqueWhite,
 				   false))
+    , device(device)
   {
     {
+      vk::DescriptorImageInfo const samplerInfo
+	{
+	 sampler,
+	 nullptr,
+	 vk::ImageLayout::eShaderReadOnlyOptimal
+	};
+      device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 0, 0, 1, vk::DescriptorType::eSampler, &samplerInfo, nullptr, nullptr}});
+    }
+    { // upload background image
       {
 	magma::DynamicBuffer::RangeId tmpBuffer(stagingBuffer.allocate(display::superCorbeau::width * display::superCorbeau::height * 4));
 	auto memory(stagingBuffer.getMemory<unsigned char []>(tmpBuffer));
 	auto src(display::superCorbeau::header_data);
+
 	for (unsigned int i(0u); i < display::superCorbeau::width * display::superCorbeau::height; ++i)
 	  display::superCorbeau::headerPixel(src, &memory[i * 4]);
-	auto commandBuffers(commandPool.allocatePrimaryCommandBuffers(1));
-	commandBuffers[0].begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-	vk::ImageSubresourceRange imageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
-
-	commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, {}, {},
-						{
-						  vk::ImageMemoryBarrier{
-						    {},
-						      vk::AccessFlagBits::eTransferWrite,
-							vk::ImageLayout::eUndefined,
-							vk::ImageLayout::eTransferDstOptimal,
-							VK_QUEUE_FAMILY_IGNORED,
-							VK_QUEUE_FAMILY_IGNORED,
-							backgroundImage,
-							imageSubresourceRange
-							}
-						});
-	commandBuffers[0].raw().copyBufferToImage(stagingBuffer.getBuffer(tmpBuffer),
-						  backgroundImage,
-						  vk::ImageLayout::eTransferDstOptimal,
-						  {
-						    vk::BufferImageCopy{
-						      tmpBuffer.second,
-							0, 0,
-							vk::ImageSubresourceLayers{vk::ImageAspectFlagBits::eColor, 0, 0, 1},
-							vk::Offset3D{0, 0, 0},
-							  vk::Extent3D{display::superCorbeau::width, display::superCorbeau::height, 1}
-						    }
-						  });
-	;
-	commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {},
-						{
-						  vk::ImageMemoryBarrier{
-						    vk::AccessFlagBits::eTransferWrite,
-						      vk::AccessFlagBits::eShaderRead,
-						      vk::ImageLayout::eTransferDstOptimal,
-						      vk::ImageLayout::eShaderReadOnlyOptimal,
-						      VK_QUEUE_FAMILY_IGNORED,
-						      VK_QUEUE_FAMILY_IGNORED,
-						      backgroundImage,
-						      imageSubresourceRange
-						      }
-						});
-
-	commandBuffers[0].end();
-	magma::Fence<> fence(device.createFence({}));
-	queue.submit(magma::StructBuilder<vk::SubmitInfo>::make(magma::EmptyList(),
-								nullptr,
-								magma::asListRef(commandBuffers[0].raw()),
-								magma::EmptyList()),
-		     fence);
-	device.waitForFences({fence}, true, 1000000000);
-      }
-
-      {
-	vk::DescriptorImageInfo const imageInfo
-	{
-	  sampler,
-	    nullptr,
-	    vk::ImageLayout::eShaderReadOnlyOptimal
-	    };
-	device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 0, 0, 1, vk::DescriptorType::eSampler, &imageInfo, nullptr, nullptr}});
-      }
-      {
-	vk::DescriptorImageInfo const imageInfo
-	{
-	  nullptr,
-	    backgroundImageView,
-	    vk::ImageLayout::eShaderReadOnlyOptimal
-	    };
-	device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 1, 0, 1, vk::DescriptorType::eSampledImage, &imageInfo, nullptr, nullptr}});
+	uploadBuffer(tmpBuffer, backgroundImage);
       }
     }
     {
@@ -156,10 +97,66 @@ namespace display
     }
   }
 
+  void Renderer::uploadBuffer(magma::DynamicBuffer::RangeId bufferRange, magma::Image<claws::no_delete> image)
+  {
+    magma::Fence<> fence(device.createFence({}));
+    vk::ImageSubresourceRange const imageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
+    auto commandBuffers(commandPool.allocatePrimaryCommandBuffers(1));
+    commandBuffers[0].begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+    commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, {}, {},
+					    {
+					     vk::ImageMemoryBarrier{
+								    {},
+								    vk::AccessFlagBits::eTransferWrite,
+								    vk::ImageLayout::eUndefined,
+								    vk::ImageLayout::eTransferDstOptimal,
+								    VK_QUEUE_FAMILY_IGNORED,
+								    VK_QUEUE_FAMILY_IGNORED,
+								    image,
+								    imageSubresourceRange
+					     }
+					    });
+    commandBuffers[0].raw().copyBufferToImage(stagingBuffer.getBuffer(bufferRange),
+					      image,
+					      vk::ImageLayout::eTransferDstOptimal,
+					      {
+						vk::BufferImageCopy{
+						  bufferRange.second,
+						    0, 0,
+						    vk::ImageSubresourceLayers{vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+						    vk::Offset3D{0, 0, 0},
+						      vk::Extent3D{display::superCorbeau::width, display::superCorbeau::height, 1}
+						}
+					      });
+    commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {},
+					    {
+					     vk::ImageMemoryBarrier{
+								    vk::AccessFlagBits::eTransferWrite,
+								    vk::AccessFlagBits::eShaderRead,
+								    vk::ImageLayout::eTransferDstOptimal,
+								    vk::ImageLayout::eShaderReadOnlyOptimal,
+								    VK_QUEUE_FAMILY_IGNORED,
+								    VK_QUEUE_FAMILY_IGNORED,
+								    image,
+								    imageSubresourceRange
+					     }
+					    });
+
+    commandBuffers[0].end();
+    queue.submit(magma::StructBuilder<vk::SubmitInfo>::make(magma::EmptyList(),
+							    nullptr,
+							    magma::asListRef(commandBuffers[0].raw()),
+							    magma::EmptyList()),
+		 fence);
+    device.waitForFences({magma::Fence<claws::no_delete>{fence}}, true, 1000000000);
+  }
+
   uint32_t Renderer::prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree)
   {
     std::vector<float> vertexData{};
     std::vector<uint32_t> indexData{};
+    //    std::vector<magma::Image<NoDelete>> imageIndexData{};
 
     vertexData.reserve(windowTree.getWindowCountUpperBound() * 5 * 4);
     indexData.reserve(windowTree.getWindowCountUpperBound() * 6);
@@ -222,6 +219,7 @@ namespace display
 
       std::copy(indexData.begin(), indexData.end(), &gpuBufferRange[0]);
     }
+
     return windowCount;
   }
 
@@ -233,12 +231,12 @@ namespace display
     device.waitForFences({frame.fence}, true, 1000000000);
     // reset fence
     device.resetFences({frame.fence});
-    uint32_t const vertexCount(prepareGpuData(frame, windowTree) * 6);
+    uint32_t windowCount(prepareGpuData(frame, windowTree));
     magma::PrimaryCommandBuffer cmdBuffer(swapchainUserData.commandBuffers[index]);
 
     // being command recording
     cmdBuffer.begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-    if (vertexCount)
+    if (windowCount)
       {
 	// we bind our vertex buffer range
 	cmdBuffer.bindVertexBuffers(0, {vertexBuffer.getBuffer(frame.vertexBufferRangeId)}, {frame.vertexBufferRangeId.second});
@@ -251,6 +249,16 @@ namespace display
       vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f}),
 	vk::ClearDepthStencilValue(1.0f, 0),
 	}; // a nice recognisable green for debug
+    { // upload our descriptor sets
+      vk::DescriptorImageInfo const imageInfo
+	{
+	 nullptr,
+	 backgroundImageView,
+	 vk::ImageLayout::eShaderReadOnlyOptimal
+	};
+      device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 1, 0, 1, vk::DescriptorType::eSampledImage, &imageInfo, nullptr, nullptr}});
+    }
+
     {
       // start the renderpass
       auto lock(cmdBuffer.beginRenderPass(swapchainUserData.renderPass, frame.framebuffer,
@@ -259,10 +267,17 @@ namespace display
       // us our pipeline
       lock.bindGraphicsPipeline(swapchainUserData.pipeline);
 
-      
-      // draw our quad
-      if (vertexCount)
-	lock.drawIndexed(vertexCount, 1, 0, 0, 0);
+      constexpr uint32_t const windowBatchSize(1u);
+
+      while (windowCount)
+	{
+	  uint32_t batchWindowCount(std::min(windowCount, windowBatchSize));
+	  uint32_t const vertexCount(batchWindowCount * 6);
+
+	  // draw our quads
+	  lock.drawIndexed(vertexCount, 1, 0, 0, 0);
+	  windowCount -= batchWindowCount;
+	}
     }
     cmdBuffer.end();
 
@@ -328,7 +343,7 @@ namespace display
     auto viewportStateCreateInfo(magma::StructBuilder<vk::PipelineViewportStateCreateInfo, true>::make(magma::asListRef(viewport),
 												       magma::asListRef(scissor)));
 
-    // We want to benefit from earl depth test
+    // We want to benefit from early depth test
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{
       {},
 	false,                            // VkBool32                                       depthClampEnable

@@ -25,12 +25,13 @@ namespace protocol
       };
   }
 
-  WaylandServerProtocol::WaylandServerProtocol()
+  WaylandServerProtocol::WaylandServerProtocol(display::Renderer &renderer)
     : wl_listener(),
       wlDisplay(wl_display_create()),
       wlEventLoop(wl_display_get_event_loop(wlDisplay)),
       wlProtocolLogger(nullptr),
-      windowTree(wm::WindowData{{{{0, 0}}, {{1920, 1080}}}, true, wm::Container{wm::Tilling{}}})
+      windowTree(wm::WindowData{{{{0, 0}}, {{1920, 1080}}}, true, wm::Container{wm::Tilling{}}}),
+      renderer(renderer)
   {
     wl_global_create(wlDisplay, &wl_compositor_interface, 1, this,
 		     convertToWlGlobalBindFunc<&WaylandServerProtocol::bindCompositor>());
@@ -80,7 +81,7 @@ namespace protocol
 				       &Surface::set_buffer_scale,
 				       &Surface::damage_buffer>());
 
-    instantiateImplementation(client, 1, id, wl_surface_interface, &surface_implementation, new Surface(), [](wl_resource *resource)
+    instantiateImplementation(client, 1, id, wl_surface_interface, &surface_implementation, new Surface(&renderer), [](wl_resource *resource)
 			      {
 				delete static_cast<Surface *>(wl_resource_get_user_data(resource));
 			      });

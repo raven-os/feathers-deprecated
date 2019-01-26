@@ -63,7 +63,9 @@ namespace display
     magma::Device<> device;
     magma::Semaphore<> imageAvailable;
     magma::Fence<> fence;
+  public:
     Renderer renderer;
+  private:
     SwapchainUserData swapchainUserData;
     static constexpr uint32_t imageCount{2u};
     unsigned int frameIndex{0u};
@@ -212,6 +214,16 @@ namespace display
     KernelDisplay operator=(KernelDisplay &&) = delete;
 
     modeset::ModeSetter const& getModeSetter() const noexcept;
+
+    Renderer &getRenderer() noexcept
+    {
+      return renderer.renderer;
+    }
+
+    Renderer const &getRenderer() const noexcept
+    {
+      return renderer.renderer;
+    }
 
     void render(wm::WindowTree const &windowTree)
     {

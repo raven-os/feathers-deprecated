@@ -4,6 +4,11 @@
 #include <wayland-server.h>
 #include "generated/xdg-shell-unstable-v6-server-protocol.h"
 
+#include "protocol/ShellSurface.hpp"
+#include "protocol/XDGSurface.hpp"
+
+#include <iostream>
+
 namespace wm
 {
   void Tilling::recalculateChildren(WindowNodeIndex index, WindowTree &windowTree, WindowData const &windowData)
@@ -25,16 +30,10 @@ namespace wm
 	try
 	  {
 	    auto const &childSurfaceData(std::get<ClientData>(childData.data));
-	    if (std::holds_alternative<protocol::ShellSurface *>(childSurfaceData.data))
-	      wl_shell_surface_send_configure(childResource, 0, childData.rect.size[0], childData.rect.size[1]);
-	    else
-	      {
-		struct wl_array states;
-
-		wl_array_init(&states);
-		*reinterpret_cast<uint32_t *>(wl_array_add(&states, sizeof(uint32_t))) = ZXDG_TOPLEVEL_V6_STATE_RESIZING;
-		zxdg_toplevel_v6_send_configure(childResource, childData.rect.size[0], childData.rect.size[1], &states);
-	      }
+	    std::visit([&](auto &surface)
+		       {
+			 surface->sendConfigure(childResource, childData.rect);
+		       }, childSurfaceData.data);
 	  }
 	catch (std::bad_variant_access const &)
 	  {}

@@ -9,10 +9,10 @@
 
 namespace
 {
-  void *mapData(int fd, int size)
+  char *mapData(int fd, int size)
   {
-    return mmap(nullptr, size, PROT_READ, MAP_SHARED,
-		fd, 0);
+    return static_cast<char *>(mmap(nullptr, size, PROT_READ, MAP_SHARED,
+				    fd, 0));
   }
 }
 
@@ -37,7 +37,7 @@ namespace protocol
 			      uint32_t id, int offset, int width, int height, int stride, uint32_t format)
   {
     assert(data);
-    assert(offset + stride * height < data->size); // TODO: check format and post error 0 or 1
+    assert(offset + stride * height <= data->size); // TODO: check format and post error 0 or 1
     static auto buffer_implementation(createImplementation<struct wl_buffer_interface,
 				      &Buffer::destroy>());
 

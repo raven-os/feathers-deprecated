@@ -9,6 +9,7 @@
 namespace wm
 {
   class WindowTree;
+  class Rect;
 };
 
 namespace protocol
@@ -20,6 +21,7 @@ namespace protocol
     Surface * const surface;
     wm::WindowTree * const windowTree;
     wm::WindowNodeIndex windowNodeIndex{wm::nullNode};
+    wl_resource *topLevelResource{nullptr};
     std::string title;
     std::string class_;
     int32_t width;
@@ -34,6 +36,7 @@ namespace protocol
 
     void commit();
     void surfaceDestroyed();
+    void sendConfigure(wl_resource *resource, wm::Rect const &rect);
 
     /**
      * destroy the xdg_surface

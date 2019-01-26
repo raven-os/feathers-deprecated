@@ -9,6 +9,7 @@
 namespace wm
 {
   class WindowTree;
+  class Rect;
 };
 
 namespace protocol
@@ -34,6 +35,7 @@ namespace protocol
 
     void commit();
     void surfaceDestroyed();
+    void sendConfigure(wl_resource *resource, wm::Rect const &rect);
 
     // wl interface functions
     void pong(struct wl_client *client,

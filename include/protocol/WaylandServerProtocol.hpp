@@ -1,5 +1,6 @@
 #include <wayland-server.h>
 #include "wm/WindowTree.hpp"
+#include "display/Renderer.hpp"
 
 namespace protocol
 {
@@ -10,9 +11,10 @@ namespace protocol
     struct wl_event_loop *wlEventLoop;
     struct wl_protocol_logger *wlProtocolLogger;
     wm::WindowTree windowTree;
+    display::Renderer &renderer;
   public:
     
-    WaylandServerProtocol();
+    WaylandServerProtocol(display::Renderer &renderer);
     WaylandServerProtocol(WaylandServerProtocol const &) = delete;
     WaylandServerProtocol(WaylandServerProtocol &&) = delete;
     WaylandServerProtocol operator=(WaylandServerProtocol const &) = delete;

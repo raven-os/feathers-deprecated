@@ -11,9 +11,9 @@ namespace protocol
   public:
     struct Data
     {
-      void *data;
+      char *data;
       int size;
-
+      
       ~Data() noexcept;
     };
 

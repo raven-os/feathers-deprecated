@@ -51,18 +51,35 @@ namespace display
     magma::DynamicBuffer stagingBuffer;
     magma::DynamicBuffer vertexBuffer;
     magma::Sampler<> sampler;
+    magma::Device<claws::no_delete> device;
 
     Renderer(magma::Device<claws::no_delete> device, vk::PhysicalDevice physicalDevice, uint32_t selectedQueueFamily);
  
     ~Renderer() = default;
 
     magma::Semaphore<claws::no_delete> render(magma::Device<claws::no_delete> device, wm::WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable);
+    void uploadBuffer(magma::DynamicBuffer::RangeId buffer, magma::Image<claws::no_delete> image);
     uint32_t prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree);
 
 
     vk::Extent2D getExtent() const noexcept
     {
       return vk::Extent2D{1920, 1080};
+    }
+
+    magma::DynamicBuffer &getStagingBuffer() noexcept
+    {
+      return stagingBuffer;
+    }
+
+    magma::Device<claws::no_delete> getDevice() const noexcept
+    {
+      return device;
+    }
+
+    vk::PhysicalDevice getPhysicalDevice() const noexcept
+    {
+      return physicalDevice;
     }
   };
 
@@ -183,6 +200,5 @@ namespace display
       : FrameData(device, magma::Swapchain<claws::no_delete>(swapchain), renderer, swapchainUserData, swapchainImageView)
     {
     }
-	 
   };
 }

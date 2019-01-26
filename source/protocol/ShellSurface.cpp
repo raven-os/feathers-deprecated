@@ -39,6 +39,12 @@ namespace protocol
     parentData.recalculateChildren(parentIndex, *windowTree);
   }
 
+  void ShellSurface::sendConfigure(wl_resource *resource, wm::Rect const &rect)
+  {
+    wl_shell_surface_send_configure(resource, 0, rect.size[0], rect.size[1]);
+  }
+
+
   // wl interface functions
   void ShellSurface::pong([[maybe_unused]] struct wl_client *client,
 			  [[maybe_unused]] struct wl_resource *resource,

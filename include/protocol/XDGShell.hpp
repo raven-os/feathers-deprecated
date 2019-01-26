@@ -12,6 +12,7 @@ namespace protocol
   class XDGShell
   {
     wm::WindowTree &windowTree;
+    
   public:
     XDGShell(wm::WindowTree &windowTree);
     XDGShell(XDGShell const &) = delete;
