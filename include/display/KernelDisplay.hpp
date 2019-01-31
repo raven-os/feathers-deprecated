@@ -67,7 +67,7 @@ namespace display
     Renderer renderer;
   private:
     SwapchainUserData swapchainUserData;
-    static constexpr uint32_t imageCount{2u};
+    static constexpr uint32_t imageCount{1u};
     unsigned int frameIndex{0u};
     magma::CommandBufferGroup<magma::PrimaryCommandBuffer> commandBuffer;
 

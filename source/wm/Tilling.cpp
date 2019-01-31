@@ -4,8 +4,7 @@
 #include <wayland-server.h>
 #include "generated/xdg-shell-unstable-v6-server-protocol.h"
 
-#include "protocol/ShellSurface.hpp"
-#include "protocol/XDGSurface.hpp"
+#include "protocol/Surface.hpp"
 
 #include <iostream>
 
@@ -30,10 +29,8 @@ namespace wm
 	try
 	  {
 	    auto const &childSurfaceData(std::get<ClientData>(childData.data));
-	    std::visit([&](auto &surface)
-		       {
-			 surface->sendConfigure(childResource, childData.rect);
-		       }, childSurfaceData.data);
+
+	    childSurfaceData.surface->sendConfigure(childResource, childData.rect);
 	  }
 	catch (std::bad_variant_access const &)
 	  {}

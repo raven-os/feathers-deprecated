@@ -2,6 +2,7 @@
 #include "protocol/ShellSurface.hpp"
 #include "protocol/XDGSurface.hpp"
 #include "protocol/Buffer.hpp"
+#include "protocol/CreateImplementation.hpp"
 
 #include "magma/Buffer.hpp"
 #include "display/Renderer.hpp"
@@ -10,11 +11,40 @@
 
 #include <iostream>
 
+#include <wayland-server-protocol.h>
+
 namespace protocol
 {
   Surface::Surface(display::Renderer *renderer) noexcept
     : renderer(renderer)
   {
+  }
+  
+  Surface::~Surface() noexcept
+  {
+    std::visit([](auto role)
+	       {
+		 role->surfaceDestroyed();
+	       }, role);
+
+  }
+
+
+  void Surface::sendConfigure(wl_resource *resource, wm::Rect const &rect)
+  {
+    std::visit([&](auto role)
+	       {
+		 role->sendConfigure(resource, rect);
+	       }, role);
+  }
+
+  void Surface::sendFrame()
+  {
+    if (frameCallback)
+      {
+	wl_callback_send_done(frameCallback, 1);
+	frameCallback = nullptr;
+      }
   }
 
   void Surface::destroy([[maybe_unused]] struct wl_client *client,
@@ -24,6 +54,7 @@ namespace protocol
 	       {
 		 role->surfaceDestroyed();
 	       }, role);
+    role = NoRole{};
   }
 
   void Surface::attach([[maybe_unused]] struct wl_client *client,
@@ -49,6 +80,9 @@ namespace protocol
 		      [[maybe_unused]] uint32_t callback)
   {
     std::cout << "client requesting callback" << std::endl;
+    frameCallback = wl_resource_create(client, &wl_callback_interface, 1,
+					callback);
+
   }
 
   void Surface::set_opaque_region([[maybe_unused]] struct wl_client *client,
@@ -105,9 +139,15 @@ namespace protocol
 
   void Surface::NoRole::commit()
   {
+    assert(false);
   }
 
   void Surface::NoRole::surfaceDestroyed()
   {
+  }
+
+  void Surface::NoRole::sendConfigure(wl_resource *resource, wm::Rect const &rect)
+  {
+    assert(false);
   }
 }

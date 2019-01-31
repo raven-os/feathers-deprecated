@@ -27,6 +27,13 @@ namespace wm
   class WindowTree;
 }
 
+namespace protocol
+{
+  class Buffer;
+}
+
+struct wl_resource;
+
 namespace display
 {
 
@@ -37,14 +44,15 @@ namespace display
   {
     magma::CommandPool<> commandPool;
     magma::DescriptorSetLayout<> descriptorSetLayout;
+    magma::DescriptorSetLayout<> samplerDescriptorSetLayout;
     magma::PipelineLayout<> pipelineLayout;
     magma::ShaderModule<> vert;
     magma::ShaderModule<> frag;
     vk::PhysicalDevice physicalDevice;
     magma::Semaphore<> renderDone;
     vk::Queue queue;
-    magma::DescriptorPool<> descriptorPool;
-    magma::DescriptorSets<> descriptorSets;
+    magma::DescriptorPool<> samplerDescriptorPool;
+    magma::DescriptorSets<> samplerDescriptorSet;
     magma::DeviceMemory<> backgroundImageMemory;
     magma::Image<> backgroundImage;
     magma::ImageView<> backgroundImageView;
@@ -58,8 +66,8 @@ namespace display
     ~Renderer() = default;
 
     magma::Semaphore<claws::no_delete> render(magma::Device<claws::no_delete> device, wm::WindowTree const &windowTree, unsigned int index, SwapchainUserData &swapchainUserData, FrameData &frame, magma::Semaphore<claws::no_delete> imageAvailable);
-    void uploadBuffer(magma::DynamicBuffer::RangeId buffer, magma::Image<claws::no_delete> image);
-    uint32_t prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree);
+    void uploadBuffer(magma::DynamicBuffer::RangeId buffer, magma::Image<claws::no_delete> image, uint32_t width, uint32_t height);
+    std::vector<magma::ImageView<claws::no_delete>> prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree, std::vector<std::pair<struct wl_resource *, protocol::Buffer *>> &);
 
 
     vk::Extent2D getExtent() const noexcept
@@ -155,6 +163,10 @@ namespace display
     magma::Framebuffer<> framebuffer;
     magma::DynamicBuffer::RangeId vertexBufferRangeId{magma::DynamicBuffer::nullId};
     magma::DynamicBuffer::RangeId indexBufferRangeId{magma::DynamicBuffer::nullId};
+    uint32_t descriptorPoolSize;
+    magma::DescriptorPool<> descriptorPool;
+    std::vector<magma::DescriptorSets<>> descriptorSets;
+    std::vector<std::pair<struct wl_resource *, protocol::Buffer *>> buffersInUse;
 
     template<class Swapchain>
     FrameData(magma::Device<claws::no_delete> device,
@@ -189,6 +201,7 @@ namespace display
 					     swapchain.getExtent().width,
 					     swapchain.getExtent().height,
 					     1))
+      , descriptorPoolSize(0u)
     {
     }
 

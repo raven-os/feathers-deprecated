@@ -3,15 +3,11 @@
 #include <array>
 #include <variant>
 
-#include <magma/Image.hpp>
-#include <magma/DeviceMemory.hpp>
-
 #include "wm/Tilling.hpp"
 
 namespace protocol
 {
-  class ShellSurface;
-  class XDGSurface;
+  class Surface;
 }
 
 namespace wm
@@ -24,7 +20,7 @@ namespace wm
 
   struct ClientData
   {
-    std::variant<protocol::ShellSurface *, protocol::XDGSurface *> data;
+    protocol::Surface *surface;
   };
 
   struct Container

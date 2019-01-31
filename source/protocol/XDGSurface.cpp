@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdio>
+#include <algorithm>
 
 #include "protocol/XDGSurface.hpp"
 #include "protocol/XDGTopLevel.hpp"
@@ -32,8 +33,6 @@ namespace protocol
 
     windowTree->removeIndex(windowNodeIndex);
 
-    auto &parentData(windowTree->getData(parentIndex));
-
     std::visit([&](auto &containerData)
 	       {
 		 containerData.childResources.erase(std::remove_if(containerData.childResources.begin(),
@@ -42,8 +41,8 @@ namespace protocol
 								   {
 								     return wl_resource_get_user_data(resource) == this;
 								   })); // TODO: refactor into clean function
-	       }, std::get<wm::Container>(parentData.data).data);
-    parentData.recalculateChildren(parentIndex, *windowTree);
+	       }, std::get<wm::Container>(windowTree->getData(parentIndex).data).data);
+    windowTree->getData(parentIndex).recalculateChildren(parentIndex, *windowTree);
   }
   
   void XDGSurface::sendConfigure(wl_resource *resource, wm::Rect const &rect)
@@ -54,7 +53,6 @@ namespace protocol
     *reinterpret_cast<uint32_t *>(wl_array_add(&states, sizeof(uint32_t))) = ZXDG_TOPLEVEL_V6_STATE_RESIZING;
     zxdg_toplevel_v6_send_configure(topLevelResource, rect.size[0], rect.size[1], &states);
     zxdg_surface_v6_send_configure(resource, 0);
-    std::cout << "send configure" << std::endl;
   }
 
 
@@ -90,7 +88,7 @@ namespace protocol
     auto &parentData(windowTree->getData(parentIndex));
 
     data.isSolid = true;
-    data.data = wm::ClientData{this};
+    data.data = wm::ClientData{surface};
 
     static auto toplevel_implementation(createImplementation<struct zxdg_toplevel_v6_interface,
 					&XDGTopLevel::destroy,
@@ -207,6 +205,5 @@ namespace protocol
 				 struct wl_resource *resource,
 				 uint32_t serial)
   {
-    std::cout << "configure acknowledged" << std::endl;
   }
 }

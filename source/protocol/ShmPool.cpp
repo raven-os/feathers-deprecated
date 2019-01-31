@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <cassert>
 #include <cstring>
+#include <cstdio>
 
 namespace
 {
@@ -45,7 +46,13 @@ namespace protocol
 			      new Buffer{ShmBuffer{data, offset, width, height, stride, format}},
 			      [](wl_resource *resource)
 			      {
-				delete static_cast<Buffer *>(wl_resource_get_user_data(resource));
+				auto *buffer(static_cast<Buffer *>(wl_resource_get_user_data(resource)));
+				buffer->resource_gone = true;
+
+				if (!buffer->refCount)
+				  delete buffer;
+				else
+				  --buffer->refCount;
 			      });
 
   }

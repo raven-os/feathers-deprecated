@@ -41,7 +41,17 @@ namespace protocol
   {
   public:
     std::variant<ShmBuffer> data;
+    uint32_t refCount{0u};
+    bool resource_gone{false};
 
     void destroy(wl_client *, wl_resource *);
+
+    magma::ImageView<claws::no_delete> getImageView() const noexcept
+    {
+      return std::visit([](auto &data) noexcept -> magma::ImageView<claws::no_delete>
+			{
+			  return data.imageView;
+			}, data);
+    }
   };
 }

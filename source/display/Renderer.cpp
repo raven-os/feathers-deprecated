@@ -1,23 +1,25 @@
 #include "display/Renderer.hpp"
+
 #include "wm/WindowTree.hpp"
 
+#include "protocol/Surface.hpp"
+#include "protocol/Buffer.hpp"
+
 #include <claws/utils/lambda_utils.hpp>
+#include <cstdio>
 
 namespace display
 {
   Renderer::Renderer(magma::Device<claws::no_delete> device, vk::PhysicalDevice physicalDevice, uint32_t selectedQueueFamily)
     : commandPool(device.createCommandPool({vk::CommandPoolCreateFlagBits::eResetCommandBuffer}, selectedQueueFamily))
-    , descriptorSetLayout(device.createDescriptorSetLayout({
-	  vk::DescriptorSetLayoutBinding{0, vk::DescriptorType::eSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr
-	      },
-	    vk::DescriptorSetLayoutBinding{1, vk::DescriptorType::eSampledImage, 1, vk::ShaderStageFlagBits::eFragment, nullptr
-		}}))
-    , pipelineLayout(device.createPipelineLayout({}, {descriptorSetLayout}, {}))
+    , descriptorSetLayout(device.createDescriptorSetLayout({vk::DescriptorSetLayoutBinding{0, vk::DescriptorType::eSampledImage, 1, vk::ShaderStageFlagBits::eFragment, nullptr}}))
+    , samplerDescriptorSetLayout(device.createDescriptorSetLayout({vk::DescriptorSetLayoutBinding{0, vk::DescriptorType::eSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr}}))
+    , pipelineLayout(device.createPipelineLayout({}, {samplerDescriptorSetLayout, descriptorSetLayout}, {}))
     , physicalDevice(physicalDevice)
     , renderDone(device.createSemaphore())
     , queue(device.getQueue(selectedQueueFamily, 0u))
-    , descriptorPool(device.createDescriptorPool(1, {vk::DescriptorPoolSize{vk::DescriptorType::eSampler, 1}, vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage, 1}}))
-    , descriptorSets(descriptorPool.allocateDescriptorSets({descriptorSetLayout}))
+    , samplerDescriptorPool(device.createDescriptorPool(1, {vk::DescriptorPoolSize{vk::DescriptorType::eSampler, 1}}))
+    , samplerDescriptorSet(samplerDescriptorPool.allocateDescriptorSets({samplerDescriptorSetLayout}))
     , backgroundImageMemory()
     , backgroundImage([&](){
 	auto image(device.createImage2D({}, vk::Format::eR8G8B8A8Unorm, {display::superCorbeau::width, display::superCorbeau::height}, vk::SampleCountFlagBits::e1,
@@ -73,7 +75,7 @@ namespace display
 	 nullptr,
 	 vk::ImageLayout::eShaderReadOnlyOptimal
 	};
-      device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 0, 0, 1, vk::DescriptorType::eSampler, &samplerInfo, nullptr, nullptr}});
+      device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{samplerDescriptorSet[0], 0, 0, 1, vk::DescriptorType::eSampler, &samplerInfo, nullptr, nullptr}});
     }
     { // upload background image
       {
@@ -83,7 +85,7 @@ namespace display
 
 	for (unsigned int i(0u); i < display::superCorbeau::width * display::superCorbeau::height; ++i)
 	  display::superCorbeau::headerPixel(src, &memory[i * 4]);
-	uploadBuffer(tmpBuffer, backgroundImage);
+	uploadBuffer(tmpBuffer, backgroundImage, display::superCorbeau::width, display::superCorbeau::height);
       }
     }
     {
@@ -97,14 +99,21 @@ namespace display
     }
   }
 
-  void Renderer::uploadBuffer(magma::DynamicBuffer::RangeId bufferRange, magma::Image<claws::no_delete> image)
+  void Renderer::uploadBuffer(magma::DynamicBuffer::RangeId bufferRange, magma::Image<claws::no_delete> image, uint32_t width, uint32_t height)
   {
     magma::Fence<> fence(device.createFence({}));
     vk::ImageSubresourceRange const imageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
     auto commandBuffers(commandPool.allocatePrimaryCommandBuffers(1));
     commandBuffers[0].begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 
-    commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, {}, {},
+    commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe | vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, {},
+					    vk::BufferMemoryBarrier{vk::AccessFlagBits::eHostWrite,
+								      vk::AccessFlagBits::eTransferRead,
+								      VK_QUEUE_FAMILY_IGNORED,
+								      VK_QUEUE_FAMILY_IGNORED,
+								      stagingBuffer.getBuffer(bufferRange)
+								      },
+					    
 					    {
 					     vk::ImageMemoryBarrier{
 								    {},
@@ -117,6 +126,7 @@ namespace display
 								    imageSubresourceRange
 					     }
 					    });
+
     commandBuffers[0].raw().copyBufferToImage(stagingBuffer.getBuffer(bufferRange),
 					      image,
 					      vk::ImageLayout::eTransferDstOptimal,
@@ -126,7 +136,7 @@ namespace display
 						    0, 0,
 						    vk::ImageSubresourceLayers{vk::ImageAspectFlagBits::eColor, 0, 0, 1},
 						    vk::Offset3D{0, 0, 0},
-						      vk::Extent3D{display::superCorbeau::width, display::superCorbeau::height, 1}
+						      vk::Extent3D{width, height, 1}
 						}
 					      });
     commandBuffers[0].raw().pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, {}, {}, {},
@@ -151,19 +161,21 @@ namespace display
 		 fence);
     device.waitForFences({magma::Fence<claws::no_delete>{fence}}, true, 1000000000);
   }
-
-  uint32_t Renderer::prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree)
+  
+  std::vector<magma::ImageView<claws::no_delete>> Renderer::prepareGpuData(FrameData &frame, wm::WindowTree const &windowTree, std::vector<std::pair<struct wl_resource *, protocol::Buffer *>> &buffersInUseOut)
   {
     std::vector<float> vertexData{};
     std::vector<uint32_t> indexData{};
-    //    std::vector<magma::Image<NoDelete>> imageIndexData{};
+    std::vector<magma::ImageView<claws::no_delete>> imageViews{};
 
     vertexData.reserve(windowTree.getWindowCountUpperBound() * 5 * 4);
     indexData.reserve(windowTree.getWindowCountUpperBound() * 6);
+    imageViews.reserve(windowTree.getWindowCountUpperBound());
     auto vertexDataIt(std::back_inserter(vertexData));
     auto indexDataIt(std::back_inserter(indexData));
+    auto imageViewsIt(std::back_inserter(imageViews));
     uint32_t windowCount(0u);
-    auto display([this, &windowTree, &vertexDataIt, &indexDataIt, &windowCount](auto display, wm::WindowNodeIndex index, float minDepth, float range) -> void
+    auto display([&](auto display, wm::WindowNodeIndex index, float minDepth, float range) -> void
 		 {
 		   std::vector<wm::WindowNodeIndex> delayedRender;
 		   for (wm::WindowNodeIndex child : windowTree.getChildren(index))
@@ -171,25 +183,39 @@ namespace display
 		       display(child, minDepth + range * 0.5f, range * 0.4f);
 		     else
 		       delayedRender.push_back(child);
-		   if (windowTree.getData(index).isVisible())
-		     {
-		       wm::Rect const &rect(windowTree.getData(index).rect);
-		       for (uint32_t i(0u); i < 4u; ++i)
-			 {
-			   for (uint32_t j(0u); j < 2u; ++j)
-			     *vertexDataIt++ = float(rect.position[j] + rect.size[j] * ((i >> j) & 1u));
-			   *vertexDataIt++ =  minDepth + range;
-			   for (uint32_t j(0u); j < 2u; ++j)
-			     *vertexDataIt++ = float((i >> j) & 1u);
-			 }
-		       *indexDataIt++ = windowCount * 4 + 0;
-		       *indexDataIt++ = windowCount * 4 + 1;
-		       *indexDataIt++ = windowCount * 4 + 2;
-		       *indexDataIt++ = windowCount * 4 + 1;
-		       *indexDataIt++ = windowCount * 4 + 2;
-		       *indexDataIt++ = windowCount * 4 + 3;
-		       ++windowCount;
-		     }
+		   {
+		     auto &windowData(windowTree.getData(index));
+		     if (windowTree.getData(index).isVisible())
+		       {
+			 wm::Rect const &rect(windowTree.getData(index).rect);
+			 for (uint32_t i(0u); i < 4u; ++i)
+			   {
+			     for (uint32_t j(0u); j < 2u; ++j)
+			       *vertexDataIt++ = float(rect.position[j] + rect.size[j] * ((i >> j) & 1u));
+			     *vertexDataIt++ =  minDepth + range;
+			     for (uint32_t j(0u); j < 2u; ++j)
+			       *vertexDataIt++ = float((i >> j) & 1u);
+			   }
+			 *indexDataIt++ = windowCount * 4 + 0;
+			 *indexDataIt++ = windowCount * 4 + 1;
+			 *indexDataIt++ = windowCount * 4 + 2;
+			 *indexDataIt++ = windowCount * 4 + 1;
+			 *indexDataIt++ = windowCount * 4 + 2;
+			 *indexDataIt++ = windowCount * 4 + 3;
+			 if (wl_resource *buffer_resource = std::get<wm::ClientData>(windowData.data).surface->getBufferResource())
+			   {
+			     protocol::Buffer *buffer(static_cast<protocol::Buffer *>(wl_resource_get_user_data(buffer_resource)));
+						      
+			     *imageViewsIt++ = buffer->getImageView();
+			     ++buffer->refCount;
+			     buffersInUseOut.push_back({buffer_resource, buffer});
+			   }
+			 else
+			   *imageViewsIt++ = backgroundImageView;
+			 ++windowCount;
+		       }
+		   }
+		   
 		   float childRange(range * 0.5f / float(delayedRender.size()));
 		   float depth(minDepth);
 		   for (wm::WindowNodeIndex child : delayedRender)
@@ -205,7 +231,7 @@ namespace display
       {
 	frame.vertexBufferRangeId = magma::DynamicBuffer::nullId;
 	frame.indexBufferRangeId = magma::DynamicBuffer::nullId;
-	return windowCount;
+	return imageViews;
       }
     frame.vertexBufferRangeId = vertexBuffer.allocate(static_cast<uint32_t>(vertexData.size() * sizeof(float)));
     frame.indexBufferRangeId = vertexBuffer.allocate(static_cast<uint32_t>(indexData.size() * sizeof(uint32_t)));
@@ -219,8 +245,7 @@ namespace display
 
       std::copy(indexData.begin(), indexData.end(), &gpuBufferRange[0]);
     }
-
-    return windowCount;
+    return imageViews;
   }
 
 
@@ -231,7 +256,21 @@ namespace display
     device.waitForFences({frame.fence}, true, 1000000000);
     // reset fence
     device.resetFences({frame.fence});
-    uint32_t windowCount(prepareGpuData(frame, windowTree));
+    for (auto [buffer_resource, buffer] : frame.buffersInUse)
+      if (!buffer->refCount)
+	{
+	  delete buffer;
+	}
+      else
+	{
+	  --buffer->refCount;
+	  if (!buffer->resource_gone)
+	    wl_buffer_send_release(buffer_resource);
+	}
+    frame.buffersInUse.clear();
+    std::vector<magma::ImageView<claws::no_delete>> imageViews(prepareGpuData(frame, windowTree, frame.buffersInUse));
+    uint32_t windowCount(imageViews.size());
+    constexpr uint32_t const windowBatchSize(1u);
     magma::PrimaryCommandBuffer cmdBuffer(swapchainUserData.commandBuffers[index]);
 
     // being command recording
@@ -243,40 +282,54 @@ namespace display
 	// we bind our index buffer range
 	cmdBuffer.bindIndexBuffer(vertexBuffer.getBuffer(frame.indexBufferRangeId), frame.indexBufferRangeId.second, vk::IndexType::eUint32);
 	// we bind update our descriptor so that it points to our image
-	cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
-      }
-    std::vector<vk::ClearValue> clearValues{
-      vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f}),
-	vk::ClearDepthStencilValue(1.0f, 0),
-	}; // a nice recognisable green for debug
-    { // upload our descriptor sets
-      vk::DescriptorImageInfo const imageInfo
-	{
-	 nullptr,
-	 backgroundImageView,
-	 vk::ImageLayout::eShaderReadOnlyOptimal
-	};
-      device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{descriptorSets[0], 1, 0, 1, vk::DescriptorType::eSampledImage, &imageInfo, nullptr, nullptr}});
-    }
 
+	if (frame.descriptorPoolSize < windowCount)
+	  {
+	    frame.descriptorSets.resize(0);
+	    frame.descriptorPool = device.createDescriptorPool(windowCount * 2, {vk::DescriptorPoolSize{vk::DescriptorType::eSampler, 1}, vk::DescriptorPoolSize{vk::DescriptorType::eSampledImage, windowCount}});
+	    frame.descriptorPoolSize = windowCount;
+	  }
+	frame.descriptorSets.reserve(frame.descriptorPoolSize);
+	while (frame.descriptorSets.size() < frame.descriptorPoolSize)
+	  frame.descriptorSets.emplace_back(frame.descriptorPool.allocateDescriptorSets({descriptorSetLayout}));
+	for (uint32_t i(0u); i < windowCount; ++i)
+	  {
+	    // upload our descriptor sets
+	    vk::DescriptorImageInfo const imageInfo
+	      {
+	       nullptr,
+	       imageViews[i],
+	       vk::ImageLayout::eShaderReadOnlyOptimal
+	      };
+	    device.updateDescriptorSets(std::array<vk::WriteDescriptorSet, 1u>{vk::WriteDescriptorSet{frame.descriptorSets[i][0], 0, 0, 1, vk::DescriptorType::eSampledImage, &imageInfo, nullptr, nullptr}});
+	  }
+      }
+    cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, 1, samplerDescriptorSet.data(), 0, nullptr);
+    std::vector<vk::ClearValue> clearValues{
+					    vk::ClearColorValue(std::array<float, 4>{0.0f, 0.5f, 0.0f, 1.0f}),
+					    vk::ClearDepthStencilValue(1.0f, 0),
+    }; // a nice recognisable green for debug
     {
       // start the renderpass
       auto lock(cmdBuffer.beginRenderPass(swapchainUserData.renderPass, frame.framebuffer,
 					  {{0, 0}, getExtent()}, clearValues, vk::SubpassContents::eInline));
 
-      // us our pipeline
-      lock.bindGraphicsPipeline(swapchainUserData.pipeline);
-
-      constexpr uint32_t const windowBatchSize(1u);
-
+      uint32_t indexOffset(0u);
+      auto descriptorSetsPtr(frame.descriptorSets.data());
       while (windowCount)
 	{
 	  uint32_t batchWindowCount(std::min(windowCount, windowBatchSize));
+	  // us our pipeline
+	  lock.bindGraphicsPipeline(swapchainUserData.pipeline);
+	  cmdBuffer.raw().bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, 1, descriptorSetsPtr->data(), 0, nullptr);
+
 	  uint32_t const vertexCount(batchWindowCount * 6);
 
 	  // draw our quads
-	  lock.drawIndexed(vertexCount, 1, 0, 0, 0);
+	  lock.drawIndexed(vertexCount, 1, indexOffset, 0, 0);
 	  windowCount -= batchWindowCount;
+	  indexOffset += vertexCount;
+	  descriptorSetsPtr += batchWindowCount;
 	}
     }
     cmdBuffer.end();
@@ -287,6 +340,16 @@ namespace display
 							    magma::asListRef(cmdBuffer.raw()),
 							    magma::asListRef(renderDone)), // signal renderdone when done
 		 frame.fence); // signal the fence
+    auto sendFrame([&](auto sendFrame, wm::WindowNodeIndex index, float minDepth, float range) -> void
+		   {
+		     for (wm::WindowNodeIndex child : windowTree.getChildren(index))
+		       sendFrame(child, minDepth + range * 0.5f, range * 0.4f);
+		     auto &windowData(windowTree.getData(index));
+		     if (windowTree.getData(index).isVisible())
+		       std::get<wm::ClientData>(windowData.data).surface->sendFrame();
+		   });
+
+    claws::inject_self{sendFrame}(windowTree.getRootIndex(), 0.0f, 0.9f);
     return renderDone;
   }
 

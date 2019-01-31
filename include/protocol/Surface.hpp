@@ -8,10 +8,16 @@ namespace display
   class Renderer;
 };
 
+namespace wm
+{
+  class Rect;
+};
+
 namespace protocol
 {
   class ShellSurface;
   class XDGSurface;
+  class Buffer;
 
   class Surface
   {
@@ -28,15 +34,20 @@ namespace protocol
 
       void commit();
       void surfaceDestroyed();
+      void sendConfigure(wl_resource *resource, wm::Rect const &rect);
+      void sendFrame();
     };
     std::variant<NoRole, ShellSurface *, XDGSurface *> role{NoRole{}};
     display::Renderer *renderer;
+    wl_resource *frameCallback{nullptr};
   public:
     class Taken{};
 
     Surface(display::Renderer *renderer) noexcept;
     Surface(Surface const &) = delete;
     Surface(Surface &&) = delete;
+
+    ~Surface() noexcept;
 
     template<class Role>
     void setRole(Role *role)
@@ -45,6 +56,22 @@ namespace protocol
 	throw Taken{};
       this->role = role;
     }
+
+
+    Buffer const *getBuffer() const noexcept
+    {
+      if (!buffer)
+	return nullptr;
+      return static_cast<Buffer *>(wl_resource_get_user_data(buffer));
+    }
+
+    wl_resource *getBufferResource() const noexcept
+    {
+      return buffer;
+    }
+
+    void sendConfigure(wl_resource *resource, wm::Rect const &rect);
+    void sendFrame();
 
   public:
     // wl interface functions

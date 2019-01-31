@@ -13,18 +13,20 @@ namespace protocol
 		 data.destroy(client, resource);
 	       }, data);
   }
-  
+
   void ShmBuffer::update(display::Renderer *renderer)
   {
-    magma::DynamicBuffer::RangeId tmpBuffer(renderer->getStagingBuffer().allocate(width * height));
-    auto memory(renderer->getStagingBuffer().getMemory<unsigned char []>(tmpBuffer));
-    auto it(&memory[0]);
-
-    for (int y(0u); y < height; ++y)
-      {
-	auto ptr(data->data + offset + y * stride);
-	it = std::copy(ptr, ptr + width, it);
-      }
+    magma::DynamicBuffer::RangeId tmpBuffer(renderer->getStagingBuffer().allocate((width * height * 4 + 0x40) & ~0x3F));
+    {
+      auto memory(renderer->getStagingBuffer().getMemory<unsigned char []>(tmpBuffer));
+      auto it(&memory[0]);
+      
+      for (int y(0u); y < height; ++y)
+	{
+	  auto ptr(data->data + offset + y * stride);
+	  it = std::copy(ptr, ptr + width * 4, it);
+	}
+    }
     magma::Device<claws::no_delete> device(renderer->getDevice());
     vk::PhysicalDevice physicalDevice(renderer->getPhysicalDevice());
 
@@ -49,7 +51,7 @@ namespace protocol
 								     0,
 								     1));
       }
-    renderer->uploadBuffer(tmpBuffer, image);
+    renderer->uploadBuffer(tmpBuffer, image, width, height);
   }
 
   void ShmBuffer::destroy(wl_client *, wl_resource *)

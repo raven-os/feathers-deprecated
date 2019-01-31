@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdio>
+#include <algorithm>
 
 #include "protocol/ShellSurface.hpp"
 #include "protocol/Surface.hpp"
@@ -78,7 +79,7 @@ namespace protocol
     auto &parentData(windowTree->getData(parentIndex));
 
     data.isSolid = true;
-    data.data = wm::ClientData{this};
+    data.data = wm::ClientData{surface};
     std::visit([&](auto &containerData)
 	       {
 		 containerData.childResources.emplace_back(resource); // TODO: refactor into clean function

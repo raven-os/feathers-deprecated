@@ -132,7 +132,7 @@ namespace wm
 	  WindowNodeIndex result(freeList);
 
 	  freeList = getSibling(freeList);
-	  return freeList;
+	  return result;
 	}
     }
 
@@ -141,7 +141,7 @@ namespace wm
       WindowNodeIndex child(getFirstChild(getParent(index)));
 
       if (child == index)
-	getNode(getParent(index)).firstChild = nullNode;
+	getNode(getParent(index)).firstChild = getSibling(index);
       else
 	{
 	  while (getSibling(child) != index)
